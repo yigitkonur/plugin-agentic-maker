@@ -7,7 +7,7 @@ Smallest thing that runs first. The **v1 `agentic-maker` CLI is five commands** 
 **M0 — spike, no plugin (1–2 sittings).** Resolve §12 with real runs on one skill (U1–U14). Output: a one-page "what's true" that edits this plan before any code.
 **M1 — derail a *skill*.** `derailment-method`, `trace-reader` (Read/Grep/Glob), `derail` with runners **`existing`** (no launch; best value per cost — reads a session you already have) and **`headless`** (claude); the 5-command CLI; the `check` gates; H2 with kill switch. **Dogfood: derail the plugin's own two knowledge skills.** If loop state is lost on compaction → H3; if the orchestrator skips `check` → H1.
 **M2 — derail & audit a *CLI*.** Cold `--help`-only scenarios; `probe cli` (+ `cli-diff`); `agent-interface-design` with the CLI references migrated (Appendix B fixes), `audit` (CLI path), `frameworks/` for the stacks in the three-project test; `surfaces.tsv` + `detect`.
-**M3 — live & multi-harness.** herdr runner (conductor rules, `approvals:`), codex/agy adapters, `eval` runner if U13 passes, harness observation notes.
+**M3 — live & multi-harness.** herdr runner (conductor rules, `approvals:`), codex adapter (observed output only), agy screen-format adapter (`documented only`; agy is never launched), optional `eval` runner (U13 passed), harness observation notes.
 **M4 — MCP.** `probe mcp` (stdio + unauthenticated Streamable HTTP; `mcpc`/Inspector routing), `scan mcp`, MCP references (+`fresh/`), `design` command, decisions, iterative repair, interview.
 **M5 — hardening.** `evals/` (trigger + negative + seeded-defect), `eval-emit`, README, `claude plugin validate`, footprint measurement, optional `derail-matrix` workflow, AGENTS.md rules (version bump on every shipped change).
 **M6 — parity & retire.**
@@ -24,6 +24,8 @@ Smallest thing that runs first. The **v1 `agentic-maker` CLI is five commands** 
 ---
 
 ## 12. Unknowns to resolve in M0 (flagged, not guessed)
+
+**Status 2026-10-20: all sixteen were run in M0. Verdicts and the pasted evidence are in [what-is-true](../what-is-true.md); the table below is the original question list.**
 
 | # | Unknown | Why it matters |
 |---|---|---|

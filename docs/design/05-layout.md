@@ -23,7 +23,7 @@ agentic-maker/
 │       ├── SKILL.md                       # invariants, markers, severity, fix discipline
 │       └── references/{taxonomy, fix-patterns, reading-traces, evidence-and-anti-sycophancy, finding-schema}.md
 ├── agents/trace-reader.md
-├── hooks/  (empty unless U4 fails)  scripts/
+├── scripts/                              # check.sh, parity.py (H2 lives in skills/derail frontmatter — M0 U4)
 ├── evals/                                # claude plugin eval: trigger/negative cases + seeded-defect audit cases
 ├── fixtures/                             # seeded-defect CLI (bash), MCP (python stdlib), skill — parity + regression
 └── workflows/derail-matrix.js            # M5+, optional

@@ -3,9 +3,9 @@
 ## 13. Open questions (recommended default in bold)
 
 - **Q1 Name.** **`agentic-maker`** (`/agentic-maker:audit|design|derail`). Alternatives: `agent-tooling`, `derail`.
-- **Q2 Default runner.** **Headless for inner rounds (or `eval` for skill/plugin targets if U13 passes), one herdr live round to confirm**; herdr when `interactive: true`, harness is agy, or the user asks. (Alternative: herdr always — higher fidelity, slower, sequential.)
+- **Q2 Default runner.** **Headless (`--restricted`) for inner rounds, one herdr live round to confirm**; herdr when `interactive: true` or the user asks (agy only when the user already runs one). (Alternative: herdr always — higher fidelity, slower, sequential.)
 - **Q3 herdr-conductor dependency.** **Soft** (detect + recommend; defer syntax to it when present). Hard dependency rejected.
-- **Q4 Isolation default.** **Skill/plugin targets: `clean` via the `eval` runner if U13 passes. CLI/MCP targets: `in-situ` with a recorded contamination report unless U1 finds a subscription-compatible recipe.** `--bare` is not used for trigger tests at all (it drops the skill listing).
+- **Q4 Isolation default.** **`clean` for every target kind, via `--restricted --strict-mcp-config --plugin-dir <target>` (M0 U1: works on subscription auth, keeps the skill listing). `in-situ` is opt-in and tests collisions.** `--bare` (API key only) and `--safe-mode` (drops the target plugin's skills) are not used.
 - **Q5 Taxonomy extension.** **Yes: add T1–T3, M7, O7, O8, C5; original 21 IDs frozen.**
 - **Q6 Time-sensitive MCP facts** (model matrix, client matrix, registries, exemplars, platform prices, CVEs, benchmarks). **Keep all, in `fresh/` with `as_of`, never cited without a re-check line; no claim of currency.** (Alternative: drop vendor/price tables — loses real signal.)
 - **Q7 Companion skills** (`build-mcp-server-sdk-v1/v2`, `build-mcp-use-server`, `convert-mcp-sdk-v1-to-v2`, `test-by-mcpc-cli`, `run-railway`, `linear-cli`). **Stay separate; routed to only if installed.** `probe mcp` is the read-only inspector; `mcpc` remains the heavier live tester.

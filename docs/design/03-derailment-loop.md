@@ -22,16 +22,16 @@ Old modes map: **A** (synthetic) → `headless` (a real fresh process, not a sam
 
 | Runner | Spawn | Wait | Best for | Notes |
 |---|---|---|---|---|
-| **headless** (default for inner rounds) | `claude -p "<prompt>" --output-format stream-json --verbose --include-hook-events --session-id <uuid> --max-turns N --max-budget-usd B --plugin-dir <target>` / `--mcp-config F --strict-mcp-config`; cwd = fresh **temp** workspace from scenario fixtures (never the target project, so project-keyed hooks/pointers can't see it). Codex: `codex exec --json -C <dir> -s <sandbox>`; agy: `agy -p --output-format stream-json` | process exit | cheap, parallel, structured, CI-able | `--bare` is **not** the isolation (no skill listing, API-key only). Permission mode, `--allowedTools`, turn and budget caps explicit and recorded; destructive-capable targets only under a sandbox (`--settings` sandbox) or on throwaway fixtures — never bypass permissions on real data |
-| **eval** (skill/plugin targets; clean room) | Generate a throwaway eval suite from the scenario (`prompt.md` + graders compiled from receipts) and run `claude plugin eval <plugin> --runs 1 --ablation none --keep-temp --json --max-cost-usd C` | process exit | The one clean room that works with subscription auth and keeps the **skill listing**, so T1–T3 are testable; OS sandbox; optional with/without Δ | Graded, not forensic: we still need the kept sandbox's session transcript for the reader (**U13**). If unreadable, `eval` is used for trigger statistics only and `headless` for forensics |
+| **headless** (default for inner rounds) | `claude -p "<prompt>" --restricted --strict-mcp-config --plugin-dir <target> --tools <list> --allowedTools <list> --permission-mode <m> --output-format stream-json --verbose --include-hook-events --session-id <uuid> --max-turns N --max-budget-usd B` (+ `--mcp-config F` for MCP targets) — a verified clean room (M0 U1); cwd = fresh **temp** workspace from scenario fixtures (never the target project, so project-keyed hooks/pointers can't see it). Codex: `codex exec --json -C <dir> -s <sandbox>` (adapter built only from observed output); **agy is never launched by the plugin** (its PATH wrapper rotates accounts on every launch — M0 E5) | process exit | cheap, parallel, structured, CI-able | `--bare` is not the isolation (API-key only) and `--safe-mode` drops the target plugin's skills; `--restricted` is (M0 U1). A non-restricted child inherits the user's permission mode, hooks, 100+ skills and `HERDR_*` env, so `run` scrubs `HERDR_*` and passes the permission mode explicitly. Permission mode, `--allowedTools`, turn and budget caps explicit and recorded; destructive-capable targets only under a sandbox (`--settings` sandbox) or on throwaway fixtures — never bypass permissions on real data |
+| **eval** (optional: graded trigger statistics, `eval-emit`) | Generate a throwaway eval suite from the scenario (`prompt.md` + graders compiled from receipts) and run `claude plugin eval <plugin> --runs 1 --ablation none --keep-temp --json --max-cost-usd C` | process exit | Graded with/without Δ; its sandbox is also a clean room that keeps the **skill listing** (T1–T3 testable) | Graded, not forensic. The kept sandbox's `out/trace.jsonl` (listed as `tracePath` in the `--json` result) is a readable stream-json trace, so the reader can use it (M0 U13) |
 | **herdr** (live; final confirming round; interactive/dialog scenarios; agy) | Follow `herdr-conductor`'s **rules directly**: `tab create --no-focus`, `agent start <name> --kind <k>`, read the screen after start (trust dialogs), `agent prompt … --wait --timeout`, background `agent wait`, never poll, never touch own pane. Do **not** hand the task to `herdr-worker` (it appends done-checks/marker/"you are a worker" to the brief = contamination) | `agent wait` (state), then screen read; `completion_seq` | Fidelity to what a user sees: trust dialogs, approvals, TUI quirks, multi-turn, harnesses without a good headless mode | The worker's brief is the scenario prompt **verbatim** — no coordinator callback; deliverables go to files; the orchestrator verifies on the machine. The conductor's guard denies bypass flags, so workers *will* hit approval dialogs: scenarios declare `approvals:` (dialogs the run may answer, with keys); any other dialog is recorded as a **finding** (real user friction) and the run ends `needs_decision`. The mechanics are agent-driven, never a script (conductor rule: a chain that runs unattended also fails unattended) |
 | **existing** | none | none | Post-hoc audit of sessions you already ran (old Mode B), fleet comparison | Never prompt the live agent during capture (contaminates evidence); a corrective nudge to finish deliverables is allowed only *after* capture and only if the user wants the work done |
 
-*Recommended default (Q2):* **headless for rounds 1…n (or `eval` for skill/plugin targets if U13 passes), one herdr live round to confirm** (matches "done = watched in its real form").
+*Recommended default (Q2):* **headless (`--restricted`) for rounds 1…n, one herdr live round to confirm** (matches "done = watched in its real form").
 
 ### 6.3 How the execution is read (trace sources ranked by trust)
 
-1. **Harness-written structured record**: Claude `stream-json` events (documented), or session JSONL at the pre-assigned path; Codex `exec --json` / rollout files; agy `stream-json`. Complete tool args, results, exit codes, hook events.
+1. **Harness-written structured record**: Claude `stream-json` events (documented), or the session JSONL (a hook's `transcript_path`; under herdr `agent get` → `agent_session.value` → `~/.claude/projects/<cwd with / as ->/<id>.jsonl`); Codex `exec --json` / rollout files (`~/.codex/sessions/…/rollout-*.jsonl`); agy: no verified record (never launched by the plugin; scrollback only). Complete tool args, results, exit codes, hook events.
 2. **Terminal scrollback with verbose view**: `herdr agent read <t> --source recent-unwrapped --lines N` (`recent-unwrapped` mandatory — soft wraps break regexes). Make the view verbose **conditionally**: probe the scrollback for markers of expanded output first, toggle (`ctrl+o`) only if collapsed, re-probe. Per-harness behavior (Claude = transcript *viewer*, AGY = unfold, Codex = unverified) is recorded in `harnesses/<name>.md` **from observation, dated** (M0, U7).
 3. **The agent's own report** — a claim; never evidence.
 
@@ -43,13 +43,18 @@ Files in the target project: `.agentic-maker/scenarios/<name>.md` (committed; th
 
 ```
 ---
-name: add-json-output          kind: skill|plugin|cli|mcp
+name: add-json-output
+kind: skill|plugin|cli|mcp
 target: ./skills/x | cli:mycli | mcp:./.mcp.json
 build: cargo build             # optional: how to produce the artifact (Rust/Go/TS need one)
 bin: target/debug/mycli        # optional: resolved binary path (not the crate name)
 env: [FOO_API_BASE]            # allowlist of env vars passed to the worker (no secrets by default)
-harness: claude   runner: headless   isolation: clean|in-situ
-max_turns: 40     timeout_s: 600     budget_usd: 2
+harness: claude
+runner: headless
+isolation: clean|in-situ
+max_turns: 40
+timeout_s: 600
+budget_usd: 2
 interactive: false
 approvals: []                  # dialogs a live run may answer: [{match: "Do you trust", keys: "enter"}]
 ---
@@ -64,7 +69,7 @@ Authoring guide (kept from Mode A): "everyday user energy + 2–3 implicit const
 
 ### 6.5 Clean room vs in-situ
 
-`clean`: only the target is visible (for skills/plugins via the `eval` runner's isolation if U13 passes; for MCP `--strict-mcp-config`; no user CLAUDE.md, no other plugins). `in-situ`: the user's real setup — tests **collisions** (a new skill's description competing with 30 others), which is itself a real failure class (T2). Every run writes `env.json` (versions, flags, permission mode, visible skills/plugins/MCP/CLAUDE.md = **contamination report**), so we never claim isolation we didn't get. Rounds 1…n clean when achievable; the confirming round in-situ. Note for T-tests: `--plugin-dir` may name skills `<dir>:<skill>` rather than the installed `<plugin>:<skill>`; the listing the worker saw is recorded and compared with what a real install produces (**U14**).
+`clean`: only the target is visible (`--restricted --strict-mcp-config --plugin-dir <target>`, plus `--mcp-config` for MCP: no user CLAUDE.md, settings, hooks, other plugins or user MCP servers — M0 U1). `in-situ`: the user's real setup — tests **collisions** (a new skill's description competing with 30 others), which is itself a real failure class (T2). Every run writes `env.json` (versions, flags, permission mode, visible skills/plugins/MCP/CLAUDE.md = **contamination report**), so we never claim isolation we didn't get. Rounds 1…n clean when achievable; the confirming round in-situ. Note for T-tests: `--plugin-dir` may name skills `<dir>:<skill>` rather than the installed `<plugin>:<skill>`; the listing the worker saw is recorded and compared with what a real install produces (**U14**).
 
 ### 6.6 Finding the drift — the reader and the taxonomy
 
@@ -72,7 +77,7 @@ Authoring guide (kept from Mode A): "everyday user energy + 2–3 implicit const
 
 Signals it looks for (from `herdr-pane-audit` heuristics, generalized): re-reads of the same section; `--help` instead of running the thing (C3); long deliberation before an ambiguous step (M1/M5); error → workaround invention (O1/O5); steps in the text that never appear in the trace (C4); "done" while receipts fail (C1); files created in unexpected places (M2/S3); questions to the user the text should answer (S1/M5); two instructions in conflict—which one won (S2); retry with unchanged hypothesis (C5).
 
-**Finding record** (one schema for all targets): `id, marker, severity, root_code, layer(trigger|discovery|execution|recovery|completion), trace_refs[], quote, belief (what the agent believed at that moment) + belief_source (`observed` = from a thinking block in the trace; `inferred` = from preceding observations — U3 decides how often we get `observed`), controlling_text{file,lines,quote|ABSENT}, fix{kind: rewrite|delete|inline-at-point-of-use|restructure|add-probe, patch}, rerun_predicate{type: tool_used|regex|not_regex|order|reads_file|exit_code|judged, …}, confidence`. Predicates are **machine-checkable over `trace.norm.jsonl`** (mirroring eval grader types) wherever possible; `judged` is allowed but labelled and never counts as a clean rerun on its own.
+**Finding record** (one schema for all targets): `id, marker, severity, root_code, layer(trigger|discovery|execution|recovery|completion), trace_refs[], quote, belief (what the agent believed at that moment) + belief_source (`observed` = from a thinking block in the trace; `inferred` = from preceding observations — M0 U3: `stream-json` thinking text is empty, so the default is `inferred`), controlling_text{file,lines,quote|ABSENT}, fix{kind: rewrite|delete|inline-at-point-of-use|restructure|add-probe, patch}, rerun_predicate{type: tool_used|regex|not_regex|order|reads_file|exit_code|judged, …}, confidence`. Predicates are **machine-checkable over `trace.norm.jsonl`** (mirroring eval grader types) wherever possible; `judged` is allowed but labelled and never counts as a clean rerun on its own.
 
 **Taxonomy:** keep the 4 markers `[STUCK][BROKE][GUESSED][NICE]`, P0/P1/P2, compound-P0 (≥3 P1 in one phase), and all **21 codes with stable IDs** (S1–S5, M1–M6, O1–O6, C1–C4). Add (marked *new*): **T1** not triggered, **T2** mis-triggered/collision, **T3** over-triggered; **M7** ambiguous tool boundary; **O7** response misread; **O8** budget blowup (definitions/responses); **C5** retry blindness/loop. (Q5.) Without T, the loop can't see the most common skill failure; M7/O7/O8/C5 are what CLI/MCP derailments produce.
 
@@ -106,4 +111,4 @@ After convergence on a `skill`/`plugin` target, `agentic-maker eval-emit` can wr
 
 ---
 ### Claims to verify (M0)
-- U1/U13 clean-room recipes; U3 whether main-thread `stream-json` carries thinking (decides `belief_source`); U9 `claude --bg` as a no-herdr live runner; U14 skill naming under `--plugin-dir`; U16 workers must not inherit the orchestrator's hooks/pointers.
+- Resolved in M0 ([what-is-true](../what-is-true.md)): U1 clean room = `--restricted`; U3 no thinking text; U13 eval trace readable; U16 workers get their own `session_id`. Still open: U9 (`--bg`, not adopted), U14 (installed-copy listing unobserved), U7 (`Ctrl+O`, S6).

@@ -42,7 +42,7 @@ Bar: a hook must prevent a failure that has actually been observed (here or in t
 - Ledger and pointer are keyed to the **orchestrator's `session_id`**; any other session (including an in-situ worker) exits 0 immediately.
 - **Pass** (never block) when: `stop_hook_active`; `background_tasks` non-empty (a rerun/wait is in flight); ledger status `awaiting_user`, `closed`, or `unverified-recorded`; budget spent; TTL (6 h) expired; the run was abandoned (`ledger abandon`).
 - Block only on: target files modified after the newest *completed* trace **and** status `fixing`. The reason names the files and offers exactly three exits: rerun scenario X, record UNVERIFIED with a reason, or abandon.
-- Registered in `derail/SKILL.md` frontmatter (`hooks:`) so sessions that never run `/agentic-maker:derail` pay nothing; the command uses `${CLAUDE_PLUGIN_ROOT}` (hook processes don't get the Bash-tool PATH). *Fallback if M0 shows skill-scoped hooks don't work from plugin skills (U4):* same entry in `hooks/hooks.json`, same early-exit script.
+- Registered in `derail/SKILL.md` frontmatter (`hooks:`) so sessions that never run `/agentic-maker:derail` pay nothing; the command uses `${CLAUDE_PLUGIN_ROOT}` (hook processes don't get the Bash-tool PATH). *Verified in M0 (U4, U15):* skill-scoped hooks fire from a plugin skill, `${CLAUDE_PLUGIN_ROOT}` expands in their commands, the `Stop` payload carries `session_id`, `stop_hook_active`, `background_tasks` and `transcript_path`, so no `hooks/hooks.json` is shipped.
 
 **CONDITIONAL (2)**
 - **H1 `SubagentStop` matcher `^agentic-maker:trace-reader$` → verify the reader's final JSON.** Not needed in v1: the same protection is **structural** — the reader has `Read, Grep, Glob` only and returns JSON; the orchestrator must pass it through `agentic-maker check findings` (quotes verbatim in the cited trace events, required fields, valid codes) before any finding can be recorded by `ledger fix`; an unverified edit still trips H2 because the target is newer than the trace. Add H1 only if dogfooding shows the orchestrator skipping `check`. Caveats found in review: hook only sees `agent_id` (parallel readers need per-reader output paths), a hard 8-continuation cap, and `last_assistant_message` isn't the report when `SubagentHandback` is used.
@@ -67,7 +67,7 @@ Bar: a hook must prevent a failure that has actually been observed (here or in t
 
 ---
 ### Claims to verify (M0)
-- U4 skill-scoped `hooks:` inside plugin skills (registered? `${CLAUDE_PLUGIN_ROOT}` available? visible in `/hooks`?); fallback is `hooks/hooks.json`.
+- U4 resolved in M0 (see [what-is-true](../what-is-true.md)); still unchecked: visibility of the hook in `/hooks` (interactive only).
 - U5 `!`cmd`` / `$ARGUMENTS` / `allowed-tools` behavior in user-invoked skills.
 - U11 `skills:` preload of a `user-invocable: false` skill into a plugin agent.
 - U12 measured always-on footprint (3 descriptions) against the ≲400-token budget.
