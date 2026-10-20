@@ -7,6 +7,7 @@ claimed with no fresh evidence. Every other situation passes silently.
 """
 import json
 import os
+import re
 import sys
 import time
 
@@ -41,6 +42,10 @@ def load(root, session=None, run_id=None):
 def init(root, session, targets, run_id=None, budget_usd=10.0, rounds=5, ttl_hours=6.0, force=False):
     if not session:
         raise CliError("usage", "session_required", "ledger init needs --session (use ${CLAUDE_SESSION_ID} inside a skill)")
+    if not re.match(r"^[A-Za-z0-9_-]+$", session):
+        raise CliError("usage", "bad_session_id", "session id %r: only letters, digits, - and _ are allowed" % session, suggestion="use ${CLAUDE_SESSION_ID}")
+    if run_id and not re.match(r"^[A-Za-z0-9_.-]+$", run_id):
+        raise CliError("usage", "bad_run_id", "run id %r: only letters, digits, . - and _ are allowed" % run_id)
     ptr = _pointer(root, session)
     if os.path.exists(ptr) and not force:
         cur = read_json(read_json(ptr)["ledger"])
@@ -48,6 +53,8 @@ def init(root, session, targets, run_id=None, budget_usd=10.0, rounds=5, ttl_hou
             raise CliError("conflict", "ledger_active", "session %s already has an open ledger (%s, status %s)" % (session, cur["run_id"], cur["status"]),
                            suggestion="agentic-maker ledger close|abandon first, or pass --force")
     run_id = run_id or "%s-derail" % time.strftime("%Y%m%d-%H%M%S")
+    if os.path.exists(_path(root, run_id)):
+        raise CliError("conflict", "run_id_exists", "a ledger for run %s already exists" % run_id, suggestion="pick another --run-id, or omit it for a fresh one")
     tpaths = [t if os.path.isabs(t) else os.path.abspath(os.path.join(root, t)) for t in targets]
     for t in tpaths:
         if not os.path.exists(t):

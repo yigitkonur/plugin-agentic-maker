@@ -1,0 +1,130 @@
+source_file	item	reason
+audit-agentic-cli/SKILL.md	JSON envelopes, schemas, error fields, stream separation, exit-code taxonomy	row label of the source reference-routing table; each topic has its own file under references/cli/ and is listed in index-cli.md
+audit-agentic-cli/SKILL.md	Retries, idempotency, async jobs, batch, timeout, pagination, rate limits	row label of the source reference-routing table; each topic has its own file under references/cli/ and is listed in index-cli.md
+audit-agentic-cli/SKILL.md	Help, auth, config, flags, environment detection	row label of the source reference-routing table; each topic has its own file under references/cli/ and is listed in index-cli.md
+audit-agentic-cli/SKILL.md	Iterative repair-loop CLI design and case study	row label of the source reference-routing table; each topic has its own file under references/cli/ and is listed in index-cli.md
+audit-agentic-cli/SKILL.md	CLI vs MCP vs hybrid (when surface is still in question)	row label of the source reference-routing table; each topic has its own file under references/cli/ and is listed in index-cli.md
+audit-agentic-cli/SKILL.md	Worked code examples (Go, Python, Node, Rust, Shell) and real-world audits	row label of the source reference-routing table; each topic has its own file under references/cli/ and is listed in index-cli.md
+audit-agentic-cli/SKILL.md	Patterns for the agent or service that calls the CLI	row label of the source reference-routing table; each topic has its own file under references/cli/ and is listed in index-cli.md
+audit-agentic-cli/SKILL.md	scripts/audit-cli-help.sh	replaced script: its checks run in 'agentic-maker probe cli|cli-diff|mcp', 'scan', 'run', 'normalize' (see docs/parity/files.tsv)
+audit-agentic-cli/SKILL.md	scripts/diff-cli-help.sh	replaced script: its checks run in 'agentic-maker probe cli|cli-diff|mcp', 'scan', 'run', 'normalize' (see docs/parity/files.tsv)
+audit-agentic-cli/references/discovery-and-auth.md	-j, --json	carried: the standard-flag matrix in references/cli/ lists the same flags with the short and long forms in separate cells
+audit-agentic-cli/references/discovery-and-auth.md	-v, --verbose	carried: the standard-flag matrix in references/cli/ lists the same flags with the short and long forms in separate cells
+audit-agentic-cli/references/discovery-and-auth.md	-o, --output	carried: the standard-flag matrix in references/cli/ lists the same flags with the short and long forms in separate cells
+audit-agentic-cli/references/examples.md	linear-cli	author-local companion skill; skills/agent-interface-design/references/decisions/companion-routing.md routes to such tools only when installed
+audit-agentic-cli/references/examples.md	run-railway	author-local companion skill; skills/agent-interface-design/references/decisions/companion-routing.md routes to such tools only when installed
+audit-agentic-mcp/SKILL.md	[build-mcp-server-sdk-v1](../../../build-mcp-server-sdk-v1/)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-agentic-mcp/SKILL.md	[build-mcp-server-sdk-v2](../../../build-mcp-server-sdk-v2/)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-agentic-mcp/SKILL.md	[build-mcp-use-server](../../../build-mcp-use-server/)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-agentic-mcp/SKILL.md	[convert-mcp-sdk-v1-to-v2](../../../convert-mcp-sdk-v1-to-v2/)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-agentic-mcp/SKILL.md	[test-by-mcpc-cli](../../../test-by-mcpc-cli/)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-agentic-mcp/SKILL.md	[audit-agentic-cli](../../../audit-agentic-cli/)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	Official TS SDK v1 (@modelcontextprotocol/sdk)	carried: framework-choice nodes are in references/fresh/mcp-framework-picker.md and decisions/surface-choice.md (labels reworded)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	Official TS SDK v2 alpha (@modelcontextprotocol/server)	carried: framework-choice nodes are in references/fresh/mcp-framework-picker.md and decisions/surface-choice.md (labels reworded)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	SKIP — use CLI / agent skill	carried: framework-choice nodes are in references/fresh/mcp-framework-picker.md and decisions/surface-choice.md (labels reworded)
+audit-agentic-mcp/scripts/measure-context-budget.sh.md	--description-chars N	carried: the same thresholds are options of 'agentic-maker probe mcp' with the same defaults (see skills/audit/references/probes-mcp.md)
+audit-agentic-mcp/scripts/measure-context-budget.sh.md	--schema-chars N	carried: the same thresholds are options of 'agentic-maker probe mcp' with the same defaults (see skills/audit/references/probes-mcp.md)
+audit-agentic-mcp/scripts/measure-context-budget.sh.md	--response-chars N	carried: the same thresholds are options of 'agentic-maker probe mcp' with the same defaults (see skills/audit/references/probes-mcp.md)
+audit-agentic-mcp/scripts/measure-context-budget.sh.md	--tool-threshold N	carried: the same thresholds are options of 'agentic-maker probe mcp' with the same defaults (see skills/audit/references/probes-mcp.md)
+audit-skill-by-derailment/SKILL.md	[STUCK] — executor cannot continue	carried: the marker/severity table in skills/derailment-method/SKILL.md and references/taxonomy.md, worded for any target
+audit-skill-by-derailment/SKILL.md	[BROKE] — command or selector threw error	carried: the marker/severity table in skills/derailment-method/SKILL.md and references/taxonomy.md, worded for any target
+audit-skill-by-derailment/SKILL.md	[GUESSED] — agent invented unstated decision	carried: the marker/severity table in skills/derailment-method/SKILL.md and references/taxonomy.md, worded for any target
+audit-skill-by-derailment/SKILL.md	Premature completion — skipped remote/E2E gates	carried: the marker/severity table in skills/derailment-method/SKILL.md and references/taxonomy.md, worded for any target
+audit-skill-by-derailment/SKILL.md	Skipped destructive cleanup / mutation	carried: the marker/severity table in skills/derailment-method/SKILL.md and references/taxonomy.md, worded for any target
+audit-skill-by-derailment/SKILL.md	Ran --help instead of real execution probe	carried: the marker/severity table in skills/derailment-method/SKILL.md and references/taxonomy.md, worded for any target
+audit-skill-by-derailment/SKILL.md	[NICE] — skill prevented an error	carried: the marker/severity table in skills/derailment-method/SKILL.md and references/taxonomy.md, worded for any target
+audit-skill-by-derailment/SKILL.md	[scripts/audit-worker-pane.sh](scripts/audit-worker-pane.sh.md)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-skill-by-derailment/SKILL.md	[scripts/read-herdr-panes.sh](scripts/read-herdr-panes.sh.md)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-skill-by-derailment/SKILL.md	[scripts/launch-derailment.sh](scripts/launch-derailment.sh.md)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-skill-by-derailment/SKILL.md	[scripts/parse-derailment-trace.sh](scripts/parse-derailment-trace.sh.md)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-skill-by-derailment/SKILL.md	Reference Document	column header of the source routing table; the new routing tables use 'Read when' headers
+audit-skill-by-derailment/SKILL.md	[references/herdr-native-runner.md](references/herdr-native-runner.md)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-skill-by-derailment/SKILL.md	[references/ctrl-o-verbose-physics.md](references/ctrl-o-verbose-physics.md)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-skill-by-derailment/SKILL.md	[references/forensic-subagent-briefs.md](references/forensic-subagent-briefs.md)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-skill-by-derailment/SKILL.md	[references/disk-evidence-and-anti-sycophancy.md](references/disk-evidence-and-anti-sycophancy.md)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-skill-by-derailment/SKILL.md	[references/friction-taxonomy-guide.md](references/friction-taxonomy-guide.md)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-skill-by-derailment/SKILL.md	[references/herdr-pane-audit.md](references/herdr-pane-audit.md)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-skill-by-derailment/SKILL.md	[references/fix-patterns.md](references/fix-patterns.md)	navigation link inside the source SKILL.md; the new skills have their own routing tables
+audit-skill-by-derailment/references/herdr-pane-audit.md	wJ:p2	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/herdr-pane-audit.md	wH:p4	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/herdr-pane-audit.md	wK:p2	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/herdr-pane-audit.md	wV:p2	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-agentic-cli/SKILL.md	linear-cli	author-local companion skill; skills/agent-interface-design/references/decisions/companion-routing.md routes to such tools only when installed
+audit-agentic-cli/SKILL.md	run-railway	author-local companion skill; skills/agent-interface-design/references/decisions/companion-routing.md routes to such tools only when installed
+audit-agentic-cli/SKILL.md	scripts/audit-cli-help.md	replaced script: its checks run in 'agentic-maker probe cli|cli-diff|mcp', 'scan', 'run', 'normalize' (see docs/parity/files.tsv)
+audit-agentic-cli/SKILL.md	scripts/audit-cli-help.sh	replaced script: its checks run in 'agentic-maker probe cli|cli-diff|mcp', 'scan', 'run', 'normalize' (see docs/parity/files.tsv)
+audit-agentic-cli/SKILL.md	scripts/diff-cli-help.md	replaced script: its checks run in 'agentic-maker probe cli|cli-diff|mcp', 'scan', 'run', 'normalize' (see docs/parity/files.tsv)
+audit-agentic-cli/SKILL.md	scripts/diff-cli-help.sh	replaced script: its checks run in 'agentic-maker probe cli|cli-diff|mcp', 'scan', 'run', 'normalize' (see docs/parity/files.tsv)
+audit-agentic-cli/references/examples.md	linear-cli	author-local companion skill; skills/agent-interface-design/references/decisions/companion-routing.md routes to such tools only when installed
+audit-agentic-cli/references/examples.md	run-railway	author-local companion skill; skills/agent-interface-design/references/decisions/companion-routing.md routes to such tools only when installed
+audit-agentic-cli/references/iterative-cli.md	#GUIDANCE:	carried: the continuation protocol is in references/cli/iterative-repair-design.md (marker inside a code block)
+audit-agentic-cli/references/iterative-cli.md	#STATUS:	carried: the continuation protocol is in references/cli/iterative-repair-design.md (marker inside a code block)
+audit-agentic-cli/references/mcp-vs-cli-decision.md	build-mcp-*	author-local companion skill; skills/agent-interface-design/references/decisions/companion-routing.md routes to such tools only when installed
+audit-agentic-cli/scripts/diff-cli-help.md	Subcommands:	replaced script: its checks run in 'agentic-maker probe cli|cli-diff|mcp', 'scan', 'run', 'normalize' (see docs/parity/files.tsv)
+audit-agentic-mcp/SKILL.md	scripts/audit-mcp-server.sh.md	replaced script: its checks run in 'agentic-maker probe cli|cli-diff|mcp', 'scan', 'run', 'normalize' (see docs/parity/files.tsv)
+audit-agentic-mcp/SKILL.md	scripts/measure-context-budget.sh.md	replaced script: its checks run in 'agentic-maker probe cli|cli-diff|mcp', 'scan', 'run', 'normalize' (see docs/parity/files.tsv)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	../patterns/advanced-protocol.md	relative link into the source tree; the new files link to their own destinations (checked by scripts/check-links.py)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	../patterns/agentic-patterns.md	relative link into the source tree; the new files link to their own destinations (checked by scripts/check-links.py)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	../patterns/client-compatibility.md	relative link into the source tree; the new files link to their own destinations (checked by scripts/check-links.py)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	../patterns/composition.md	relative link into the source tree; the new files link to their own destinations (checked by scripts/check-links.py)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	../patterns/context-engineering.md	relative link into the source tree; the new files link to their own destinations (checked by scripts/check-links.py)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	../patterns/mcp-vs-cli.md	relative link into the source tree; the new files link to their own destinations (checked by scripts/check-links.py)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	../patterns/prompt-gates.md	relative link into the source tree; the new files link to their own destinations (checked by scripts/check-links.py)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	../patterns/security.md	relative link into the source tree; the new files link to their own destinations (checked by scripts/check-links.py)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	../patterns/threat-catalog.md	relative link into the source tree; the new files link to their own destinations (checked by scripts/check-links.py)
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md	../patterns/transport-and-ops.md	relative link into the source tree; the new files link to their own destinations (checked by scripts/check-links.py)
+audit-agentic-mcp/references/patterns/caching-economics.md	../../scripts/measure-context-budget.sh	replaced script: its checks run in 'agentic-maker probe cli|cli-diff|mcp', 'scan', 'run', 'normalize' (see docs/parity/files.tsv)
+audit-agentic-mcp/references/patterns/context-engineering.md	../../scripts/measure-context-budget.sh	replaced script: its checks run in 'agentic-maker probe cli|cli-diff|mcp', 'scan', 'run', 'normalize' (see docs/parity/files.tsv)
+audit-agentic-mcp/references/patterns/context-engineering.md	138 tokens	carried: the Pare benchmark table is in references/fresh/mcp-token-benchmarks.md; the number cell and unit are separate cells
+audit-agentic-mcp/references/patterns/context-engineering.md	382 tokens	carried: the Pare benchmark table is in references/fresh/mcp-token-benchmarks.md; the number cell and unit are separate cells
+audit-agentic-mcp/references/patterns/context-engineering.md	39 tokens	carried: the Pare benchmark table is in references/fresh/mcp-token-benchmarks.md; the number cell and unit are separate cells
+audit-agentic-mcp/references/patterns/progressive-discovery.md	100x	carried: stage budgets are in references/mcp/patterns-progressive-discovery.md; 100x appears only in a source URL slug
+audit-agentic-mcp/references/patterns/progressive-discovery.md	2000 tokens	carried: stage budgets are in references/mcp/patterns-progressive-discovery.md; 100x appears only in a source URL slug
+audit-agentic-mcp/references/patterns/progressive-discovery.md	500 tokens	carried: stage budgets are in references/mcp/patterns-progressive-discovery.md; 100x appears only in a source URL slug
+audit-agentic-mcp/references/patterns/registry-and-distribution.md	github.com/BrowserMCP/mcp/issues/168	citation of a source repository for an example; the claim is kept in the destination file, the repository link is not
+audit-agentic-mcp/references/patterns/schema-design.md	GLips/Figma-Context-MCP	citation of a source repository for an example; the claim is kept in the destination file, the repository link is not
+audit-agentic-mcp/references/patterns/schema-design.md	modelcontextprotocol/servers	citation of a source repository for an example; the claim is kept in the destination file, the repository link is not
+audit-skill-by-derailment/SKILL.md	$PANE_ID	placeholder of the replaced launch/callback mechanism; the worker reports through files and the CLI renders the brief ('agentic-maker run')
+audit-skill-by-derailment/SKILL.md	COORDINATOR_PANE_ID	placeholder of the replaced launch/callback mechanism; the worker reports through files and the CLI renders the brief ('agentic-maker run')
+audit-skill-by-derailment/SKILL.md	S/M/O/C	carried: the marker/severity table in skills/derailment-method/SKILL.md and references/taxonomy.md, worded for any target
+audit-skill-by-derailment/SKILL.md	invoke_subagent	harness-specific name (agy tool / herdr agent list) from the replaced runner; herdr's own --help is the source for agent kinds
+audit-skill-by-derailment/references/ctrl-o-verbose-physics.md	thinking...	carried: folded-thought display is described in skills/derail/references/trace-sources.md
+audit-skill-by-derailment/references/disk-evidence-and-anti-sycophancy.md	.mp4	domain leak of the video-flow skill (docs/design/appendix-b-inherited-defects.md, item 24); receipts are generic kinds now
+audit-skill-by-derailment/references/disk-evidence-and-anti-sycophancy.md	.png	domain leak of the video-flow skill (docs/design/appendix-b-inherited-defects.md, item 24); receipts are generic kinds now
+audit-skill-by-derailment/references/disk-evidence-and-anti-sycophancy.md	1.2 seconds	domain leak of the video-flow skill (docs/design/appendix-b-inherited-defects.md, item 24); receipts are generic kinds now
+audit-skill-by-derailment/references/forensic-subagent-briefs.md	<OUTPUT_DIR>	placeholder of the replaced launch/callback mechanism; the worker reports through files and the CLI renders the brief ('agentic-maker run')
+audit-skill-by-derailment/references/forensic-subagent-briefs.md	<TARGET_SKILL_DIR>	placeholder of the replaced launch/callback mechanism; the worker reports through files and the CLI renders the brief ('agentic-maker run')
+audit-skill-by-derailment/references/forensic-subagent-briefs.md	<WORKSPACE_CWD>	placeholder of the replaced launch/callback mechanism; the worker reports through files and the CLI renders the brief ('agentic-maker run')
+audit-skill-by-derailment/references/forensic-subagent-briefs.md	invoke_subagent	harness-specific name (agy tool / herdr agent list) from the replaced runner; herdr's own --help is the source for agent kinds
+audit-skill-by-derailment/references/forensic-subagent-briefs.md	w2N:pP	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/forensic-subagent-briefs.md	w2N:pQ	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/forensic-subagent-briefs.md	w2N:pR	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/forensic-subagent-briefs.md	w2N:pS	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/forensic-subagent-briefs.md	w2N:pT	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/friction-taxonomy-guide.md	__TAKE_RESULT_JSON_END__	domain leak of the video-flow skill (docs/design/appendix-b-inherited-defects.md, item 24); receipts are generic kinds now
+audit-skill-by-derailment/references/friction-taxonomy-guide.md	__TAKE_RESULT_JSON_START__	domain leak of the video-flow skill (docs/design/appendix-b-inherited-defects.md, item 24); receipts are generic kinds now
+audit-skill-by-derailment/references/friction-taxonomy-guide.md	~/Downloads/flow-videos/	domain leak of the video-flow skill (docs/design/appendix-b-inherited-defects.md, item 24); receipts are generic kinds now
+audit-skill-by-derailment/references/herdr-native-runner.md	$COORDINATOR_PANE_ID	placeholder of the replaced launch/callback mechanism; the worker reports through files and the CLI renders the brief ('agentic-maker run')
+audit-skill-by-derailment/references/herdr-native-runner.md	$WORKER_PANE_ID	placeholder of the replaced launch/callback mechanism; the worker reports through files and the CLI renders the brief ('agentic-maker run')
+audit-skill-by-derailment/references/herdr-native-runner.md	/usr/local/bin/herdr	install path of herdr on the author's machine; 'agentic-maker doctor' reports the binary it finds
+audit-skill-by-derailment/references/herdr-native-runner.md	devin	harness-specific name (agy tool / herdr agent list) from the replaced runner; herdr's own --help is the source for agent kinds
+audit-skill-by-derailment/references/herdr-native-runner.md	run_command	harness-specific name (agy tool / herdr agent list) from the replaced runner; herdr's own --help is the source for agent kinds
+audit-skill-by-derailment/references/herdr-native-runner.md	~/.cargo/bin/herdr	install path of herdr on the author's machine; 'agentic-maker doctor' reports the binary it finds
+audit-skill-by-derailment/references/herdr-pane-audit.md	.github/workflows/	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	30KB	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	ci.yml	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	wG:p6	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/herdr-pane-audit.md	wH:p4	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/herdr-pane-audit.md	wJ:p2	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/herdr-pane-audit.md	wK:p2	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/herdr-pane-audit.md	wV:p2	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/scripts/audit-worker-pane.sh.md	__TAKE_RESULT_JSON_START__	domain leak of the video-flow skill (docs/design/appendix-b-inherited-defects.md, item 24); receipts are generic kinds now
+audit-skill-by-derailment/scripts/audit-worker-pane.sh.md	w2N:pP	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/scripts/audit-worker-pane.sh.md	w2N:pQ	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
+audit-skill-by-derailment/scripts/launch-derailment.sh.md	DERAILMENT_AGENT_CMD	placeholder of the replaced launch/callback mechanism; the worker reports through files and the CLI renders the brief ('agentic-maker run')

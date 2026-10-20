@@ -4,6 +4,7 @@ Locates only. Whether a candidate is good is judged by probing it (probe cli / p
 The rules are data (data/surfaces.tsv): a new ecosystem is a new row.
 """
 import fnmatch
+import json
 import os
 import re
 
@@ -79,6 +80,43 @@ def detect(root, rules, kinds=None, evidence=3, only=None):
     out = sorted(cand.values(), key=lambda e: (e["kind"], e["path"]))
     return {"root": root, "candidates": out, "files_scanned": min(seen, MAX_FILES),
             "truncated": seen > MAX_FILES, "by_kind": {k: sum(1 for e in out if e["kind"] == k) for k in sorted({e["kind"] for e in out})}}
+
+
+def run_hints(root, candidates):
+    """A crate or package name is not a path: for Rust and Node CLIs say how the binary is built and where it lands."""
+    for c in candidates:
+        if c["kind"] != "cli" or c["ecosystem"] not in ("rust", "node"):
+            continue
+        d = os.path.join(root, os.path.dirname(c["path"]))
+        while True:
+            manifest = os.path.join(d, "Cargo.toml" if c["ecosystem"] == "rust" else "package.json")
+            if os.path.isfile(manifest):
+                break
+            if os.path.abspath(d) == os.path.abspath(root) or os.path.dirname(d) == d:
+                manifest = None
+                break
+            d = os.path.dirname(d)
+        if not manifest:
+            continue
+        try:
+            text = open(manifest, encoding="utf-8", errors="replace").read()
+        except OSError:
+            continue
+        rel_dir = os.path.relpath(d, root)
+        if c["ecosystem"] == "rust":
+            m = re.search(r'^\[\[bin\]\][^\[]*?^name\s*=\s*"([^"]+)"', text, re.M | re.S) or re.search(r'^\[package\][^\[]*?^name\s*=\s*"([^"]+)"', text, re.M | re.S)
+            if m:
+                binary = os.path.normpath(os.path.join(rel_dir, "target", "debug", m.group(1)))
+                c["run"] = {"build": "cargo build", "in": rel_dir, "binary": binary, "built": os.path.isfile(os.path.join(root, binary))}
+        else:
+            try:
+                bins = json.loads(text).get("bin")
+            except ValueError:
+                bins = None
+            first = bins if isinstance(bins, str) else (next(iter(bins.values()), None) if isinstance(bins, dict) else None)
+            if first:
+                binary = os.path.normpath(os.path.join(rel_dir, first))
+                c["run"] = {"build": None, "in": rel_dir, "binary": binary, "built": os.path.isfile(os.path.join(root, binary))}
 
 
 MCP_SIGNALS = {

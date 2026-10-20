@@ -20,7 +20,7 @@ RETRYABLE = {"rate_limit", "timeout", "network", "dependency_failed"}
 
 
 class CliError(Exception):
-    def __init__(self, cls, code, message, suggestion=None, details=None, next_actions=None):
+    def __init__(self, cls, code, message, suggestion=None, details=None, next_actions=None, retryable=None):
         Exception.__init__(self, message)
         self.cls = cls
         self.code = code
@@ -28,6 +28,7 @@ class CliError(Exception):
         self.suggestion = suggestion
         self.details = details
         self.next_actions = next_actions or []
+        self.retryable = retryable
 
     @property
     def exit_code(self):
@@ -68,7 +69,7 @@ class Output(object):
             "ok": False,
             "error": {
                 "class": err.cls, "code": err.code, "message": err.message,
-                "retryable": err.cls in RETRYABLE, "suggestion": err.suggestion,
+                "retryable": (err.cls in RETRYABLE) if err.retryable is None else err.retryable, "suggestion": err.suggestion,
             },
             "schema_version": SCHEMA_VERSION,
             "next_actions": err.next_actions,

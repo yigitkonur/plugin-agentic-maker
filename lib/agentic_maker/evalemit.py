@@ -36,6 +36,9 @@ def emit(root, sc, out_dir):
     meta = sc["meta"]
     case = os.path.join(out_dir, slug(meta["name"]))
     os.makedirs(os.path.join(case, "graders"), exist_ok=True)
+    for old in os.listdir(os.path.join(case, "graders")):     # graders written by an earlier emit; a receipt removed from the scenario must not keep guarding CI
+        if old == "skill-fired.md" or re.match(r"^receipt-\d+-(exists|regex|file)\.md$", old):
+            os.remove(os.path.join(case, "graders", old))
     written, skipped, warns = [], [], []
     tools = meta.get("allowed_tools") or ["Read", "Glob", "Grep", "Skill"]
     with open(os.path.join(case, "prompt.md"), "w", encoding="utf-8") as f:

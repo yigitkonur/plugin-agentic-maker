@@ -118,6 +118,16 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
         bogus_r = go(["__agentic_maker_probe_no_such_command__"], "bogus")
         help_text = (help_r["stdout"] + "\n" + help_r["stderr"]) if help_r else ""
         sub_rows = []
+        # what sounds destructive is judged on the top-level command list only: subcommand help pages quote words like "remove" in prose
+        top_help = help_text
+        listed_top = extract_commands(help_text, True)
+        danger = DESTRUCTIVE_WORD.search(" ".join("%s %s" % kv for kv in listed_top.items()) if listed_top else help_text)
+        if not subcommands and help_r is not None:
+            # flags usually live on the subcommands (clap, cobra): read --help of the listed ones that do not sound destructive
+            listed = extract_commands(help_r["stdout"] + "\n" + help_r["stderr"], True)
+            subcommands = [n for n, ln in listed.items() if n != "help" and not DESTRUCTIVE_WORD.search(n + " " + ln)][:8]
+            if subcommands:
+                outputs["auto_subcommand_help"] = subcommands
         for line in subcommands or []:
             r = go(shlex.split(line) + ["--help"], "sub")
             if r:
@@ -226,18 +236,19 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
                                      "A secret passed as an argument lands in shell history, process listings and the agent's transcript.",
                                      "read secrets from a file, stdin or an environment variable; document --token-file or --password-stdin",
                                      {"help_mentions": SECRET_FLAG.search(help_text).group(0)}, "cli/auth-and-secrets.md"))
-        if DESTRUCTIVE_WORD.search(help_text):
+        if danger:
+            unverified = "the destructive command's own --help is never run; pass --sub '<command>' to read it"
             if not any(b in help_text for b in BYPASS_FLAGS):
                 findings.append(_finding("destructive.no_bypass", "safety", "High", "fail",
                                          "A destructive command with no non-interactive switch either hangs the agent on a prompt or runs with no guard.",
                                          "add --yes/--force for the prompt and make the command fail with exit 2, naming the flag, when it cannot ask",
-                                         {"help_mentions": DESTRUCTIVE_WORD.search(help_text).group(0)}, "cli/non-interactive.md"))
+                                         {"help_mentions": danger.group(0), "unverified": unverified}, "cli/non-interactive.md"))
             if "--dry-run" not in help_text:
                 findings.append(_finding("destructive.no_dry_run", "safety", "Medium", "fail", "The agent cannot preview a destructive change before making it.",
-                                         "add --dry-run that prints the plan and changes nothing", {"help_mentions": DESTRUCTIVE_WORD.search(help_text).group(0)}, "cli/dry-run.md"))
-        sug = suggest_safe(help_text) if help_text else {"suggested_safe": [], "read_commands_needing_arguments": []}
+                                         "add --dry-run that prints the plan and changes nothing", {"help_mentions": danger.group(0), "unverified": unverified}, "cli/dry-run.md"))
+        sug = suggest_safe(top_help) if top_help else {"suggested_safe": [], "read_commands_needing_arguments": []}
         return {"binary": path, "kind": kind, "help_excerpt": "\n".join(help_text.splitlines()[:60]), "executed": executed, **sug, "not_executed": not_executed + (
-                    ["destructive-looking commands in the help are never run: only declared safe commands are"] if DESTRUCTIVE_WORD.search(help_text) else []),
+                    ["destructive-looking commands in the help are never run: only declared safe commands are"] if danger else []),
                 "findings": findings, "subcommands": sub_rows, "documentation": outputs}
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -272,6 +283,17 @@ def extract_commands(t, with_lines=False):
         m = re.match(r"^\s+([A-Za-z0-9][A-Za-z0-9:_-]+)([\s,]|$)", ln)
         if m:
             out[m.group(1)] = ln.strip()
+    if not out:      # argparse lists subcommands under "positional arguments:" indented four spaces; wrapped descriptions are indented further
+        inside = False
+        for ln in t.splitlines():
+            if re.match(r"^positional arguments:\s*$", ln):
+                inside = True
+                continue
+            if inside and ln and not ln[0].isspace():
+                inside = False
+            m = re.match(r"^ {4}([A-Za-z0-9][A-Za-z0-9:_-]+)(\s{2,}|$)", ln) if inside else None
+            if m:
+                out[m.group(1)] = ln.strip()
     return out if with_lines else sorted(out)
 
 

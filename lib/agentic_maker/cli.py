@@ -28,6 +28,15 @@ output: one JSON envelope on stdout when piped or with --json (--human forces te
         diagnostics on stderr; never prompts. Global flags: --json --human --root DIR"""
 
 
+TOP_EXAMPLES = """examples:
+  agentic-maker doctor                          what works here, what degrades
+  agentic-maker detect .                        find the CLIs, MCP servers and skills in a project
+  agentic-maker probe cli ./bin/mytool          run a CLI the way an agent would and report
+  agentic-maker probe mcp "python3 /abs/server.py"        list tools, measure the budget
+  agentic-maker run .agentic-maker/scenarios/x.md --dry-run   plan a fresh-agent run before spending
+  agentic-maker <command> --help                options, example and exit codes of one command"""
+
+
 class _Parser(argparse.ArgumentParser):
     def error(self, message):
         raise CliError("usage", "bad_arguments", message, suggestion="%s --help" % self.prog)
@@ -40,8 +49,11 @@ def _p(sub, name, help_, epilog=""):
 
 def build():
     top = _Parser(prog="agentic-maker", description="Design agent-facing tools and test them by derailment.",
-                  epilog=EXIT_TABLE, formatter_class=argparse.RawDescriptionHelpFormatter)
+                  epilog=TOP_EXAMPLES + "\n\n" + EXIT_TABLE, formatter_class=argparse.RawDescriptionHelpFormatter)
     top.add_argument("--version", action="version", version="agentic-maker " + __version__)
+    top.add_argument("--json", action="store_true", help="force the JSON envelope (default when stdout is not a terminal)")
+    top.add_argument("--human", action="store_true", help="force readable text")
+    top.add_argument("--root", metavar="DIR", help="project root (default: the nearest directory with .agentic-maker, .git or .claude-plugin)")
     sub = top.add_subparsers(dest="cmd", metavar="<command>", parser_class=_Parser)
 
     _p(sub, "doctor", "Report what is installed, what works and what degrades. Read-only; never launches agy.",
@@ -74,7 +86,8 @@ def build():
     n.add_argument("source", help="a take directory, or a stream-json / session JSONL file")
     n.add_argument("--out", help="output directory (default: the take directory, or next to the file)")
 
-    pr = _p(sub, "probe", "Black-box audit of a surface: run it the way an agent would and report what comes back.")
+    pr = _p(sub, "probe", "Black-box audit of a surface: run it the way an agent would and report what comes back.",
+            "examples:\n  agentic-maker probe cli ./target/debug/mycli\n  agentic-maker probe mcp \"python3 /abs/server.py\"\n  agentic-maker probe cli-diff help-v1.txt help-v2.txt")
     psub = pr.add_subparsers(dest="what", metavar="<surface>", parser_class=_Parser)
     pc = _p(psub, "cli", "Audit a CLI: help, version, an invalid command, JSON purity, exit codes, hangs, secrets, destructive commands. "
             "Runs only --help, --version, one invalid command and the commands you declare safe; each in an empty temp dir, stdin closed, with a timeout.",
@@ -97,7 +110,7 @@ def build():
     pm.add_argument("--call", action="append", default=[], metavar="NAME=JSON", help="call this tool with these arguments (declare read-only tools only); repeatable")
     pm.add_argument("--server", help="server name when the target is an .mcp.json with several")
     pm.add_argument("--cwd", help="working directory for a stdio server (default: an empty temp dir)")
-    pm.add_argument("--env", action="append", default=[], metavar="K=V", help="environment variable for a stdio server; repeatable")
+    pm.add_argument("--env", action="append", default=[], metavar="NAME[=V]", help="environment variable for a stdio server; repeatable. NAME alone passes on your own value, so a secret never sits on the command line (an .mcp.json target also carries its own env)")
     pm.add_argument("--timeout", type=int, default=20, help="seconds per request (default 20)")
     pm.add_argument("--description-chars", type=int, default=400, help="flag descriptions over N characters (default 400)")
     pm.add_argument("--schema-chars", type=int, default=2000, help="flag input schemas over N characters (default 2000)")
@@ -117,9 +130,10 @@ def build():
     sc.add_argument("kind", choices=["skill", "plugin", "mcp", "cli"])
     sc.add_argument("path", nargs="?", default=".")
 
-    c = _p(sub, "check", "Deterministic gates: receipts, findings, diff, nice.")
+    c = _p(sub, "check", "Deterministic gates: receipts, findings, diff, nice.",
+           "examples:\n  agentic-maker check receipts .agentic-maker/runs/<run>/<scenario>/01\n  agentic-maker check findings f1.json --trace <take>/trace.norm.jsonl")
     csub = c.add_subparsers(dest="what", metavar="<gate>", parser_class=_Parser)
-    cr = _p(csub, "receipts", "Did the run leave the world as the scenario's Receipts say? (anti-self-report)",
+    cr = _p(csub, "receipts", "Did the run leave the world as the scenario's Receipts say? (anti-self-report). Receipts of kind `cmd` run through /bin/sh in the workspace: read the scenario's Receipts before checking one you did not write.",
             "example:\n  agentic-maker check receipts .agentic-maker/runs/<run>/<scenario>/01")
     cr.add_argument("take_dir")
     cr.add_argument("--workspace", help="check this directory instead of the recorded workspace")
@@ -139,10 +153,12 @@ def build():
     cp.add_argument("--findings", required=True)
     cp.add_argument("--trace", required=True, help="the new take's trace.norm.jsonl")
     cp.add_argument("--finding", nargs="*", help="only these ids")
-    cn = _p(csub, "nice", "Did an edit remove text that a [NICE] behaviour depended on?")
+    cn = _p(csub, "nice", "Did an edit delete text that a [NICE] behaviour depended on?",
+            "example:\n  agentic-maker check nice --findings f1.json")
     cn.add_argument("--findings", required=True)
 
-    lg = _p(sub, "ledger", "The derail run ledger: state that survives compaction, and the Stop gate.")
+    lg = _p(sub, "ledger", "The derail run ledger: state that survives compaction, and the Stop gate.",
+            "examples:\n  agentic-maker ledger init --session \"$CLAUDE_SESSION_ID\" --target skills/my-skill\n  agentic-maker ledger status --session \"$CLAUDE_SESSION_ID\"")
     lsub = lg.add_subparsers(dest="what", metavar="<action>", parser_class=_Parser)
     li = _p(lsub, "init", "Open a ledger for this orchestrator session.",
             "example:\n  agentic-maker ledger init --session \"$CLAUDE_SESSION_ID\" --target skills/my-skill")
@@ -153,29 +169,35 @@ def build():
     li.add_argument("--rounds", type=int, default=5)
     li.add_argument("--ttl-hours", type=float, default=6.0)
     li.add_argument("--force", action="store_true")
-    ls = _p(lsub, "status", "Show the ledger.")
+    ls = _p(lsub, "status", "Show the ledger.", "example:\n  agentic-maker ledger status --session \"$CLAUDE_SESSION_ID\"")
     ls.add_argument("--session")
     ls.add_argument("--run-id")
-    lt = _p(lsub, "trace", "Record a completed take (done automatically by `run --session`).")
+    lt = _p(lsub, "trace", "Record a completed take (done automatically by `run --session`).",
+            "example:\n  agentic-maker ledger trace .agentic-maker/runs/<run>/<scenario>/01 --session \"$CLAUDE_SESSION_ID\"")
     lt.add_argument("take_dir")
     lt.add_argument("--session", required=True)
-    lf = _p(lsub, "fix", "Mark verified findings as being fixed. Refuses ids that did not verify.")
+    lf = _p(lsub, "fix", "Mark verified findings as being fixed. Refuses ids that did not verify.",
+            "example:\n  agentic-maker ledger fix F1 F2 --session \"$CLAUDE_SESSION_ID\" --findings f1.json --trace <take>/trace.norm.jsonl")
     lf.add_argument("ids", nargs="+")
     lf.add_argument("--session", required=True)
     lf.add_argument("--findings", required=True)
     lf.add_argument("--trace", required=True)
-    lss = _p(lsub, "set-status", "Set framing|running|reading|fixing|awaiting_user (awaiting_user lets the Stop gate pass).")
+    lss = _p(lsub, "set-status", "Set framing|running|reading|fixing|awaiting_user (awaiting_user lets the Stop gate pass).",
+             "example:\n  agentic-maker ledger set-status awaiting_user --session \"$CLAUDE_SESSION_ID\" --reason \"asked the user which scenario\"")
     lss.add_argument("status")
     lss.add_argument("--session", required=True)
     lss.add_argument("--reason")
-    la = _p(lsub, "abandon", "Stop the loop; the Stop gate passes from now on.")
+    la = _p(lsub, "abandon", "Stop the loop; the Stop gate passes from now on.",
+            "example:\n  agentic-maker ledger abandon --session \"$CLAUDE_SESSION_ID\" --reason \"the user stopped the loop\"")
     la.add_argument("--session", required=True)
     la.add_argument("--reason", required=True)
-    lc = _p(lsub, "close", "Close the loop with an honest outcome.")
+    lc = _p(lsub, "close", "Close the loop with an honest outcome.",
+            "example:\n  agentic-maker ledger close --session \"$CLAUDE_SESSION_ID\" --outcome unverified --reason \"the rerun was not possible\"")
     lc.add_argument("--session", required=True)
     lc.add_argument("--outcome", choices=["clean", "open", "unverified"], required=True)
     lc.add_argument("--reason", required=True)
-    _p(lsub, "gate", "Stop-hook entry point: reads the hook JSON on stdin, prints a block decision or nothing. Always exits 0.")
+    _p(lsub, "gate", "Stop-hook entry point: reads the hook JSON on stdin (waits at most 2 s for it), prints a block decision or nothing. Always exits 0.",
+       "example:\n  echo '{\"session_id\": \"x\"}' | agentic-maker ledger gate")
     return top
 
 
@@ -228,6 +250,9 @@ def dispatch(args, root, out):
         a = {"run_id": args.run_id, "dry_run": args.dry_run, "from_file": args.from_file, "workspace": args.workspace,
              "self_annotate": args.self_annotate, "workspace_dir": args.workspace_dir}
         if args.prepare:
+            if args.dry_run:
+                raise CliError("usage", "prepare_has_no_dry_run", "--prepare writes a scratch workspace and a take directory, so --dry-run cannot preview it",
+                               suggestion="agentic-maker run %s --dry-run  (the plan and cost ceiling), then --prepare without --dry-run" % args.scenario)
             res, warns = runner_mod.prepare_live(root, sc, a)
             return out.ok(res, [{"command": "herdr tab create --cwd %s --label derail --no-focus" % res["workspace"], "why": "then follow skills/derail/references/runners/herdr.md; one herdr command per reply"}], json.dumps(res, indent=2), warnings=warns)
         if runner == "headless":
@@ -245,7 +270,7 @@ def dispatch(args, root, out):
             except CliError as e:
                 warns = warns + ["not recorded in a ledger: " + e.message]
         nxt = [{"command": "agentic-maker check receipts %s" % res["take_dir"], "why": "what the run left on disk (the agent's own report is only a claim)"},
-               {"command": "trace-reader on %s" % res["trace_md"], "why": "give the reader trace.md plus receipts.json; it returns findings as JSON"}]
+               {"delegate": "trace-reader", "input": res["trace_md"], "why": "give the reader trace.md plus receipts.json; it returns findings as JSON"}]
         human = "%s: %s, %d events, %d tool calls (%d errors), $%s, isolated=%s\n  trace: %s" % (
             res["run_id"], res["status"], res["events"], res["tool_calls"], res["tool_errors"], res.get("cost_usd", "-"), res.get("isolated"), res["trace_md"])
         if code == 8:
@@ -270,7 +295,7 @@ def dispatch(args, root, out):
         warns = []
         if stats["unparsed"] or stats["unknown"]:
             warns.append("unparsed lines: %d, unknown event types: %s" % (stats["unparsed"], json.dumps(stats["unknown"])))
-        return out.ok(res, [{"command": "trace-reader on %s" % md, "why": "the reader cites events as [n]"}],
+        return out.ok(res, [{"delegate": "trace-reader", "input": md, "why": "the reader cites events as [n]"}],
                       "%d events -> %s" % (stats["events"], md), warnings=warns)
 
     if cmd == "probe":
@@ -287,9 +312,15 @@ def dispatch(args, root, out):
         res = detect_mod.detect(os.path.abspath(base), rules, kinds, evidence=(5 if cmd == "scan" else 2), only=only)
         if cmd == "scan" and args.kind == "mcp":
             res["mcp"] = detect_mod.mcp_signals(os.path.abspath(base), only=only)
+        detect_mod.run_hints(res["root"], res["candidates"])
         nxt = []
         kinds_found = set(res["by_kind"])
-        if "cli" in kinds_found:
+        runs = [c["run"] for c in res["candidates"] if c.get("run")]
+        for r in runs[:2]:
+            if r["build"] and not r["built"]:
+                nxt.append({"command": (r["build"] if r["in"] == "." else "cd %s && %s" % (r["in"], r["build"])), "why": "the CLI is not built yet; the probe needs the binary path, not the crate name"})
+            nxt.append({"command": "agentic-maker probe cli %s" % r["binary"], "why": "audit this CLI by running it the way an agent would"})
+        if "cli" in kinds_found and not runs:
             nxt.append({"command": "agentic-maker probe cli <binary> --safe-cmds <file>", "why": "audit a CLI candidate by running it"})
         if "mcp" in kinds_found:
             nxt.append({"command": "agentic-maker probe mcp <command or url> --budget", "why": "measure a real MCP server's tools"})
@@ -348,9 +379,12 @@ def dispatch_probe(args, root, out):
     if w == "mcp":
         env_pairs = {}
         for kv in args.env:
-            if "=" not in kv:
-                raise CliError("usage", "bad_env", "--env expects K=V, got %r" % kv)
-            k, v = kv.split("=", 1)
+            k, _, v = kv.partition("=")
+            if not _:
+                if k not in os.environ:
+                    raise CliError("not_found", "env_not_set", "--env %s: that variable is not set in your environment" % k,
+                                   suggestion="export %s first, or pass %s=value (a secret on the command line lands in shell history)" % (k, k))
+                v = os.environ[k]
             env_pairs[k] = v
         target = args.target
         if not re.match(r"^https?://", target) and os.path.exists(os.path.join(root, target)) and target.endswith(".json"):
@@ -454,10 +488,30 @@ def dispatch_ledger(args, root, out):
     raise CliError("usage", "no_action", "choose an action", suggestion="agentic-maker ledger --help")
 
 
+def _read_stdin(deadline_s):
+    """The hook payload, read until EOF or until nothing arrives for deadline_s seconds (a caller with an open, silent pipe must not hang us)."""
+    if sys.stdin is None or sys.stdin.isatty():
+        return ""
+    import select
+    fd, chunks = sys.stdin.fileno(), []
+    while True:
+        try:
+            ready = select.select([fd], [], [], deadline_s)[0]
+        except (OSError, ValueError):
+            break
+        if not ready:
+            break
+        data = os.read(fd, 65536)
+        if not data:
+            break
+        chunks.append(data)
+    return b"".join(chunks).decode("utf-8", "replace")
+
+
 def main(argv):
     argv, fj, fh, root_arg = _split_globals(list(argv))
-    if argv[:2] == ["ledger", "gate"]:
-        code, text = ledger_mod.gate(sys.stdin.read() if not sys.stdin.isatty() else "")
+    if argv[:2] == ["ledger", "gate"] and not {"-h", "--help"} & set(argv):
+        code, text = ledger_mod.gate(_read_stdin(2.0))
         if text:
             sys.stdout.write(text + "\n")
         return code  # always 0: a hook must never trap the agent
@@ -466,8 +520,10 @@ def main(argv):
         root = project_root(root_arg)
         args = build().parse_args(argv)
         if not args.cmd:
-            build().print_help()
-            return 0
+            if sys.stdout.isatty() and not fj:
+                build().print_help()
+                return 0
+            raise CliError("usage", "no_command", "choose a command", suggestion="agentic-maker --help")
         return dispatch(args, root, out)
     except CliError as e:
         return out.fail(e)

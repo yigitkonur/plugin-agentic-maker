@@ -33,6 +33,7 @@ DEFAULT_ALLOWED = {
     "mcp": ["Read", "Glob", "Grep"],
 }
 STATUS_BY_SUBTYPE = {"success": "completed", "error_max_turns": "max_turns", "error_max_budget_usd": "budget"}
+WORKSPACE_MARK = ".am-workspace"
 PROMPT_INDEX = 2  # position of the prompt in the command list
 SELF_ANNOTATE = """
 
@@ -362,15 +363,27 @@ def prepare_live(root, sc, args):
     take = next_take_dir(root, run_id, meta["name"])
     cmd, exposure, warnings, path_dirs, toolset = plan(root, sc, args, take)
     if args.get("workspace_dir"):
-        # a stable directory: the trust dialog is answered once, not once per round. It is emptied and reseeded every time.
+        # a stable directory: the trust dialog is answered once, not once per round. It is emptied and reseeded every time,
+        # so it must be new, empty, or one this command made before (the marker); never a directory that holds anything else.
         ws = os.path.realpath(_abs(root, args["workspace_dir"]))
-        if ws in ("/", os.path.expanduser("~"), os.path.realpath(root)) or len(ws) < 12:
-            raise CliError("validation", "workspace_dir_unsafe", "refusing to empty %s" % ws, suggestion="pass a dedicated scratch directory")
-        shutil.rmtree(ws, ignore_errors=True)
+        home, proj = os.path.realpath(os.path.expanduser("~")), os.path.realpath(root)
+        contains = lambda inner: inner == ws or inner.startswith(ws.rstrip(os.sep) + os.sep)
+        if contains(home) or contains(proj) or len(ws) < 12:
+            raise CliError("validation", "workspace_dir_unsafe", "refusing to empty %s: it holds your home directory or this project" % ws,
+                           suggestion="pass a dedicated scratch directory that does not exist yet")
+        if os.path.exists(ws):
+            held = os.listdir(ws) if os.path.isdir(ws) else ["(a file)"]
+            if held and WORKSPACE_MARK not in held:
+                raise CliError("conflict", "workspace_dir_not_ours", "%s is not empty and was not made by `run --prepare`; it would be emptied" % ws,
+                               suggestion="pass a directory that does not exist yet, or an empty one")
+            shutil.rmtree(ws)
         os.makedirs(ws)
     else:
         ws = os.path.realpath(tempfile.mkdtemp(prefix="am-ws-"))
     manifest = seed_workspace(root, sc, ws)
+    if args.get("workspace_dir"):
+        with open(os.path.join(ws, WORKSPACE_MARK), "w") as f:
+            f.write("made by agentic-maker run --prepare; emptied and reseeded on every --prepare\n")
     if path_dirs:
         bindir = os.path.join(ws, ".am-bin")
         os.makedirs(bindir)

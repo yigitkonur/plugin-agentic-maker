@@ -81,7 +81,8 @@ class _Stdio(object):
                 break
             if msg is None:
                 raise CliError("dependency_failed", "server_exited", "the server exited before answering %s" % method,
-                               details={"stderr": self.errtxt[-5:], "stdout_noise": self.noise[:3]})
+                               suggestion="read details.stderr: a missing module, secret or wrong working directory is the usual cause; fix it, then run the probe again",
+                               details={"stderr": self.errtxt[-5:], "stdout_noise": self.noise[:3]}, retryable=False)
             if msg.get("method") and msg.get("id") is not None:      # a request from the server: refuse politely, never hang
                 self.send({"jsonrpc": "2.0", "id": msg["id"], "error": {"code": -32601, "message": "client supports no server requests"}})
                 continue
@@ -201,7 +202,7 @@ def analyze(tools, instructions, thresholds):
     for i in range(len(descs)):
         for j in range(i + 1, len(descs)):
             a, b = descs[i], descs[j]
-            if a[1] and b[1] and len(a[1]) > 12 and (a[1] == b[1] or difflib.SequenceMatcher(None, a[1], b[1]).ratio() > 0.9):
+            if a[1] and b[1] and (a[1] == b[1] or (len(a[1]) > 12 and difflib.SequenceMatcher(None, a[1], b[1]).ratio() > 0.9)):
                 parent[find(a[0])] = find(b[0])
     clusters = {}
     for nm, _ in descs:
@@ -237,6 +238,8 @@ def analyze(tools, instructions, thresholds):
                 findings.append(_f("description.long.%s" % name, "budget", "Medium", "Descriptions above about 200 tokens are paid for on every turn and bury the point.", "target about 100 tokens; move long examples into parameter descriptions", {"tool": name, "chars": d_chars}, "mcp/descriptions-structure-and-length.md"))
             elif d_chars > thresholds["description_chars"]:
                 findings.append(_f("description.long.%s" % name, "budget", "Low", "Over the description-length cue.", "shorten", {"tool": name, "chars": d_chars}, "mcp/descriptions-structure-and-length.md"))
+            if d_chars < 25:
+                findings.append(_f("description.thin.%s" % name, "discovery", "Medium", "A description this short cannot say what the tool does or when to pick it over its neighbours.", "write one sentence: Verb + Resource, then when to use it and what it returns", {"tool": name, "chars": d_chars, "description": desc}, "mcp/descriptions-structure-and-length.md"))
             first = re.findall(r"[A-Za-z]+", desc)[:5]
             if first and first[0].lower() not in VERBS and not any(w.lower() in VERBS for w in first[:3]):
                 findings.append(_f("description.verb.%s" % name, "discovery", "Low", "Descriptions that open with Verb + Resource are matched to the task more reliably.", "start with the action", {"tool": name, "starts": " ".join(first)}, "mcp/descriptions-structure-and-length.md"))
@@ -357,6 +360,9 @@ def probe(target, thresholds=None, calls=None, timeout=20, cwd=None, env_pairs=N
                 findings.append(_f("response.big.%s" % nm, "budget", "High" if c["response_chars"] > 4 * th["response_chars"] else "Medium",
                                    "A response this large crowds out the task (O8) and costs tokens on every call.", "cap and paginate; add a concise mode; signal truncation",
                                    {"tool": nm, "chars": c["response_chars"], "est_tokens": (c["response_chars"] + 3) // 4}, "mcp/budget-response-size.md"))
+            if c["is_error"] and not re.search(r"expected|must |should|try |valid|use |missing|required|not found|one of|call |no such|unknown", text, re.I):
+                findings.append(_f("response.error_does_not_teach.%s" % nm, "errors", "Medium", "An error that names no field, no expected value and no next call leaves the agent to repeat the same call (C5).",
+                                   "say which argument was wrong, what was expected and which call to make next", {"tool": nm, "text_head": text[:100]}, "mcp/errors-framing-and-recovery.md"))
             if not c["is_error"] and re.match(r"^\s*(error|failed|failure|exception)\b", text, re.I):
                 findings.append(_f("response.error_as_success.%s" % nm, "errors", "High", "A failure reported with isError false reads as success; the agent moves on with nothing done.",
                                    "set isError: true and make the message say what to change", {"tool": nm, "text_head": text[:100]}, "mcp/errors-protocol-vs-tool.md"))

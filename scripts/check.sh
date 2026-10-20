@@ -68,6 +68,36 @@ if command -v claude >/dev/null 2>&1; then
   out=$(claude plugin validate . 2>&1); echo "$out" | grep -q 'Validation passed' || { echo "$out"; bad "claude plugin validate"; }
 else echo "  claude not found: skipped"; fi
 
+step "safety: run --prepare never empties a directory it did not make; the Stop gate never hangs on a silent pipe"
+sd=$(mktemp -d); mkdir "$sd/precious"; echo keep > "$sd/precious/important.txt"
+python3 -I lib/agentic_maker/__main__.py --root fixtures/skill-project run release-notes --prepare --workspace-dir "$sd/precious" >/dev/null 2>&1; rc=$?
+[ "$rc" = 5 ] && [ -f "$sd/precious/important.txt" ] || bad "--prepare touched a directory it did not make (exit $rc)"
+python3 -I lib/agentic_maker/__main__.py --root fixtures/skill-project run release-notes --prepare --dry-run >/dev/null 2>&1; [ "$?" = 2 ] || bad "--prepare --dry-run must be a usage error"
+rm -rf "$sd" fixtures/skill-project/.agentic-maker/runs fixtures/skill-project/.agentic-maker/active
+python3 - <<'PY' || bad "ledger gate blocked on an open, silent stdin"
+import subprocess, sys, time
+p = subprocess.Popen([sys.executable, "-I", "lib/agentic_maker/__main__.py", "ledger", "gate"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+try:
+    p.wait(timeout=8)
+except subprocess.TimeoutExpired:
+    p.kill(); sys.exit(1)
+PY
+
+step "eval-emit: a scenario becomes a claude plugin eval case (no model)"
+ed=$(mktemp -d); trap 'rm -rf "$ed"' EXIT
+python3 -I lib/agentic_maker/__main__.py --root fixtures/skill-project eval-emit release-notes --out "$ed" --json >/dev/null || bad "eval-emit failed"
+[ -n "$(ls -A "$ed" 2>/dev/null)" ] || bad "eval-emit wrote nothing"
+
+step "footprint: always-on cost of an installed copy (limit 400 tokens)"
+if command -v claude >/dev/null 2>&1; then
+  cfg=$(mktemp -d); here=$(pwd)
+  det=$(cd "$cfg" && CLAUDE_CONFIG_DIR="$cfg" claude plugin marketplace add "$here" >/dev/null 2>&1 && CLAUDE_CONFIG_DIR="$cfg" claude plugin install agentic-maker@plugin-agentic-maker >/dev/null 2>&1 && CLAUDE_CONFIG_DIR="$cfg" claude plugin details agentic-maker 2>&1)
+  rm -rf "$cfg"
+  tok=$(printf '%s\n' "$det" | sed -n 's/.*Always-on:[^0-9]*\([0-9.]*\)\(k\)\{0,1\} *tok.*/\1\2/p' | head -1)
+  echo "  always-on: ${tok:-unknown} tok"
+  case "$tok" in ""|*k) bad "footprint unreadable or above 1k" ;; *) [ "${tok%.*}" -le 400 ] || bad "always-on footprint above 400 tokens" ;; esac
+else echo "  claude not found: skipped"; fi
+
 step "hygiene: no personal path, email or token anywhere in the tree"
 # scan what git would publish (tracked + untracked, minus ignored); fall back to the whole tree outside git
 if git rev-parse --git-dir >/dev/null 2>&1; then files=$(git ls-files -co --exclude-standard); else files=$(find . -path ./.git -prune -o -type f -print); fi

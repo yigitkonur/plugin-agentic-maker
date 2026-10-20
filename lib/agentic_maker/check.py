@@ -56,7 +56,8 @@ def _walk_files(ws):
     for dp, dns, fns in os.walk(ws):
         dns[:] = [d for d in dns if d != ".am-bin"]
         for fn in fns:
-            out.append(os.path.relpath(os.path.join(dp, fn), ws))
+            if fn != ".am-workspace":
+                out.append(os.path.relpath(os.path.join(dp, fn), ws))
     return out
 
 
