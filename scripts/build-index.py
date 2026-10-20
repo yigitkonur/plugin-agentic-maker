@@ -9,7 +9,7 @@ import re
 import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "skills", "agent-interface-design", "references")
-GROUPS = ["cli", "mcp", "decisions", "frameworks", "fresh"]
+GROUPS = ["cli", "mcp", "skill", "decisions", "frameworks", "fresh"]
 LIMIT = 7600
 
 

@@ -1,6 +1,6 @@
 ---
 name: derailment-method
-description: How to find out why an agent drifted, guessed or stalled while using a skill, CLI, script or MCP tool - read the whole execution, name the text that misled it, rewrite that text instead of adding rules. Use when diagnosing "why did my agent skip / guess / ignore this". Not for code review.
+description: How to find why an agent drifted while using a skill, CLI or tool: read the whole run, name the text that misled it, rewrite that text. Use when diagnosing "why did my agent skip / guess / ignore this". Not for code review.
 user-invocable: false
 ---
 

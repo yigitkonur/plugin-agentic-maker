@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Audit an agent-facing surface - a CLI, script, MCP server or skill - against the agent-interface contract, running read-only probes where it can. Produces a scored report and changes nothing. Started by the user.
+description: Audit a CLI, script, MCP server or skill for agent use with read-only probes. Reports; changes nothing. Started by you.
 disable-model-invocation: true
 argument-hint: "<CLI binary path | MCP command or config | skill directory>"
 context: fork

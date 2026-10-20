@@ -10,6 +10,7 @@ from agentic_maker import __version__
 from agentic_maker import check as check_mod
 from agentic_maker import detect as detect_mod
 from agentic_maker import doctor as doctor_mod
+from agentic_maker import evalemit as evalemit_mod
 from agentic_maker import probe_cli as probe_cli_mod
 from agentic_maker import probe_mcp as probe_mcp_mod
 from agentic_maker import ledger as ledger_mod
@@ -62,6 +63,11 @@ def build():
     r.add_argument("--workspace-dir", help="with --prepare: seed this dedicated scratch directory (emptied each time) instead of a new temp dir, so the trust dialog is answered once")
     r.add_argument("--self-annotate", action="store_true",
                    help="ask the worker to tag its own [STUCK]/[GUESSED]/[BROKE]/[NICE] moments (cheap, but biased: it changes what the worker does)")
+
+    ee = _p(sub, "eval-emit", "Write a scenario as a `claude plugin eval` case (trigger check, receipts as graders, fixtures as a scaffold script): derailment finds, the eval guards in CI.",
+            "example:\n  agentic-maker eval-emit release-notes --out evals\nthen: claude plugin eval <plugin dir> --scaffold --case release-notes --runs 1")
+    ee.add_argument("scenario", help="scenario file or name")
+    ee.add_argument("--out", default="evals", help="eval directory (default evals/, relative to the root)")
 
     n = _p(sub, "normalize", "Turn a record into trace.norm.jsonl and trace.md with [n] evidence references.",
            "example:\n  agentic-maker normalize .agentic-maker/runs/<run>/<scenario>/01")
@@ -246,6 +252,11 @@ def dispatch(args, root, out):
             return out.partial(res, "the run ended as %s, not completed; the trace was kept" % res["status"], nxt, human, warns)
         return out.ok(res, nxt, human, warnings=warns)
 
+    if cmd == "eval-emit":
+        sc = sc_mod.parse(_scenario_path(root, args.scenario))
+        res = evalemit_mod.emit(root, sc, args.out if os.path.isabs(args.out) else os.path.join(root, args.out))
+        return out.ok(res, [{"command": res["run_with"], "why": "run the emitted case (needs Claude Code 2.1.269 or later)"}],
+                      "wrote %s: %s" % (res["case_dir"], ", ".join(res["written"])), warnings=(res["warnings"] + (["not expressible as eval graders: %s" % "; ".join(res["receipts_not_expressible"])] if res["receipts_not_expressible"] else [])) or None)
     if cmd == "normalize":
         src = args.source if os.path.isabs(args.source) else os.path.join(root, args.source)
         if os.path.isdir(src):

@@ -1,6 +1,6 @@
 ---
 name: derail
-description: Test a skill, plugin, CLI or MCP tool by derailment - run fresh agents on realistic tasks, read the whole execution, fix the text that caused each drift, rerun. Started by the user because it spends model usage.
+description: Test a skill, plugin, CLI or MCP tool with fresh agents, read their runs, fix the text that caused each drift, rerun. Started by you; spends model usage.
 disable-model-invocation: true
 argument-hint: "<target path or scenario> [--rounds N] [--runner headless|existing] [--from <record>]"
 allowed-tools: Bash(agentic-maker *) Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker *)

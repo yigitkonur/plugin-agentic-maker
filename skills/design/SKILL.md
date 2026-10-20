@@ -1,6 +1,6 @@
 ---
 name: design
-description: Design an agent-facing surface from an idea - choose CLI, MCP server or skill, interview the user, sketch the tools and their contract before any code. Started by the user; asks questions, writes no code until the sketch is approved.
+description: Design an agent-facing CLI, MCP server or skill from an idea: choose the surface, interview, sketch before any code. Started by you.
 disable-model-invocation: true
 argument-hint: "<what the agent should be able to do>"
 allowed-tools: Bash(agentic-maker *) Read Grep Glob

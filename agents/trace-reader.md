@@ -1,6 +1,6 @@
 ---
 name: trace-reader
-description: Read-only reader of one agent execution trace. Use after a derailment run to find where the agent drifted and which text caused it; returns the findings as one JSON object. Not for code review or for editing anything.
+description: Read-only reader of one agent execution trace: finds where the agent drifted and which text caused it; returns JSON findings. Used by the derail loop; not for code review.
 tools: Read, Grep, Glob
 skills:
   - derailment-method

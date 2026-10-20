@@ -1,6 +1,6 @@
 ---
 name: agent-interface-design
-description: Guidance for building or reviewing anything an AI agent calls or reads - a CLI or script (JSON output, exit codes, --help, error messages), an MCP server or tool (descriptions, schemas, responses), or a skill. Use for "make it agent-friendly", "my agent keeps failing to parse / picks the wrong tool", tool descriptions, error messages. Not for human-facing UI.
+description: Guidance for building or reviewing what an AI agent calls or reads: a CLI or script (JSON output, exit codes, --help, errors), an MCP server or tool (descriptions, schemas), or a skill. Use for "make it agent-friendly" or "my agent keeps misparsing / picking the wrong tool". Not for human UI.
 ---
 
 # Agent-interface design
@@ -25,6 +25,7 @@ Answer them for the surface in front of you, cold. Detail and the CLI / MCP / sk
 
 | Situation | Read |
 |---|---|
+| Writing a skill or its description | [skill/descriptions-that-trigger.md](references/skill/descriptions-that-trigger.md), [skill/text-as-program.md](references/skill/text-as-program.md) |
 | Choosing CLI, MCP or a skill | [decisions/surface-choice.md](references/decisions/surface-choice.md) |
 | Designing or fixing a CLI | [cli/checks.md](references/cli/checks.md) (five checks, severity, finish criteria), [cli/repair-build-order.md](references/cli/repair-build-order.md), then [index-cli.md](references/index-cli.md) |
 | Output, errors, exit codes | [cli/envelope-and-errors.md](references/cli/envelope-and-errors.md), [cli/exit-codes.md](references/cli/exit-codes.md), [cli/streams-and-jsonl.md](references/cli/streams-and-jsonl.md) |
