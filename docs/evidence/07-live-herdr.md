@@ -31,6 +31,10 @@ The worker's brief was the scenario prompt and nothing else: no marker request, 
 
 Folded tool output ended with "… +12 lines (ctrl+o to expand)". After `ctrl+o` the footer read "Showing detailed transcript · ctrl+o to toggle · ctrl+e to show all  verbose"; a second `ctrl+o` returned to the normal footer. So it is a toggle; sending it blind to a view that is already expanded would collapse it. Because the structured transcript exists on disk, the loop did not need it.
 
+## Rerun after the self-audit fixes (same day)
+
+`run --prepare` was changed after the first round (a `--workspace-dir` must be new, empty or marked by an earlier `--prepare`; a marker file `.am-workspace` is written after seeding and ignored by the receipts). The live round was therefore repeated with `--prepare --workspace-dir <new directory>`: the same twelve-step sequence (tab, `agent start` -> `agent_not_ready` -> trust dialog -> `down`, `enter` -> `idle`, one `agent prompt --wait`, `done` at `completion_seq 524`), ingest of the transcript found by the session id (51 events, 10 tool calls), `check receipts` -> **11/11 passed**, and `herdr tab close` of only the tab this round made (the tab list afterwards has no `am-live` tab). This session's own pane was not prompted, keyed or closed. The trust dialog added one more scratch-folder entry to `~/.claude.json`.
+
 ## What was not done
 
 - **Codex worker, `Ctrl+O` in Codex:** not started. It would add a trust entry to `~/.codex/config.toml` and use Codex quota for a point (the key's meaning) that the transcript source makes unnecessary. A Codex **rollout adapter** exists, built from real rollout files read from disk (`~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`, codex-cli 0.163): 189 events and 13 tool calls from one real session, no unparsed lines. It is `documented only` as a live runner.

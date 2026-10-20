@@ -110,7 +110,25 @@ A first smoke (`/agentic-maker:design a command line tool that lets an AI agent 
 
 Second run: 6 reads (surface choice, interview, contract, CLI deliverables, companion routing, the dated MCP-vs-CLI file), $0.15, no denials. It chose a CLI with the condition "only if you are one person on your own machine", labelled each claim as documented fact, benchmark or practitioner report, flagged the dated figures ("6 months old, verify before citing"), and opened the interview with group 1 of 4 (intent, consumer, underlying service), promising no code before approval. The remaining groups need a person; they were not run.
 
-## 5. Footprint and `eval-emit`
+## 5. The final regression of the loop, with the final code
+
+After the last code change the whole `derail` loop was run once more on a fresh copy of the seeded skill from `docs/evidence/04-derail-loop.md` (`/agentic-maker:derail skills/manifest-synth --rounds 3`, one scenario, two takes a round, budget $3, clean-room recipe).
+
+| | Before the edit (round 1) | After the edit (round 2) |
+|---|---|---|
+| Receipts | take 1: 7/11, take 2: 10/11 | take 1: 11/11, take 2: 11/11 |
+| Skill used | 1 of 2 takes | 2 of 2 |
+| Ledger | closed `clean` after 2 of the 3 approved rounds; workers $0.14, whole session $1.64 | |
+
+The edit rewrote the jargon description into a user's words and replaced `reference/format.md` and the unanchored `scripts/group.py` by paths relative to the skill's base directory. The report names what it left open: one skill-trigger sample of two, two title predicates that cannot match a JSON-escaped argument (judged from the trace, not edited), a vague "keep each entry short" next to a 72-character rule it left alone for lack of evidence.
+
+The run found two more defects in the plugin's own text, both fixed:
+- **The reader's first output failed verification in both takes** ("none of 4 findings verified"): the reader's prompt pointed at `derailment-method/references/finding-schema.md`, a relative path it could not resolve, so it guessed the shape. The JSON skeleton and the allowed predicate types are now in `agents/trace-reader.md` itself. Reader-only check on a recorded trace: the first output has the right shape, and the checker verified the one finding whose quote was exact and rejected the two whose quotes were not (the gate doing its job). With the wrong project root the same file is rejected for a missing controlling file, which is why `check findings` resolves them against `--root`.
+- **The closing `git diff` was denied again**, this time as `git -C <dir> diff`. `allowed-tools` now covers both forms.
+
+Seen and left alone: the reader, under `--restricted`, tried to open the worker's output file in its temporary workspace, which is outside the directories the orchestrator was given; it fell back to `receipts.json`. This is a property of the clean-room recipe, not of the skill text.
+
+## 6. Footprint and `eval-emit`
 
 - `claude plugin details agentic-maker` on a temporary-config install of this repo: **Always-on ~309 tok** (design 40, derail 40, derailment-method 60, audit 40, agent-interface-design 80, trace-reader 50); on-invoke 540 to 2k. `scripts/check.sh` fails above 400.
 - `eval-emit` converts the fixture scenario into a `claude plugin eval` case and `check.sh` runs it on every change.
@@ -119,4 +137,4 @@ Second run: 6 reads (surface choice, interview, contract, CLI deliverables, comp
 
 - Every model run is one sample; the agent is not deterministic. The before/after of section 2 is two runs against three, not a rate.
 - The projects in section 3 are small and written for this check. They show that the detection, the probes and the loop work on three stacks and that the first breaks the plan predicted (a binary path that is not the crate name, a script that ignores its arguments, a server that needs its own virtualenv) are handled; they do not show recall on real-world tools.
-- `UNVERIFIED`: the rest of the `design` interview; the model audit after the last round of fixes; Windows.
+- `UNVERIFIED`: the rest of the `design` interview; the model-level self-audit after the last round of fixes; Windows.

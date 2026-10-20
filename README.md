@@ -53,13 +53,14 @@ Everything below was watched working on 2026-10-20 (Claude Code 2.1.302, herdr 0
 | Stop gate blocks a premature "fixed" | watched working in the real harness | [04](docs/evidence/04-derail-loop.md) |
 | `audit` of a CLI (`probe cli`) | watched working; fixture-tested recall 10/11 (old script: 5/11), clean twin silent | [05](docs/evidence/05-audit-cli.md) |
 | `audit` of an MCP server (`probe mcp`, stdio and HTTP) | watched working; budget equals a hand count | [06](docs/evidence/06-audit-mcp.md) |
-| Live herdr round with a Claude worker | watched working, one round | [07](docs/evidence/07-live-herdr.md) |
+| Live herdr round with a Claude worker | watched working, two rounds (the second after the safety fixes), receipts 11/11 both times | [07](docs/evidence/07-live-herdr.md) |
 | Ingest a Claude session transcript or `stream-json` | watched working | 04, 07 |
 | Ingest a Codex rollout | parser built from real rollout files; no live Codex worker run | [07](docs/evidence/07-live-herdr.md) |
 | agy | never launched (its command is an account-rotating wrapper); scrollback ingest only | [07](docs/evidence/07-live-herdr.md) |
+| The plugin audits itself; three other stacks (Rust CLI, Python MCP server on the real SDK, bash + skill repo) | watched: found and fixed a data-loss bug in its own CLI; the derail loop ran on the bash + skill repo (receipts 4/4 on the last three takes) | [08](docs/evidence/08-self-audit.md) |
 | `eval-emit` (scenario -> `claude plugin eval` case) | watched working on one case | [08](docs/evidence/08-self-audit.md) |
 | Authenticated MCP servers (OAuth) | not measured: reported as such, routed to `mcpc` / MCP Inspector | - |
-| `design` skill | loads and routes; the interview is interactive and was not run end to end | [08](docs/evidence/08-self-audit.md) |
+| `design` skill | watched: picks the surface with labelled evidence and opens the interview (group 1 of 4); the rest of the interview needs a person and was not run | [08](docs/evidence/08-self-audit.md) |
 | Windows | not tested (macOS/Linux/WSL intended) | - |
 
 ## What it replaces

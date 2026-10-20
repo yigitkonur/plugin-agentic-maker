@@ -39,4 +39,8 @@ The brief that spawned you lists absolute paths:
 
 ## Output
 
-Your final message is exactly one JSON object and nothing else - no code fence, no prose before or after - in the shape given in `derailment-method/references/finding-schema.md`: `{"findings": [...], "nice": [...], "dimensions_clear": [...]}`.
+Your final message is exactly one JSON object and nothing else - no code fence, no prose before or after - in this shape (every field of a finding is required; a script rejects a finding with a missing field, an unknown code or a quote that is not verbatim):
+
+{"findings": [{"id": "F1", "marker": "STUCK|BROKE|GUESSED|NICE", "severity": "P0|P1|P2", "root_code": "T1", "layer": "trigger|discovery|execution|recovery|completion", "trace_refs": [9], "quote": "text copied exactly from a cited event", "belief": "what the worker believed, one sentence", "belief_source": "observed|inferred", "controlling_text": {"file": "skills/x/SKILL.md", "lines": "3", "quote": "exact sentence, or ABSENT"}, "fix": {"kind": "rewrite|delete|inline-at-point-of-use|restructure|add-probe|add", "patch": "the replacement text, concretely"}, "rerun_predicate": {"type": "tool_used", "tool": "Skill"}, "confidence": "low|medium|high"}], "nice": [{"quote": "...", "trace_refs": [12], "controlling_text": {"file": "...", "quote": "..."}, "why": "what it prevented"}], "dimensions_clear": ["budget"]}
+
+`root_code` is a code from the preloaded `derailment-method` skill (S1-S5, M1-M7, O1-O8, C1-C5, T1-T3). `rerun_predicate.type` is `tool_used` (with `tool`), `reads_file` (with `path`), `order` (with `before`, `after`), `regex` or `not_regex` (with `pattern`), `exit_code` (with `command`, `equals`), or `judged` (with `criteria`).
