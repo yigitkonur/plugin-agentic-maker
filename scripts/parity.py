@@ -165,14 +165,25 @@ def main(argv=None):
     ap.add_argument("--dest", default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))), help="repo root")
     ap.add_argument("--soft", action="store_true", help="also write table-key and token survival reports")
     ap.add_argument("--no-write", action="store_true", help="do not write docs/parity/*.tsv")
+    ap.add_argument("--only", action="append", default=[], metavar="PREFIX", help="limit to source paths starting with PREFIX (repeatable); implies --no-write")
+    ap.add_argument("--list", action="store_true", help="print every unmapped heading key")
     args = ap.parse_args(argv)
 
     if not os.path.isdir(args.src):
         sys.stderr.write("source directory not found: %s\n" % args.src)
         return 2
     md, other = source_files(args.src)
+    if args.only:
+        args.no_write = True
+        md = [f for f in md if any(f.startswith(p) for p in args.only)]
+        other = [f for f in other if any(f.startswith(p) for p in args.only)]
     parity_dir = os.path.join(args.dest, "docs", "parity")
-    dropped = {r[0]: (r[1] if len(r) > 1 else "") for r in read_tsv(os.path.join(parity_dir, "dropped.tsv"))}
+    dropped = {}
+    if os.path.isdir(parity_dir):
+        for fn in sorted(os.listdir(parity_dir)):
+            if fn.startswith("dropped") and fn.endswith(".tsv"):
+                for r in read_tsv(os.path.join(parity_dir, fn)):
+                    dropped[r[0]] = r[1] if len(r) > 1 else ""
     scripts = {r[0]: r for r in read_tsv(os.path.join(parity_dir, "files.tsv"))}
     claims = collect_markers(args.dest)
     # headings the author clearly intended but a stray code fence in the source hides from a strict parse
@@ -199,8 +210,9 @@ def main(argv=None):
             else:
                 unmapped.append(full)
                 ledger.append((full, level, line, "UNMAPPED", "", ""))
-    dangling = sorted(k for k in claims if k not in all_keys)
-    dangling_dropped = sorted(k for k in dropped if k not in all_keys)
+    scope = lambda k: (not args.only) or any(k.startswith(p) for p in args.only)
+    dangling = sorted(k for k in claims if scope(k) and k not in all_keys)
+    dangling_dropped = sorted(k for k in dropped if scope(k) and k not in all_keys)
     unlisted_files = sorted(f for f in other if f not in scripts)
 
     if not args.no_write:
@@ -215,6 +227,9 @@ def main(argv=None):
     drop = sum(1 for r in ledger if r[3] == "dropped")
     print("source headings: %d | mapped: %d | dropped: %d | UNMAPPED: %d | dangling markers: %d | dangling drops: %d | non-md files without a row in files.tsv: %d"
           % (n, mapped, drop, len(unmapped), len(dangling), len(dangling_dropped), len(unlisted_files)))
+    if args.list:
+        for k in unmapped:
+            print("  UNMAPPED: %s" % k)
     for k in dangling[:20]:
         print("  dangling marker: %s  (%s)" % (k, ", ".join(claims[k][:2])))
     for k in bad_reasons[:20]:
