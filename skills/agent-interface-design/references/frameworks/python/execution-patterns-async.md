@@ -27,8 +27,8 @@ class GracefulShutdown:
 
     def _handle_signal(self, signum, frame):
         if self.shutting_down:
-            # Second signal - force exit
-            sys.exit(1)
+            # Second signal - force exit with the signal code (130 SIGINT, 143 SIGTERM), never 1
+            sys.exit(128 + signum)
 
         self.shutting_down = True
         print(f"\nReceived signal {signum}, shutting down gracefully...", file=sys.stderr)

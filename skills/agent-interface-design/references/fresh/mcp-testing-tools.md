@@ -75,7 +75,7 @@ Documentation: https://www.promptfoo.dev/docs/integrations/mcp/
 - Smaller models (Llama, Mistral) struggle with more than 10 tools.
 - A tweak that helps Claude can break Llama, so run evals in CI.
 
-> Reconciled: the sources gave a "more than 10 tools" report for small models here and the brief's tool-count cues (up to 20 comfortable, about 30 warning, 40 or more needs progressive discovery); this file keeps the 10-tool figure as a model-specific report only and `../mcp/ops-tool-selection-evals.md` states the general cues.
+> Reconciled: the sources gave a "more than 10 tools" report for small models here and the brief's tool-count cues (up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute)); this file keeps the 10-tool figure as a model-specific report only and `../mcp/ops-tool-selection-evals.md` states the general cues.
 
 ## Source threads
 

@@ -234,7 +234,17 @@ program
       circuitBreakerTimeout: parseInt(options.circuitBreakerTimeout),
     });
 
-    const result = await limiter.execute(() => api.sync());
-    console.log(JSON.stringify(result));
+    try {
+      const result = await limiter.execute(() => api.sync());
+      console.log(JSON.stringify(result));
+    } catch (err) {
+      // rate-limit exhaustion is the transient group: envelope on stdout, human line on stderr, exit 7
+      const e = err as Error;
+      console.error(e.message);
+      console.log(JSON.stringify({ ok: false, schema_version: '1.0', error: {
+        class: e instanceof CircuitOpenError ? 'dependency_failed' : 'rate_limit',
+        code: e.name, message: e.message, retryable: true } }));
+      process.exit(7);
+    }
   });
 ```

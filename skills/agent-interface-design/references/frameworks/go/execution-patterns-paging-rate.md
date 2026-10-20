@@ -58,7 +58,7 @@ func (s *Server) ListItems(ctx context.Context, opts PaginationOptions) (*Pagina
 
     var nextCursor string
     if hasMore && len(items) > 0 {
-        nextCursor = encodeCursor(items[len(items)-1])
+        nextCursor = encodeCursor(&items[len(items)-1])
     }
 
     return &PaginatedResponse[Item]{

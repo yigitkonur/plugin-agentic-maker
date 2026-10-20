@@ -2,7 +2,7 @@
 
 > Read when: you must decide whether an agent workflow should stay CLI-first, move to an MCP server, be covered by a skill, or split across surfaces.
 
-Dated benchmark numbers, community reports and doc links: `../fresh/mcp-vs-cli-decision-dated.md`. Evidence discussion: `mcp-vs-cli-evidence.md`. Optional companion skills for building or testing MCP servers: `companion-routing.md`. Use this file only after the CLI surface is fixed.
+Dated benchmark numbers, community reports and doc links: `../fresh/mcp-vs-cli-decision-dated.md`. Evidence discussion: `mcp-vs-cli-evidence.md`. Optional companion skills for building or testing MCP servers: `companion-routing.md`. This file makes the surface decision; for a CLI, `../cli/checks.md` applies next.
 
 <!-- src: audit-agentic-cli/references/mcp-vs-cli-decision.md#1. Recommended Default -->
 ## Recommended default
@@ -91,7 +91,7 @@ MCP is a poor fit when:
 <!-- src: audit-agentic-cli/references/mcp-vs-cli-decision.md#6. When A Hybrid Beats Either Extreme -->
 ## When a hybrid beats either extreme
 
-The highest-leverage pattern is often neither pure CLI nor pure MCP.
+Often neither pure CLI nor pure MCP is best.
 
 <!-- src: audit-agentic-cli/references/mcp-vs-cli-decision.md#6.1 MCP Control Plane, CLI Execution Plane -->
 ### MCP control plane, CLI execution plane
@@ -111,7 +111,7 @@ Use a skill when the missing piece is not runtime capability but judgment and wo
 - "For GitHub triage, prefer `gh --json` and summarize with `jq`."
 - "For deploy validation, run these four commands in order and stop on this exit code."
 
-That is cheaper and simpler than building an MCP server whose only job is to explain how to use an existing CLI.
+That beats an MCP server whose only job is to explain an existing CLI.
 
 <!-- src: audit-agentic-cli/references/mcp-vs-cli-decision.md#6.3 CLI First, MCP Fallback -->
 ### CLI first, MCP fallback

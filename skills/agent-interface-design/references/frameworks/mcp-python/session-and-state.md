@@ -9,6 +9,7 @@ Rules and tables: [ops-session-state.md](../../mcp/ops-session-state.md), [ops-s
 
 ```python
 import json
+from datetime import datetime
 from pathlib import Path
 
 SUCCESS_LOG = Path("./successful_calls.jsonl")

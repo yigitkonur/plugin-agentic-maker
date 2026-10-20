@@ -188,12 +188,12 @@ class RateLimiter:
 @click.option('--rate-limit', default='100/minute')
 @click.option('--retry-on-rate-limit', is_flag=True, default=True)
 @click.option('--max-retries', default=5)
-@click.option('--backoff-initial', default='1s')
-@click.option('--backoff-max', default='60s')
+@click.option('--backoff-initial', type=float, default=1.0, help='seconds')
+@click.option('--backoff-max', type=float, default=60.0, help='seconds')
 @click.option('--backoff-multiplier', default=2.0)
 @click.option('--respect-retry-after', is_flag=True, default=True)
 @click.option('--circuit-breaker-threshold', default=5)
-@click.option('--circuit-breaker-timeout', default='30s')
+@click.option('--circuit-breaker-timeout', type=float, default=30.0, help='seconds')
 def sync(rate_limit, **kwargs):
     options = RateLimitOptions(rate_limit=rate_limit, **kwargs)
     limiter = RateLimiter(options)
@@ -201,6 +201,13 @@ def sync(rate_limit, **kwargs):
     async def run():
         return await limiter.execute(api.sync)
 
-    result = asyncio.run(run())
+    try:
+        result = asyncio.run(run())
+    except (CircuitOpenError, MaxRetriesExceeded) as e:
+        # rate-limit exhaustion is the transient group: envelope on stdout, human line on stderr, exit 7
+        print(e, file=sys.stderr)
+        output_json({"ok": False, "schema_version": "1.0", "error": {
+            "class": "rate_limit", "code": type(e).__name__.upper(), "message": str(e), "retryable": True}})
+        sys.exit(7)
     output_json(result)
 ```

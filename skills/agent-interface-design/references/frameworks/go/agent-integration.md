@@ -199,8 +199,11 @@ func StreamTaskEvents(ctx context.Context, taskID string) (<-chan TaskEvent, <-c
 
 		if err := scanner.Err(); err != nil {
 			errs <- err
+			return
 		}
-		cmd.Wait()
+		if err := cmd.Wait(); err != nil && ctx.Err() == nil {
+			errs <- fmt.Errorf("mycli task follow: %w", err) // the CLI's own non-zero exit
+		}
 	}()
 
 	return events, errs
@@ -224,8 +227,14 @@ func RunTaskWithStreaming(ctx context.Context, promptFile string) error {
 	for {
 		select {
 		case event, ok := <-events:
-			if !ok {
-				return nil
+			if !ok { // the follower ended without a "complete" event: say why, never report success
+				if err := <-errs; err != nil { // nil on a clean close
+					return err
+				}
+				if ctx.Err() != nil {
+					return ctx.Err()
+				}
+				return fmt.Errorf("stream ended without a complete event")
 			}
 			switch event.Type {
 			case "approval":

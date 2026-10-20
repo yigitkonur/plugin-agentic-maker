@@ -108,7 +108,7 @@ def delete(non_interactive: bool, yes: bool, force: bool):
         if not confirm("This will delete all data. Continue?",
                       non_interactive=non_interactive, auto_yes=yes):
             click.echo("Aborted", err=True)
-            sys.exit(1)  # source value; unresolved (1 = crash): see ../../cli/non-interactive.md
+            sys.exit(2)  # confirmation not given: same code as the non-interactive refusal (../../cli/non-interactive.md)
 
     # Proceed with deletion
 ```

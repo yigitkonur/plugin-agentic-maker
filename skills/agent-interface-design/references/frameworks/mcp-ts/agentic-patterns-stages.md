@@ -102,7 +102,7 @@ server.tool("commit_changes", "Commit validated changes. Requires validation sta
   }
 
   const result = await commitChanges(session_id, dry_run);
-  sessions.set(session_id, "committed");
+  if (!dry_run) sessions.set(session_id, "committed"); // a dry run must not consume the stage
   return { content: [{ type: "text", text: `Changes committed. ${result.summary}` }] };
 });
 ```

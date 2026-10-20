@@ -17,6 +17,7 @@ def run_eval(task: dict, tools: list) -> dict:
     while True:
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
+            max_tokens=2048,
             system="You are testing MCP tools. Think step by step before each tool call.",
             tools=tools,
             messages=messages
@@ -31,15 +32,12 @@ def run_eval(task: dict, tools: list) -> dict:
             }
 
         # Process tool calls and continue the loop
-        for block in response.content:
-            if block.type == "tool_use":
-                result = execute_mcp_tool(block.name, block.input)
-                messages.append({"role": "assistant", "content": response.content})
-                messages.append({"role": "user", "content": [{
-                    "type": "tool_result",
-                    "tool_use_id": block.id,
-                    "content": result
-                }]})
+        # one assistant turn, then one user turn that answers every tool_use block in it
+        messages.append({"role": "assistant", "content": response.content})
+        results = [{"type": "tool_result", "tool_use_id": block.id,
+                    "content": execute_mcp_tool(block.name, block.input)}
+                   for block in response.content if block.type == "tool_use"]
+        messages.append({"role": "user", "content": results})
 ```
 
 <!-- src: audit-agentic-mcp/references/patterns/testing.md#3. Feed Evaluation Transcripts Back for Auto-Refactoring -->

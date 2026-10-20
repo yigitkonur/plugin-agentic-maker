@@ -8,7 +8,7 @@ Explanation and rules: ../../mcp/budget-tool-definitions.md and ../../mcp/budget
 
 ```python
 # Single gateway tool registered in the MCP server
-@server.tool()
+@mcp.tool()  # mcp = FastMCP(...)
 async def execute_code(code: str, language: str = "python") -> str:
     """
     Execute code in sandbox. Use list_servers(), list_tools(server),
@@ -20,6 +20,9 @@ async def execute_code(code: str, language: str = "python") -> str:
         "get_tool_schema": _get_schema_on_demand,  # full JSON schema on request
         "call_tool": _call_tool,
     }
+    # ILLUSTRATION ONLY: exec() is not a sandbox. It runs in this process with Python's builtins available,
+    # so model-supplied code can import modules and open files. Run it in a separate restricted process
+    # or container with no network and no file access, and only pass it the four functions above.
     exec(compile(code, "<sandbox>", "exec"), sandbox_globals)
     return sandbox_globals.get("__result__", "")
 
@@ -125,7 +128,7 @@ def run_cli_tool(cmd: list[str]) -> str:
     return clean_cli_output(combined)
 
 # Usage in an MCP tool handler
-@server.tool()
+@mcp.tool()  # mcp = FastMCP(...)
 async def git_log(n: int = 10) -> str:
     """Recent git log with stats."""
     return run_cli_tool(["git", "log", f"-{n}", "--stat", "--no-color"])

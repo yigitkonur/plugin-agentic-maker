@@ -53,7 +53,7 @@ Or flat fields with a `_source` suffix:
 }
 ```
 
-> Unresolved: the two shapes and their source labels (`flag`/`env`/`project`/`user`/`system`/`default` versus `environment_variable`/`config_file`) differ. Pick one shape and one label set per CLI and keep it stable; the per-value object with `source` and `sources_checked` carries more information.
+> Reconciled: the sources showed two shapes with different label sets. Use the per-value object (`value`, `source`, `sources_checked`) with the labels `flag`, `env`, `project`, `user`, `system`, `default`; it carries more information than a flat `*_source` field, and `config_file` / `environment_variable` map to `project`-`user`-`system` and `env`.
 
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#Profile Support | audit-agentic-cli/references/discovery-and-auth.md#Config File Example -->
 ## Profiles

@@ -14,7 +14,7 @@ Research and SEO workflows often need more than one search wave. Apply the steer
 | `prefetch` | Execute a bounded next wave and return both current and prefetched results | Read-only research loops with strong evals |
 | `closed-loop` | Continue until stop conditions fire | Only in secure, bounded, well-observed environments |
 
-> Unresolved: the mode table marks `none` as the default ("lowest surprise") and calls `suggest` the best default for agent use, while the operational rules say "Default to `suggest`". Both claims are kept; choose the flag default per CLI and document it.
+> Reconciled: the mode table calls `none` the default ("lowest surprise") and `suggest` the best choice for an agent, while the rules said "Default to `suggest`". The flag default is `none`; an agent caller opts in with `--continuation-mode suggest`.
 
 Example flags:
 
@@ -32,7 +32,8 @@ seo-research serp "technical seo agent workflows" --json --continuation-mode pre
     "seed_query": "technical seo agent workflows",
     "results": ["..."]
   },
-  "guidance": {
+  "_agent_guidance": {
+    "source": "seo-research",
     "recommended_queries": [
       {
         "query": "agentic cli seo workflow examples",
@@ -40,7 +41,7 @@ seo-research serp "technical seo agent workflows" --json --continuation-mode pre
       }
     ],
     "stop_conditions": [
-      "Stop after 8 total searches",
+      "Stop after 12 total searches",
       "Stop if two consecutive waves add no novel authoritative domains"
     ],
     "actions_taken": [
@@ -54,7 +55,7 @@ seo-research serp "technical seo agent workflows" --json --continuation-mode pre
 
 ## Operational rules
 
-- Default to `suggest`, not `closed-loop`.
+- When an agent opts in, choose `suggest` before `closed-loop`; the flag default stays `none`.
 - Cap waves, queries, time, and spend.
 - Keep continuation read-only unless the user explicitly asked for automation beyond planning.
 - Emit `actions_taken`, `budget_remaining`, and `stop_conditions` every time.

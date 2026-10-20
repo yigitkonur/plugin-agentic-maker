@@ -31,7 +31,7 @@ START: What needs to happen after the MCP audit or architecture sketch?
 |       schema inspection, grep, and post-fix verification.
 |
 +-- Is the real problem CLI agent-readiness?
-|   +-- YES --> audit-agentic-cli (if installed), or this plugin's CLI audit
+|   +-- YES --> /agentic-maker:audit on the CLI (judged against cli/checks.md)
 |       Use when stdout/stderr, JSON contracts, exit codes, non-interactive
 |       flags, or repairable CLI workflows are the core surface.
 |
@@ -59,7 +59,7 @@ START: What needs to happen after the MCP audit or architecture sketch?
 | `build-mcp-server-sdk-v1` | `@modelcontextprotocol/sdk` v1 single-package servers | v2 split-package imports |
 | `build-mcp-server-sdk-v2` | `@modelcontextprotocol/server` v2 split-package servers where alpha risk is accepted | Production-default raw SDK work when v2 is still alpha |
 | `test-by-mcpc-cli` | Running stdio/Streamable HTTP smoke checks and JSON-scripted validation | Static design review without a running server |
-| `audit-agentic-cli` | CLI command contracts and machine-readable execution surfaces | MCP protocol, schema, auth, or transport design |
+| `/agentic-maker:audit <cli>` | CLI command contracts and machine-readable execution surfaces | MCP protocol, schema, auth, or transport design |
 | No MCP / existing CLI | Mature CLI/SDK already exposes the workflow cleanly | Multi-user auth, approval, or typed tool discovery needs |
 | Agent skill | Runtime access is unnecessary; the agent needs workflow knowledge | Live external state, auth, or per-call data access |
 
@@ -71,7 +71,7 @@ When you choose a route, include one line in the audit or architecture output:
 `Companion route: <skill-or-path> because <reason>; validation: <MCP client smoke test | MCP Inspector | unit/integration test | manual check>.`
 
 <!-- src: audit-agentic-mcp/SKILL.md#Companion skills (route fixes here) -->
-## Companion skills (optional, if installed)
+## Companion skills (optional, if installed; the audit command is part of this plugin)
 
 | Skill | When to pick | Tradeoff |
 |---|---|---|
@@ -80,6 +80,6 @@ When you choose a route, include one line in the audit or architecture output:
 | `build-mcp-use-server` | New HTTP-first TypeScript server wanting `mcp-use/server` conventions, widgets/apps, OAuth helpers | Locks into `mcp-use/server` imports; less bare-metal control |
 | `convert-mcp-sdk-v1-to-v2` | Migrating existing SDK v1 code to v2 alpha | Targets the migration only |
 | `test-by-mcpc-cli` | Repeatable stdio/Streamable HTTP smoke checks, JSON scripting, post-edit verification | Requires the `mcpc` CLI locally (the source named version 0.2.x) |
-| `audit-agentic-cli` | The interface should stay CLI-first or the task is CLI agent-readiness, not MCP | CLI contract work, not MCP protocol work |
+| `/agentic-maker:audit <cli>` (this plugin) | The interface should stay CLI-first or the task is CLI agent-readiness, not MCP | CLI contract work, not MCP protocol work |
 
-Out-of-scope routes for an MCP audit: raw `@modelcontextprotocol/sdk` v1 code goes to `build-mcp-server-sdk-v1`; raw `@modelcontextprotocol/server` v2 alpha code to `build-mcp-server-sdk-v2`; `mcp-use/server` code to `build-mcp-use-server`; live CLI smoke-testing of an MCP server to `test-by-mcpc-cli`; CLI agent-readiness to `audit-agentic-cli`; SDK v1 to v2 migration to `convert-mcp-sdk-v1-to-v2`.
+Out-of-scope routes for an MCP audit: raw `@modelcontextprotocol/sdk` v1 code goes to `build-mcp-server-sdk-v1`; raw `@modelcontextprotocol/server` v2 alpha code to `build-mcp-server-sdk-v2`; `mcp-use/server` code to `build-mcp-use-server`; live CLI smoke-testing of an MCP server to `test-by-mcpc-cli`; CLI agent-readiness to `/agentic-maker:audit <cli>`; SDK v1 to v2 migration to `convert-mcp-sdk-v1-to-v2`.

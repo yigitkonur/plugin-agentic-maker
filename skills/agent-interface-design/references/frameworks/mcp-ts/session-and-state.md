@@ -17,7 +17,7 @@ const sessionPool = createPool({
     return session;
   },
   destroy: async (session) => await session.close(),
-}, { min: 2, max: 10, idleTimeoutMs: 60_000 });
+}, { min: 2, max: 10, idleTimeoutMillis: 60_000 });
 
 async function callTool(name: string, args: Record<string, unknown>) {
   const session = await sessionPool.acquire();

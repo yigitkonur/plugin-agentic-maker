@@ -30,15 +30,19 @@ Tool descriptions say what each tool does; `instructions` says how they fit toge
 <!-- src: audit-agentic-mcp/references/patterns/tool-descriptions.md#Pattern 10: Add Correct AND Incorrect Call Examples in Descriptions -->
 ## Show correct AND incorrect call examples
 
-Concrete examples, happy path and common mistake, measurably improve task completion. Keep to one correct example and one edge case or mistake; more bloats the prompt. Include one example response so the agent can plan downstream calls without a dummy request.
+Concrete examples, happy path and common mistake, measurably improve task completion. Put them in the **parameter descriptions** of the input schema, next to the value they explain, and keep the tool description itself at about 100 tokens (never above 200; `descriptions-structure-and-length.md`). Name the return shape in one clause of the description or in the output schema (`responses-formats-and-structured.md`); do not paste an example response into the description.
 
 ```json
 {"name": "search_orders",
- "description": "Search orders by customer, date range, or status. Returns max 50 results.\n\nExample — search by date range:\n{\"customer_id\": \"cust_123\", \"after\": \"2024-01-01\", \"before\": \"2024-03-01\"}\n\nExample — common mistake (wrong date format):\n{\"customer_id\": \"cust_123\", \"after\": \"Jan 1 2024\"}\nDates must be ISO 8601 (YYYY-MM-DD). Natural language dates will fail.\n\nExample response:\n{\"orders\": [{\"id\": \"ord_456\", \"status\": \"shipped\", \"total\": 99.50}], \"has_more\": true}"}
+ "description": "Search orders by customer, date range, or status. Returns up to 50 orders (id, status, total) and has_more.",
+ "inputSchema": {"type": "object", "required": ["customer_id"], "properties": {
+   "customer_id": {"type": "string", "description": "Customer id, e.g. cust_123."},
+   "after": {"type": "string", "description": "ISO 8601 date (YYYY-MM-DD), e.g. 2024-01-01. Not 'Jan 1 2024': natural-language dates fail."},
+   "before": {"type": "string", "description": "ISO 8601 date, exclusive, e.g. 2024-03-01."}}}}
 ```
 
-Include: one happy-path call with realistic values; one common mistake with a brief reason it fails; one example response showing the return shape. Do NOT include exhaustive parameter combinations (that is the schema's job) or lengthy prose beside examples.
+Include: one happy-path value with realistic content; one common mistake with a brief reason it fails. Do NOT include exhaustive parameter combinations (that is the schema's job) or lengthy prose beside examples.
 
-> Reconciled: this example is far above the 100-token target; per the length rule in `descriptions-structure-and-length.md`, keep the tool description within 100 tokens (never above 200) and move the example calls into the relevant parameter descriptions of the input schema.
+> Reconciled: the source put full example calls and an example response inside the description (about 150 tokens), which breaks its own 100-token target. The examples moved to the parameter descriptions and the response shape to one clause.
 
-A single concrete example outperforms a paragraph of rules, and a wrong example inoculates against the most frequent failure mode. Response examples in descriptions: `responses-steering-and-examples.md`.
+A single concrete example outperforms a paragraph of rules, and a wrong example inoculates against the most frequent failure mode. Response shapes: `responses-steering-and-examples.md`.

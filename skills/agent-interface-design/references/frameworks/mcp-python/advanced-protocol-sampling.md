@@ -37,18 +37,16 @@ async def inner_agent_loop(ctx: Context, goal: str, max_turns: int = 8):
             messages=messages,
             max_tokens=1024,
             tools=tools,
-            tool_choice={"type": "auto"},
+            tool_choice={"mode": "auto"},  # toolChoice is {mode: auto|required|none}; the client must declare sampling.tools
         )
         messages.append({"role": "assistant", "content": resp.content})
         if resp.stop_reason == "endTurn":
             return resp.content.text
         if resp.stop_reason == "toolUse":
-            for block in resp.content:
-                if block.type == "tool_use":
-                    result = dispatch(block.name, block.input)
-                    messages.append({
-                        "role": "user",
-                        "content": {"type": "tool_result", "tool_use_id": block.id, "content": result},
-                    })
+            # one user message holding only tool results, one per tool_use block (the spec forbids mixing in other content)
+            results = [{"type": "tool_result", "toolUseId": block.id,
+                        "content": [{"type": "text", "text": dispatch(block.name, block.input)}]}
+                       for block in resp.content if block.type == "tool_use"]
+            messages.append({"role": "user", "content": results})
     raise RuntimeError("Inner loop exceeded max_turns")
 ```

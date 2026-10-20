@@ -31,8 +31,12 @@ async function prompt(
     output: process.stderr, // prompts go to stderr
   });
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    let answered = false;
+    rl.on('SIGINT', () => { rl.close(); process.exit(130); }); // Ctrl-C at the prompt is a signal exit
+    rl.on('close', () => { if (!answered) reject(new Error('Input ended before an answer')); });
     rl.question(message, (answer) => {
+      answered = true;
       rl.close();
       resolve(answer);
     });

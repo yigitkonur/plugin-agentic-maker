@@ -7,35 +7,42 @@
 Contract: `../../cli/idempotency.md`. Cached results live 24 hours.
 
 ```typescript
-import { createHash } from 'crypto';
+import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { homedir } from 'os';
+import { join } from 'path';
 
 interface IdempotencyResult<T> {
   cached: boolean;
   result: T;
 }
 
+type Entry = { result: unknown; expiry: number };
+
 class IdempotencyManager {
-  private cache: Map<string, { result: unknown; expiry: number }> = new Map();
+  // One CLI process serves one command, and a retried `create` is a new process: the cache must outlive it.
+  private dir = join(homedir(), '.cache', 'mycli');
+  private file = join(this.dir, 'idempotency.json');
   private ttlMs = 24 * 60 * 60 * 1000; // 24 hours
+
+  private load(): Record<string, Entry> {
+    try { return JSON.parse(readFileSync(this.file, 'utf8')); } catch { return {}; }
+  }
 
   async executeIdempotent<T>(
     key: string,
     operation: () => Promise<T>
   ): Promise<IdempotencyResult<T>> {
-    // Check cache
-    const cached = this.cache.get(key);
+    const cache = this.load();
+    const cached = cache[key];
     if (cached && cached.expiry > Date.now()) {
       return { cached: true, result: cached.result as T };
     }
 
-    // Execute operation
     const result = await operation();
 
-    // Cache result
-    this.cache.set(key, {
-      result,
-      expiry: Date.now() + this.ttlMs,
-    });
+    cache[key] = { result, expiry: Date.now() + this.ttlMs };
+    mkdirSync(this.dir, { recursive: true });
+    writeFileSync(this.file, JSON.stringify(cache));
 
     return { cached: false, result };
   }
@@ -82,8 +89,8 @@ const defaultConfig: RetryConfig = {
   backoffFactor: 2,
   jitter: 0.2,
   isRetryable: (error) => {
-    // Default: retry network errors and 5xx
-    if (error.name === 'FetchError') return true;
+    // Default: retry network errors (node-fetch FetchError, native fetch TypeError) and 429/5xx
+    if (error.name === 'FetchError' || error instanceof TypeError) return true;
     if ('status' in error) {
       const status = (error as any).status;
       return status === 429 || (status >= 500 && status < 600);
@@ -132,8 +139,12 @@ async function withRetry<T>(
 }
 
 // Usage
-const result = await withRetry(
-  () => fetch(`${API_URL}/resources`, { method: 'POST', body: JSON.stringify({ name }) }),
-  { maxAttempts: 3 }
-);
+// Native fetch resolves on 429 and 5xx instead of throwing, so turn those into errors the retry loop can see
+const result = await withRetry(async () => {
+  const res = await fetch(`${API_URL}/resources`, { method: 'POST', body: JSON.stringify({ name }) });
+  if (res.status === 429 || res.status >= 500) {
+    throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status, response: res });
+  }
+  return res;
+}, { maxAttempts: 3 });
 ```

@@ -52,7 +52,7 @@ Every item is yes/no. Work top to bottom before shipping a new MCP integration. 
 27. Is explicit user consent required before every tool invocation?
 28. Is explicit user consent required before each sampling request?
 29. Are sampling requests rate-limited and monitored for token-consumption anomalies (#10)?
-30. Does the server abstain from eliciting sensitive info (no passwords / SSN / financials via `elicitation/create`)?
+30. Does the server abstain from eliciting secrets in form mode (no passwords, API keys, tokens or payment data via `elicitation/create` form mode; URL mode for those)?
 31. Is there a deny list keeping "red" (untrusted-data-reading) tools out of the same context as "blue" (critical-action) tools?
 
 **Input and output validation**

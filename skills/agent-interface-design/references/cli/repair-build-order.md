@@ -10,7 +10,7 @@ Aim for one stable JSON envelope across all commands.
 Success:
 
 ```json
-{ "ok": true, "result": {}, "error": null, "schema_version": "v1" }
+{ "ok": true, "result": {}, "schema_version": "1.0" }
 ```
 
 Failure:
@@ -18,21 +18,20 @@ Failure:
 ```json
 {
   "ok": false,
-  "result": null,
   "error": {
-    "class": "validation",
+    "class": "usage",
     "code": "MISSING_FLAG",
     "message": "Flag --target is required.",
     "retryable": false,
     "suggestion": "Run `mycli deploy --target <name>`."
   },
-  "schema_version": "v1"
+  "schema_version": "1.0"
 }
 ```
 
-Stdout = data channel. Stderr = operator channel. Exit code = semantic class. All three must agree. In `--json` mode the failure envelope above is written to stdout, with exit 6 here (`validation`).
+Stdout = data channel. Stderr = operator channel. Exit code = semantic class. All three must agree. In `--json` mode the failure envelope above is written to stdout, with exit 2 here (`usage`: a missing required flag is a usage error; `validation` is for input that parses but fails its constraints).
 
-The fuller envelope with `command` and `meta` is in `envelope-and-errors.md`; the `schema_version` spelling (`"v1"` here, `"1.0"` there) is recorded as unresolved in `envelope-schemas.md`.
+The fuller envelope with `command` and `meta` is in `envelope-and-errors.md`; the `schema_version` is the string `"1.0"` everywhere (`envelope-schemas.md`).
 
 <!-- src: audit-agentic-cli/SKILL.md#Build Order (Repair Existing CLI) -->
 ## Build order

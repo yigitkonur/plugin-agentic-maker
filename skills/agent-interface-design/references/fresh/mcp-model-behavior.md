@@ -26,7 +26,7 @@ In GPT-4 and Llama 3 the dedicated `tool` role may carry elevated authority; in 
 | GPT-4 / 4.1 | 15-20 tools | 128 (API hard limit) | Hallucinated tool calls appear above 50; latency roughly doubles above 15 |
 | Gemini 1.5 Pro | 10 tools | ~100 tools | Optimised for single-call patterns; measurable quality degradation above 10 |
 
-One vendor explicitly recommends a maximum of 20 tools. The source's illustrative per-model limits in code were `claude: 30`, `gpt-4: 20`, `gemini: 10`, with a universal fallback of 20. Core guidance treats ceilings as cues: up to 20 comfortable, about 30 a warning, 40 or more needs progressive discovery.
+One vendor explicitly recommends a maximum of 20 tools. The source's illustrative per-model limits in code were `claude: 30`, `gpt-4: 20`, `gemini: 10`, with a universal fallback of 20. Core guidance treats ceilings as cues: up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute). The table above predates that ladder; `tool-count-by-model.md` supersedes it.
 
 ## Schema compatibility by model
 

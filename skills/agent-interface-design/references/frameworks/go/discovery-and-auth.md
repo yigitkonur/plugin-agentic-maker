@@ -38,27 +38,40 @@ const (
     ExitPartial    = 8
 )
 
-func exitWithError(err error) {
-    var code int
+// exitWithError maps an error to the exit table and, in --json mode, prints the failure envelope
+// once on stdout (../../cli/envelope-and-errors.md); the human line always goes to stderr.
+func exitWithError(err error, jsonMode bool) {
+    code, class := ExitCrash, "internal"
     switch {
     case errors.Is(err, ErrNotFound):
-        code = ExitNotFound
+        code, class = ExitNotFound, "not_found"
     case errors.Is(err, ErrUnauthorized), errors.Is(err, ErrForbidden):
-        code = ExitAuth
+        code, class = ExitAuth, "auth"
     case errors.Is(err, ErrConflict), errors.Is(err, ErrAlreadyExists):
-        code = ExitConflict
+        code, class = ExitConflict, "conflict"
     case errors.Is(err, ErrValidation), errors.Is(err, ErrInvalidInput):
-        code = ExitValidation
-    case errors.Is(err, ErrTimeout), errors.Is(err, ErrRateLimit), errors.Is(err, ErrUnavailable):
-        code = ExitTransient
+        code, class = ExitValidation, "validation"
+    case errors.Is(err, ErrTimeout):
+        code, class = ExitTransient, "timeout"
+    case errors.Is(err, ErrRateLimit):
+        code, class = ExitTransient, "rate_limit"
+    case errors.Is(err, ErrUnavailable):
+        code, class = ExitTransient, "dependency_failed"
     case errors.Is(err, ErrPartial):
-        code = ExitPartial
+        code, class = ExitPartial, "partial_success"
     case errors.Is(err, ErrUsage):
-        code = ExitUsage
-    default:
-        code = ExitCrash
+        code, class = ExitUsage, "usage"
     }
-    fmt.Fprintln(os.Stderr, err) // human diagnostic; in --json mode print the envelope to stdout instead
+    fmt.Fprintln(os.Stderr, err)
+    if jsonMode {
+        json.NewEncoder(os.Stdout).Encode(map[string]interface{}{
+            "ok": false, "schema_version": "1.0",
+            "error": map[string]interface{}{
+                "class": class, "code": strings.ToUpper(class), "message": err.Error(),
+                "retryable": code == ExitTransient,
+            },
+        })
+    }
     os.Exit(code)
 }
 ```

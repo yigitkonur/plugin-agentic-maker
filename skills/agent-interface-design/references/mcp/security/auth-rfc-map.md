@@ -26,7 +26,7 @@ Tick off this table before touching anything else. Non-compliance almost always 
 | RFC 7592 DCR Management | Update/delete registrations | AS |
 | RFC 8414 AS Metadata | `/.well-known/oauth-authorization-server[/path]` | AS (MUST offer this or OIDC) + clients (MUST support) |
 | OIDC Discovery 1.0 | `/.well-known/openid-configuration[/path]`, the alternate AS discovery | AS (MUST offer this or 8414) + clients (MUST support both) |
-| RFC 9728 Protected Resource Metadata | `/.well-known/oauth-protected-resource` at the MCP server; declares `authorization_servers`, `scopes_supported`, `bearer_methods_supported` | MCP server (MUST) + clients (MUST consume) |
+| RFC 9728 Protected Resource Metadata | `/.well-known/oauth-protected-resource` at the MCP server; declares `resource` and `authorization_servers` (required) and optionally `scopes_supported`, `bearer_methods_supported` | MCP server (MUST) + clients (MUST consume) |
 | RFC 8707 Resource Indicators | `resource=` on `/authorize` and `/token`: canonical URI of the MCP server; binds the `aud` claim | Client (MUST send) + AS (SHOULD audience-restrict) + MCP server (MUST reject non-matching `aud`) |
 | RFC 6750 Bearer Tokens | `Authorization: Bearer <token>`; `WWW-Authenticate` challenge with `error=`, `scope=`, `resource_metadata=` | Client + MCP server |
 | RFC 8693 Token Exchange | OBO pattern: `subject_token` + `actor_token` gives an upstream-audienced token. Not in the MCP spec, but commonly used by servers | MCP server + internal STS |

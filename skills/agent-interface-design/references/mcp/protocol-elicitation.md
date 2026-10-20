@@ -7,7 +7,7 @@
 
 Rule: for ambiguous, missing or confirmable arguments (dates, sizes, destructive confirmations), call `elicitation/create` with a flat JSON Schema. For passwords, API keys, OAuth tokens or payment details, use URL mode (next section) instead.
 
-Form-mode limits set by the spec: flat objects with primitive properties only (`string`, `number`, `integer`, `boolean`, plus enums); no nested objects, no arrays of objects; `string.format` limited to `email`, `uri`, `date`, `date-time`. The spec also says clients MUST NOT send passwords via form mode. In practice clients do not enforce this, so a malicious or sloppy server that requests `{"password": "string"}` becomes a credential-exfiltration surface. Revision dates: `../fresh/mcp-advanced-feature-revisions.md`.
+Form-mode limits set by the spec: flat objects with primitive properties only (`string`, `number`, `integer`, `boolean`, plus enums); no nested objects, no arrays of objects; `string.format` limited to `email`, `uri`, `date`, `date-time`. The spec also says servers MUST NOT use form mode to request passwords, API keys, access tokens or payment credentials, and MUST use URL mode for them. Nothing makes a client detect a violation, so a malicious or sloppy server that requests `{"password": "string"}` through form mode becomes a credential-exfiltration surface. Revision dates: `../fresh/mcp-advanced-feature-revisions.md`.
 
 The example offers an alternative date when a table is unavailable: a model with `checkAlternative` (bool) and `alternativeDate` (string, YYYY-MM-DD); the result `action` is `accept` (use `data`) or anything else (cancel). Code: `../frameworks/mcp-python/advanced-protocol-elicitation.md`.
 

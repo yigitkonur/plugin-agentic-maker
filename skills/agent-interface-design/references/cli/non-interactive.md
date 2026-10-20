@@ -27,7 +27,7 @@ Rules:
 - `--yes` auto-confirms but still validates input; `--force` additionally bypasses safety checks.
 - Pair destructive commands with `--dry-run` (`dry-run.md`).
 
-> Unresolved: when a human is at a TTY and answers "no" to a confirmation, the Python source prints "Aborted" and exits 1, but 1 means `crash` in `exit-codes.md` and the taxonomy has no code for "user declined". Both claims are recorded; choose and document one code for a declined prompt (and keep it out of 1).
+> Reconciled: the Python source printed "Aborted" and exited 1 when a human answered "no", but 1 means `crash`. A declined confirmation exits 2, the same code as a confirmation that cannot be asked: in both cases the confirmation was not given and nothing was changed. Print `Aborted: confirmation not given` on stderr.
 
 <!-- src: audit-agentic-cli/references/execution-patterns.md#TTY Detection -->
 ## TTY detection

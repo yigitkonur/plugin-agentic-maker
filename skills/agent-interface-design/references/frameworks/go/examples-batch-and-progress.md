@@ -135,7 +135,8 @@ func runWithProgress(ctx context.Context, opID string, work func(progress chan<-
         select {
         case p, ok := <-progressCh:
             if !ok {
-                return
+                progressCh = nil // closed: keep waiting for the result so the terminal event is never dropped
+                continue
             }
             progressEnc.Encode(map[string]any{
                 "type":         "progress",

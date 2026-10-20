@@ -4,7 +4,7 @@
 
 Companion to `design-intent-based-tools.md`. Code: `../frameworks/mcp-python/tool-design-workflows.md`.
 
-> Reconciled: the sources quote tool-count ceilings of 15, 20, 30 and 50+. This file treats them as diagnostic cues, not verdicts: up to 20 active tools is the comfortable default, about 30 is a warning, 40 or more needs progressive discovery (`patterns-progressive-discovery.md`). Per-model figures live in `../fresh/mcp-model-behavior.md`.
+> Reconciled: the sources quote tool-count ceilings of 15, 20, 30 and 50+. This file treats them as diagnostic cues, not verdicts: up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute) (`patterns-progressive-discovery.md`). Per-model figures live in `../fresh/mcp-model-behavior.md`.
 
 <!-- src: audit-agentic-mcp/references/patterns/tool-design.md#Pattern 4: Use a Planner Tool to Teach the Model Your Workflow -->
 ## Use a planner tool to teach the workflow

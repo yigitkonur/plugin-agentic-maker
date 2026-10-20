@@ -25,10 +25,11 @@ Human-friendly output (stderr or a terminal, never mixed into `--json` stdout):
 Dry run - no changes will be made
 
 deployment/web
-  ~ replicas: 2 → 3
+  + (will be created)
 
 deployment/api
-  + (will be created)
+  ~ replicas: 2 → 3
+  ~ image: app:v1.0 → app:v1.1
 
 configmap/legacy
   - (will be deleted)

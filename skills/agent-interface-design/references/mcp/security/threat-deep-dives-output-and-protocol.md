@@ -55,7 +55,7 @@ Mitigation:
 
 The spec's `elicitation/create` lets servers ask the user for structured input; attackers use it to phish (see `../protocol-elicitation.md`).
 
-Spec guardrail: elicitation `MUST NOT` be used to collect passwords, SSNs or other sensitive credentials. Enforce this at the client; do not rely on servers to self-police.
+Spec guardrail: servers `MUST NOT` use form-mode elicitation to collect passwords, API keys, access tokens or payment credentials, and `MUST` use URL mode for those, where the value never passes through the client. Clients should not rely on servers to follow this; enforce a deny list as well.
 
 Mitigation: the client keeps a deny list (patterns containing "password", "SSN", "card number", "security code"). Every elicitation dialog shows the server identity prominently and labels the server as not the user's trusted application.
 

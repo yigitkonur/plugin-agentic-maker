@@ -7,7 +7,7 @@ Steering text in tool output is the strongest lever over an agent and the same c
 <!-- src: audit-agentic-cli/references/agent-integration.md#16. Steering Contract: Put Next-Step Guidance in CLI stdout -->
 ## Put next-step guidance in stdout
 
-What works for MCP tool steering also applies to a CLI called by an agent: stdout is not just a payload channel, it is the continuation contract. Return guidance in a stable top-level field so the agent can decide what to do next without guessing:
+What works for MCP tool steering also applies to a CLI called by an agent: stdout is not just a payload channel, it is the continuation contract. Return guidance in a stable top-level `_agent_guidance` field so the agent can decide what to do next without guessing:
 
 ```json
 {
@@ -16,7 +16,8 @@ What works for MCP tool steering also applies to a CLI called by an agent: stdou
     "query": "technical seo agent workflows",
     "results": ["..."]
   },
-  "guidance": {
+  "_agent_guidance": {
+    "source": "seo-research",
     "summary": "Current results cover general overviews but miss concrete CLI examples.",
     "next_actions": [
       {
@@ -43,7 +44,7 @@ What works for MCP tool steering also applies to a CLI called by an agent: stdou
     ]
   },
   "error": null,
-  "schema_version": "v1"
+  "schema_version": "1.0"
 }
 ```
 
@@ -55,7 +56,7 @@ Why it matters:
 
 Design rules:
 
-- Put steering in `guidance`, not mixed into `result`.
+- Put steering in one namespaced `_agent_guidance` block with a `source`, not mixed into `result`; list the commands you allow next and have your own CLI validate `next_actions[].command` against them (`../decisions/steering-contract.md`).
 - Use ranked `recommended_queries` or `next_actions`, not one vague paragraph.
 - Distinguish `actions_taken` from `next_actions`.
 - Keep the same field names across commands so the agent learns the contract once.

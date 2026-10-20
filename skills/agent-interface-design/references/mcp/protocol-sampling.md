@@ -24,7 +24,7 @@ Rule: when using sampling-with-tools to drive a multi-turn inner loop, the serve
 
 - The `tools: {}` capability flag is new in the 2025-11-25 revision and absent on older clients. Check `caps.sampling.tools is not None` before sending tools.
 - Wrap the inner loop in an iteration limit (typical: 5-10; the example uses `max_turns=8`) to prevent runaway cost on the user's account. Users pay for every sampled token.
-- Loop shape: send messages with `tools` and `tool_choice={"type": "auto"}`; append the assistant content; on stop reason `endTurn` return the text; on `toolUse` dispatch each `tool_use` block and append a `tool_result` message keyed by `tool_use_id`; after the limit raise an error.
+- Loop shape: send messages with `tools` and `toolChoice: {"mode": "auto"}` (the client must declare `sampling.tools`); append the assistant content; on stop reason `endTurn` return the text; on `toolUse` dispatch each `tool_use` block and append one user message holding a `tool_result` for each, keyed by `toolUseId` (tool results only, no other content); after the limit raise an error.
 
 When to use: agentic tools that need several reasoning turns (research, refactoring, planning) where the client should pay for the compute.
 

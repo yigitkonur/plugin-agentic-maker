@@ -49,7 +49,7 @@ Every agent-friendly CLI supports structured JSON output.
 | `command` | string | The command that was executed |
 | `schema_version` | string | Output schema version for forward compatibility |
 | `result` | object | The actual operation result |
-| `meta` | object | Metadata about the response |
+| `meta` | object | Metadata about the response. `meta.total_count` is the number of items available for a list operation; a paginated list carries the same figure as `result.total` (`pagination.md`): emit one of the two, `result.total`, not both |
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Error Envelope -->
 ## Error envelope

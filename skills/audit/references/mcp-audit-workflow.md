@@ -43,7 +43,7 @@ Pick this when MCP-shaped code already exists.
 **Audit output contract**
 
 - target path and detected framework
-- short scorecard across: tool interface, schemas/responses, errors, security/auth, context/cost, client compatibility, ops/testing, and architecture
+- the scorecard from `scoring.md`: the eight dimensions of the contract (intent, contract, discovery, steering, safety, budget, recovery, verification), each a score or `not measured`; file the old MCP topics under them (tool interface and architecture under intent; schemas and responses under contract; security/auth under safety; context/cost under budget; errors under recovery; ops/testing under verification; client compatibility under discovery)
 - prioritized findings, each with severity, evidence path/line, impact, recommended fix, companion-skill route
 - verification plan: an MCP client smoke test, MCP Inspector, unit/integration, or a targeted manual check
 - assumptions and items not touched

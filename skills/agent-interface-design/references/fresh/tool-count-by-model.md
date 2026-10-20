@@ -21,7 +21,7 @@ Moved here from the tool-count decision tree because model names and limits go s
 
 - The table above is the older per-model rule. `fresh/model-behavior-rules-tool-surface.md` (Rule 1) supersedes it: cap active tools at 20 regardless of vendor, because OpenAI recommends fewer than 20, Google recommends 10-20, and Microsoft Research measured up to 85% accuracy loss from tool-space interference.
 
-> Reconciled: the sources gave Claude 20-30 / GPT-4 15-20 / Gemini 10 here and "at most 20 regardless of vendor" in the model-behavior report; `decisions/tool-count.md` uses 20 comfortable, about 30 warning, 40 or more needs progressive discovery, and treats both as diagnostic cues.
+> Reconciled: the sources gave Claude 20-30 / GPT-4 15-20 / Gemini 10 here and "at most 20 regardless of vendor" in the model-behavior report; `decisions/tool-count.md` uses one ladder (up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute)) and treats both as diagnostic cues.
 
 ## Client tool caps
 

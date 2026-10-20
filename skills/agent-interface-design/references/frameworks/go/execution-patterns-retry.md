@@ -157,8 +157,8 @@ func DoHTTP(ctx context.Context, client *http.Client, req *http.Request) (*http.
         case http.StatusServiceUnavailable, http.StatusBadGateway, http.StatusGatewayTimeout:
             return &RetryableError{Err: fmt.Errorf("server error: %d", resp.StatusCode)}
         case http.StatusConflict:
-            // Conflict might be retryable after re-read
-            return &RetryableError{Err: fmt.Errorf("conflict")}
+            // Not retried: the table says conflict is "No (check details)". Re-read and decide, then start a new operation.
+            return fmt.Errorf("conflict: %w", ErrConflict) // exit 5
         default:
             if resp.StatusCode >= 500 {
                 return &RetryableError{Err: fmt.Errorf("server error: %d", resp.StatusCode)}

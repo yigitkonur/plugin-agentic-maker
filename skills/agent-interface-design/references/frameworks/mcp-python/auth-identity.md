@@ -17,7 +17,7 @@ async def verify_mcp_token(raw_token: str) -> dict:
         algorithms=["RS256"],
         audience="https://mcp.example.com",   # exact canonical URI
         issuer=EXPECTED_ISSUER,
-        options={"require": ["aud", "iss", "exp", "sub"]},
+        options={"require_aud": True, "require_iss": True, "require_exp": True, "require_sub": True},  # python-jose names; PyJWT takes {"require": [...]}
     )
     if payload["aud"] != "https://mcp.example.com":
         raise Unauthorized("aud mismatch")

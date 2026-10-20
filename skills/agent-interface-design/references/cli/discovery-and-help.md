@@ -22,7 +22,7 @@ A well-designed CLI supports these flags consistently on every command.
 | `--no-input` | | bool | Non-interactive mode; fail if input needed | `mycli setup --no-input` |
 | `--help` | `-h` | bool | Show help for command | `mycli deploy -h` |
 
-> Unresolved: the sources disagree on three details. (1) `--json` has short form `-j` in one file and none in the others. (2) `--timeout` has no short form in one file and `-t` (seconds) in another; the examples use a duration string, the agent guide a number of seconds. (3) The non-interactive switch is `--no-input` in one file and `--non-interactive` in the code examples. Pick one spelling per CLI, document it in `--help`, and keep it identical across commands.
+> Reconciled: the sources disagreed on three details. `--json` has the short form `-j`. `--timeout` takes a duration string (`30s`, `5m`) and has no short form. The non-interactive switch is `--no-input`; a CLI may accept `--non-interactive` as an alias. Keep the spelling identical across commands and document it in `--help`.
 
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#Flag Behavior Matrix -->
 ## Flag behavior matrix
@@ -58,8 +58,7 @@ Benefits: hierarchical discovery (`mycli --help` then `mycli user --help`), rela
 ## Consistent flag naming
 
 - Short flags: reserve single letters for frequently used flags (`-j`, `-q`, `-v`, `-y`, `-f`, `-o`, `-h`).
-- Boolean defaults: every boolean flag defaults to `false`.
-- Negation: support `--no-<flag>` to disable a default (for example `--no-wait`).
+- Boolean defaults: a boolean flag defaults to `false`, except where the safe behaviour is on; then keep the positive name, default it to true, and support `--no-<flag>` to turn it off (for example `--wait`, default true, off with `--no-wait`).
 - Profiles: use `--profile` / `-p` to select a config profile (see `config-and-env.md`).
 
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#2. Self-Documenting Help | audit-agentic-cli/references/discovery-and-auth.md#Help Should Answer 5 Questions -->

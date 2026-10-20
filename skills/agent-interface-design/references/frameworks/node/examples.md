@@ -45,7 +45,11 @@ async function confirm(message: string, opts: CLIOptions): Promise<boolean> {
   });
 
   return new Promise((resolve) => {
+    let answered = false;
+    rl.on('SIGINT', () => { rl.close(); process.exit(130); }); // Ctrl-C at the prompt is a signal exit
+    rl.on('close', () => { if (!answered) process.exit(2); }); // input ended with no answer: cannot ask
     rl.question(`${message} [y/N]: `, (answer) => {
+      answered = true;
       rl.close();
       resolve(answer.toLowerCase() === 'y');
     });

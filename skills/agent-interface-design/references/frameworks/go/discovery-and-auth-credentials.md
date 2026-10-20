@@ -56,7 +56,7 @@ func resolveCredentials(cmd *cobra.Command) (string, string, error) {
         return token, "workload_identity", nil
     }
 
-    return "", "", fmt.Errorf("no credentials found") // map to ExitAuth (4)
+    return "", "", fmt.Errorf("no credentials found: %w", ErrUnauthorized) // exitWithError maps it to ExitAuth (4)
 }
 ```
 
@@ -76,12 +76,12 @@ func getAuthenticatedClient(ctx context.Context) (*Client, error) {
     if isExpired(token) {
         refreshToken, err := getRefreshToken(source)
         if err != nil {
-            return nil, fmt.Errorf("token expired and no refresh token: %w", err)
+            return nil, fmt.Errorf("token expired and no refresh token: %w: %w", ErrUnauthorized, err) // Go 1.20+: both stay matchable
         }
 
         newToken, err := refreshAccessToken(ctx, refreshToken)
         if err != nil {
-            return nil, fmt.Errorf("token refresh failed: %w", err)
+            return nil, fmt.Errorf("token refresh failed: %w: %w", ErrUnauthorized, err)
         }
 
         // Store new token

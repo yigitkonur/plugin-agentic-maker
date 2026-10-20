@@ -7,12 +7,12 @@
 
 ```bash
 mycli sync \
-  --rate-limit 100/minute \            # Request rate limit
-  --retry-on-rate-limit \              # Auto-retry on 429
-  --max-retries 5 \                    # Maximum retry attempts
-  --backoff-initial 1s \               # Initial backoff delay
-  --backoff-max 60s \                  # Maximum backoff delay
-  --backoff-multiplier 2.0 \           # Exponential multiplier
+  --rate-limit 100/minute \
+  --retry-on-rate-limit \
+  --max-retries 5 \
+  --backoff-initial 1s \
+  --backoff-max 60s \
+  --backoff-multiplier 2.0 \
   --respect-retry-after                # Honor Retry-After header
 ```
 

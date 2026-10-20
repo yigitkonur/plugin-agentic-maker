@@ -41,15 +41,20 @@ async function invokeCLI(
     }
     return { ok: true };
   } catch (error: unknown) {
-    if (error instanceof Error && 'killed' in error) {
+    const e = error as { code?: number | string; killed?: boolean; stdout?: string; stderr?: string };
+    if (e.killed === true) { // our own timeout killed the process (every execFile error has a `killed` field, true or false)
       return { ok: false, error: { code: 'timeout', message: 'Command timed out', retryable: true } };
     }
-    const execError = error as { code?: number; stderr?: string };
+    // In --json mode the failure envelope is on stdout (cli/envelope-and-errors.md): prefer it
+    try {
+      if (e.stdout?.trim()) return JSON.parse(e.stdout);
+    } catch { /* not JSON: fall back to the exit code */ }
     return {
       ok: false,
       error: {
-        code: `exit_${execError.code ?? 1}`,
-        message: execError.stderr?.trim() || 'Unknown error',
+        code: `exit_${e.code ?? 1}`,
+        message: e.stderr?.trim() || 'Unknown error',
+        retryable: e.code === 7, // exit 7 is the transient group
       },
     };
   }
@@ -59,7 +64,7 @@ async function invokeCLI(
 const result = await invokeCLI(['mycli', 'task', 'start', 'prompt.md'], { timeout: 60000 });
 ```
 
-> Reconciled: the source joined the arguments into one shell string for `exec`, which lets an argument inject shell syntax; this file uses `execFile` with an argument array. It also adds the `env` option that the tracing example passes. A failed command's envelope is on stdout, so a caller that needs it should read `stdout` from the thrown error before falling back to `exit_<n>`.
+> Reconciled: the source joined the arguments into one shell string for `exec`, which lets an argument inject shell syntax; this file uses `execFile` with an argument array. It also adds the `env` option that the tracing example passes. A failed command's envelope is on stdout, so the sample reads `stdout` from the thrown error before falling back to `exit_<n>`; `retryable` follows the exit code (7).
 
 <!-- src: audit-agentic-cli/references/agent-integration.md#Async/Await with Retry -->
 ## Async/await with retry
@@ -69,12 +74,12 @@ import { setTimeout } from 'timers/promises';
 
 async function invokeWithRetry(
   cmd: string[],
-  options: { maxRetries?: number; baseDelay?: number } = {}
+  options: { maxRetries?: number; baseDelay?: number; timeout?: number } = {}
 ): Promise<CLIResult> {
-  const { maxRetries = 3, baseDelay = 1000 } = options;
+  const { maxRetries = 3, baseDelay = 1000, timeout } = options;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const result = await invokeCLI(cmd);
+    const result = await invokeCLI(cmd, { timeout });
 
     if (result.ok) return result;
     if (!result.error?.retryable) return result;
@@ -169,9 +174,9 @@ class CLIAgent extends EventEmitter {
     this.defaultFlags = defaultFlags;
   }
 
-  async invoke(subcommand: string[], extraFlags: string[] = []): Promise<CLIResult> {
+  async invoke(subcommand: string[], extraFlags: string[] = [], retry: { timeout?: number } = {}): Promise<CLIResult> {
     const cmd = [...this.baseCmd, ...subcommand, ...this.defaultFlags, ...extraFlags];
-    const result = await invokeWithRetry(cmd);
+    const result = await invokeWithRetry(cmd, retry);
     this.emit('invocation', { cmd, result });
     return result;
   }
@@ -184,7 +189,8 @@ class CLIAgent extends EventEmitter {
   }
 
   async taskWait(taskId: string, timeoutMs = 300000) {
-    return this.invoke(['task', 'wait', taskId, '--timeout', String(timeoutMs / 1000)]);
+    // the process timeout sits a little above the CLI's own wait, so the CLI reports its timeout itself
+    return this.invoke(['task', 'wait', taskId, '--timeout', String(timeoutMs / 1000)], [], { timeout: timeoutMs + 5000 });
   }
 }
 ```

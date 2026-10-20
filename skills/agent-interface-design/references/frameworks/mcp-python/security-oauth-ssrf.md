@@ -10,15 +10,20 @@ Decisions, scope table and session TTLs: `../../mcp/security/oauth-scopes-ssrf-s
 ```python
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import SecurityScopes
+from jose import JWTError, jwt
 
-async def verify_mcp_token(security_scopes, token = Depends(oauth2_scheme)):
-    payload = jwt.decode(token, PUBLIC_KEY, algorithms=["RS256"])
-    if payload.get("aud") != "mcp-server-prod":
-        raise HTTPException(403, "Token not issued for this MCP server")
+CANONICAL_URI = "https://mcp.example.com"  # this server's canonical URI, the token audience
+
+async def verify_mcp_token(security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, PUBLIC_KEY, algorithms=["RS256"], audience=CANONICAL_URI)
+    except JWTError:  # bad signature, expired, or issued for another audience
+        raise HTTPException(401, "Invalid token", headers={"WWW-Authenticate": 'Bearer error="invalid_token"'})
     token_scopes = set(payload.get("scope", "").split())
     for scope in security_scopes.scopes:
-        if scope not in token_scopes:
-            raise HTTPException(403, f"Missing scope: {scope}")
+        if scope not in token_scopes:  # valid token, not enough scope: 403
+            raise HTTPException(403, f"Missing scope: {scope}",
+                                headers={"WWW-Authenticate": f'Bearer error="insufficient_scope", scope="{scope}"'})
     return payload
 ```
 

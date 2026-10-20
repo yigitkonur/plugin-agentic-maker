@@ -7,7 +7,7 @@
 
 For external-facing servers, implement OAuth2 with narrowly scoped permissions. Do not accept tokens not explicitly issued for your server. Start with a minimal scope baseline and request higher privileges only when a specific tool requires them.
 
-Token validation: decode and verify the JWT signature (RS256), require `aud` to equal this server's identifier (example: `mcp-server-prod`; reject with 403 "Token not issued for this MCP server"), then check that every scope the endpoint needs is in the token's space-separated `scope` claim (403 "Missing scope: ..."). The full protocol profile (RFC 9728, RFC 8707, step-up) is in `auth-flows.md` and `auth-obo-and-token-passthrough.md`.
+Token validation: decode and verify the JWT signature (RS256), require `aud` to equal this server's canonical URI (example: `https://mcp.example.com`; reject a token for another audience with 401 and `WWW-Authenticate: Bearer error="invalid_token"`), then check that every scope the endpoint needs is in the token's space-separated `scope` claim (403 with `error="insufficient_scope"` and the needed `scope`, "Missing scope: ..."). The full protocol profile (RFC 9728, RFC 8707, step-up) is in `auth-flows.md` and `auth-obo-and-token-passthrough.md`.
 
 Scope design, least privilege:
 
@@ -37,7 +37,7 @@ Session security:
 Neutral check for the rejection path:
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' -H 'Authorization: Bearer <token-for-another-audience>' https://mcp.example.com/mcp   # expect 403
+curl -s -o /dev/null -w '%{http_code}\n' -H 'Authorization: Bearer <token-for-another-audience>' https://mcp.example.com/mcp   # expect 401
 ```
 
 Code: `../../frameworks/mcp-python/security.md`. Checklist form: `threat-audit-checklist.md`.

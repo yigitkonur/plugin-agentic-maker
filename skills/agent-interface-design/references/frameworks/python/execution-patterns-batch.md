@@ -176,7 +176,7 @@ async def process_batch(
 @click.option('--input', 'input_file', required=True)
 @click.option('--batch-size', default=100)
 @click.option('--max-concurrent', default=5)
-@click.option('--delay-between-batches', default='0s')
+@click.option('--delay-between-batches', type=float, default=0.0, help='seconds')
 @click.option('--max-items', type=int)
 @click.option('--continue-on-error', is_flag=True)
 @click.option('--fail-threshold', default=1.0)

@@ -51,9 +51,10 @@ Per-session override inside a tool handler:
 from fastmcp import FastMCP, Context
 
 @mcp.tool(tags=["core"])
-async def unlock_admin_mode(ctx: Context, role: str) -> str:
-    """Unlock tools based on user role."""
-    if role == "admin":
+async def unlock_admin_mode(ctx: Context) -> str:
+    """Unlock the advanced tools for a signed-in admin."""
+    # The role comes from the verified token, never from a tool argument: the model (or an attacker) picks arguments.
+    if "admin" in verified_roles(ctx):  # verified_roles: your auth layer's verified claims
         await ctx.enable_components(tags={"advanced"})
         return "Admin tools unlocked."
     return "No additional tools available for this role."

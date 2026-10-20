@@ -7,9 +7,7 @@ Explanation and rules: ../../mcp/descriptions-structure-and-length.md and ../../
 ## Pattern 9: Use the `instructions` Field as Your Server's skills.md
 
 ```typescript
-const server = new McpServer({
-  name: "acme-crm",
-  version: "1.0.0",
+const server = new McpServer({ name: "acme-crm", version: "1.0.0" }, {
   instructions: `
 # Acme CRM MCP Server
 
@@ -27,7 +25,7 @@ const server = new McpServer({
 - All write operations require a valid session (call authenticate first)
 - Invoice sends are irreversible and trigger customer emails
 - Rate limit: 60 requests/min across all tools
-  `.trim()
+  `.trim(),
 });
 ```
 

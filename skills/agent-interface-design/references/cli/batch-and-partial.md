@@ -60,10 +60,10 @@ Response structure for a batch command:
 |-----------|------|----------|------|
 | No failures | `true` | `success` | 0 |
 | Some succeeded, some failed | `false` | `partial_failure` | 8 |
-| Nothing succeeded | `false` | `failed` | not stated by the sources; document it |
+| Nothing succeeded | `false` | `failed` | the failure's own class code (6 validation, 3 not_found, ...); 8 is for mixed results only |
 
 Always write the failed items to `failed_items_file` and give a `retry_command` that consumes it, so the agent can retry only what failed.
 
-> Unresolved: the sources describe partial results two ways: this batch response (`status: partial_failure`, top-level `succeeded`/`failed` arrays) and the error-envelope form with `error.class: partial_success`, `succeeded_operations`, `failed_operations` (`error-classes.md`). Both use exit 8; pick one shape per CLI and document it.
+> Reconciled: the sources describe partial results two ways: this batch response (`status: partial_failure`, top-level `succeeded`/`failed` arrays) and the error-envelope form (`error.class: partial_success`, `succeeded_operations`, `failed_operations`, in `error-classes.md`). Use this batch response for commands that act on many items; use the error form only when one operation partly completed and cannot list items. Both exit 8. `ok` answers "did the command do what was asked?": a batch asked for 100 creations and made 95, so `false`. A check whose job is to report problems (this plugin's `probe` and `check` commands) ran as asked, so it sets `ok: true` with `status: partial` and the same exit 8.
 
 Implementations: `../frameworks/go/execution-patterns-batch.md`, `../frameworks/python/execution-patterns-batch.md`.

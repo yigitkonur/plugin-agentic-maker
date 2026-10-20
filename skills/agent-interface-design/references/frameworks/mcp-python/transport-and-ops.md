@@ -106,7 +106,7 @@ def health():
 Wrong, kills the server:
 
 ```python
-@server.tool("validate_config")
+@mcp.tool(name="validate_config")
 async def validate_config(path: str) -> list[TextContent]:
     config = load_config(path)
     if not config:
@@ -117,7 +117,7 @@ async def validate_config(path: str) -> list[TextContent]:
 Right, structured error and the server stays alive:
 
 ```python
-@server.tool("validate_config")
+@mcp.tool(name="validate_config")
 async def validate_config(path: str) -> list[TextContent]:
     config = load_config(path)
     if not config:
@@ -148,15 +148,15 @@ Wrong, startup validation (the server crashes if the token is bad):
 api_token = os.environ["API_TOKEN"]
 httpx.get("https://api.example.com/me",
           headers={"Authorization": f"Bearer {api_token}"}).raise_for_status()  # -> crash
-server = Server("my-server")  # Never reached
+mcp = FastMCP("my-server")  # Never reached
 ```
 
 Right, validate at execution time:
 
 ```python
-server = Server("my-server")
+mcp = FastMCP("my-server")
 
-@server.tool("search_tickets")
+@mcp.tool(name="search_tickets")
 async def search_tickets(query: str) -> list[TextContent]:
     api_token = os.environ.get("API_TOKEN")
     if not api_token:

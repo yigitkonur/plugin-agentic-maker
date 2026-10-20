@@ -41,6 +41,7 @@ For long-running operations, use JSON Lines (newline-delimited JSON). Each line 
 
 | Type | Description | Required Fields | Stream |
 |------|-------------|-----------------|--------|
+| `started` | The operation was accepted and is running | `type`, `operation_id` | stderr |
 | `progress` | Incremental progress update | `type`, `phase` | stderr |
 | `log` | Log message | `type`, `level`, `message` | stderr |
 | `completed` | Operation finished (terminal; also called `result` or `summary`) | `type`, `status`, `result` | stdout, last line |

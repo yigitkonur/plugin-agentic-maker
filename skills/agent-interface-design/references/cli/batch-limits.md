@@ -8,11 +8,11 @@
 ```bash
 mycli bulk-create \
   --input items.json \
-  --batch-size 100 \                   # Items per batch
-  --max-concurrent 5 \                 # Parallel batch workers
-  --delay-between-batches 1s \         # Rate limiting between batches
-  --max-items 10000 \                  # Total item limit
-  --continue-on-error \                # Don't stop on failures
+  --batch-size 100 \
+  --max-concurrent 5 \
+  --delay-between-batches 1s \
+  --max-items 10000 \
+  --continue-on-error \
   --fail-threshold 0.1                 # Stop if >10% failures
 ```
 
@@ -25,13 +25,13 @@ mycli bulk-create \
 | `--max-concurrent <n>` | Parallel workers | 5 |
 | `--delay-between-batches <duration>` | Pause between batches | 0 |
 | `--max-items <n>` | Maximum items to process | unlimited |
-| `--continue-on-error` | Continue on item failures | false |
-| `--stop-on-error` | Stop on first failure | false |
+| `--continue-on-error` | Continue on item failures | false for destructive batches, true otherwise |
+| `--stop-on-error` | Stop on first failure | true for destructive batches, false otherwise |
 | `--fail-threshold <ratio>` | Stop if failure ratio exceeds | 1.0 |
 | `--dry-run` | Preview without executing | false |
 | `--retry-failed <n>` | Retry failed items n times | 0 |
 
-> Reconciled: the source table listed `--stop-on-error` as "false (default: continue)" while the example used `--continue-on-error` explicitly. The effective default depends on the batch kind: read-only and idempotent batches continue and report partial (exit 8); destructive batches stop at the first error. The flags override either default (`batch-and-partial.md`).
+> Reconciled: the source table listed `--stop-on-error` as "false (default: continue)" while the example used `--continue-on-error` explicitly. The table now states those defaults. Read-only and idempotent batches continue and report partial (exit 8); destructive batches stop at the first error. The flags override either default (`batch-and-partial.md`).
 
 <!-- src: audit-agentic-cli/references/execution-patterns.md#Partial Failure Response -->
 ## Full partial-failure report

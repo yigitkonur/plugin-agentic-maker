@@ -23,11 +23,13 @@ Guidelines:
 Real-world example: a data-visualization server's planner tool returns structured guidance about call order, and every later response reinforces it. See the planner pattern in `design-workflow-planner-and-facade.md`.
 
 <!-- src: audit-agentic-mcp/references/patterns/tool-responses.md#Pattern 10: Put Example Responses in Tool Descriptions -->
-## Put example responses in tool descriptions
+## Show the response shape where the agent will look
 
-Include a concrete example response in the tool's description. The agent learns the shape and plans follow-up calls without a throwaway exploratory call: one example in the description saves one round-trip at runtime.
+An agent that has seen the response shape destructures it correctly on the first try and plans follow-up calls without a throwaway exploratory call. Give it the shape in this order of preference:
 
-Without an example (`list_users`: "List users in the workspace") the agent guesses or wastes a call. With one, the description lists the fields ("users": array of {id, name, email, role}; "total": total count, may exceed returned results; "has_more": whether more pages exist), shows a two-record JSON example with `total: 47` and `has_more: true`, and adds "Use "page" param to paginate. Pass user "id" values to get_user_details."
+1. **One clause in the description** that names the fields and the paging flags: "Returns users (id, name, email, role), total, has_more."
+2. **The output schema** (`outputSchema`, with `structuredContent` in the result), where a full example record fits without costing description tokens (`responses-formats-and-structured.md`).
+3. **A two-record example** in this reference, never in the description: the description is paid for on every turn.
 
 What this unlocks:
 - The agent can destructure the response correctly on the first try.
@@ -35,9 +37,9 @@ What this unlocks:
 - It knows to pass `id` (not `name` or `email`) to downstream tools.
 - It does not make a dummy call just to discover the format.
 
-Keep examples minimal: one or two records, not a full page. The agent extrapolates the pattern. The description gets longer, which purists dislike, but agents that see example responses make fewer errors and fewer exploratory calls.
+Keep examples minimal: one or two records, not a full page. The agent extrapolates the pattern.
 
-> Reconciled: that example description exceeds the 100-token target. The length rule (`descriptions-structure-and-length.md`) wins: at most about 100 tokens, never above 200, with long examples in the parameter descriptions or the output schema (`responses-formats-and-structured.md`).
+> Reconciled: the source put a full example response inside the description. That exceeds the length rule in `descriptions-structure-and-length.md` (about 100 tokens, never above 200), so the shape now goes in a clause, the output schema, or this page.
 
 <!-- src: audit-agentic-mcp/references/patterns/tool-responses.md#Pattern 11: Return a Search Frontier, Not Just the First SERP -->
 ## Return a search frontier, not just the first result page
