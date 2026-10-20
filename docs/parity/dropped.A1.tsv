@@ -1,0 +1,4 @@
+audit-agentic-cli/SKILL.md#Reference Routing	navigation table pointing at the old reference file names; replaced by the plugin file layout and links in each file
+audit-agentic-cli/references/output-contracts.md#Table of Contents	pure navigation list of anchors; the plugin splits the file so no index is needed
+audit-agentic-cli/references/execution-patterns.md#Table of Contents	pure navigation list of anchors; the plugin splits the file so no index is needed
+audit-agentic-cli/references/execution-patterns.md#Timeout Configuration	empty heading with no body text; the timeout configuration content sits under Timeout Flag Standards and Signal Handling

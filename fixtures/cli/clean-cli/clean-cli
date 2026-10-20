@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# clean-cli: the same inventory CLI done right. The audit must report no High or Critical finding here.
+usage() {
+  cat <<USAGE
+clean-cli - manage items
+
+Usage: clean-cli <command> [options]
+
+Commands:
+  list              show all items
+  get <id>          show one item
+  delete <id>       remove an item (needs --yes or --dry-run when not on a terminal)
+
+Options:
+  --json            JSON on stdout (errors too); diagnostics on stderr
+  --yes, --force    do not ask for confirmation
+  --dry-run         show what would change
+  --token-file F    read the API token from a file
+  --version         print the version
+  -h, --help        this text
+
+Examples:
+  clean-cli list --json
+  clean-cli get 1 --json
+  clean-cli delete 1 --dry-run
+
+Exit codes:
+  0 success, 2 usage error, 3 not found, 6 validation, 7 transient
+USAGE
+}
+fail() { # class exit-code message
+  if [ "${json:-0}" = 1 ]; then printf '{"ok":false,"error":{"class":"%s","message":"%s"},"schema_version":1}\n' "$1" "$3"; fi
+  echo "error: $3" >&2; exit "$2"
+}
+args=("$@"); json=0; for a in "${args[@]}"; do [ "$a" = "--json" ] && json=1; done
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+  --version) echo "clean-cli 1.0.0"; exit 0 ;;
+  list) if [ $json = 1 ]; then echo '{"ok":true,"result":{"items":[{"id":1,"name":"widget"},{"id":2,"name":"gadget"}]},"schema_version":1}'; else echo "1  widget"; echo "2  gadget"; fi ;;
+  get) case "${2:-}" in 1|2) echo "{\"ok\":true,\"result\":{\"id\":$2},\"schema_version\":1}" ;; *) fail not_found 3 "item '${2:-}' does not exist" ;; esac ;;
+  delete)
+    if [ "$*" != "${*/--dry-run/}" ]; then echo "would delete ${2:-}"; exit 0; fi
+    if [ "$*" = "${*/--yes/}" ] && [ "$*" = "${*/--force/}" ]; then fail usage 2 "refusing to delete without --yes (no terminal to ask)"; fi
+    echo "deleted ${2:-}" ;;
+  *) json=0; fail usage 2 "unknown command '${1:-}'; run clean-cli --help" ;;
+esac

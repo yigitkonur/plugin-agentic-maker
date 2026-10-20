@@ -1,0 +1,10 @@
+audit-agentic-mcp/SKILL.md#Reference routing table	Navigation table mapping old pattern/decision-tree file names to situations; the old file names no longer exist and mcp/quick-reference.md carries the symptom-to-file routing.
+audit-agentic-mcp/SKILL.md#Pattern files (`references/patterns/`)	Routing rows keyed to old pattern file names; replaced by the aspect-to-file tree in mcp/quick-reference.md and the new per-topic file headers.
+audit-agentic-mcp/SKILL.md#Decision-tree files (`references/decision-trees/`)	Routing rows for decision-tree files whose own Read-when lines and decisions/ file names now do this job.
+audit-agentic-mcp/SKILL.md#Delegation policy	User-level subagent policy (when to delegate, binary done criteria); it belongs to the user's own delegation settings, not to a reference about MCP servers, and the plugin forbids steering the user's agent configuration.
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Contents	Navigation: table of contents of the source file, replaced by the new file's sections.
+audit-agentic-mcp/references/patterns/client-compatibility.md#Contents	Navigation: table of contents of the source file, replaced by the split fresh/client-compatibility-* files.
+audit-agentic-mcp/references/patterns/exemplar-servers.md#Contents	Navigation: table of contents of the source file, replaced by the split fresh/exemplar-servers-* files.
+audit-agentic-mcp/references/patterns/mcp-vs-cli.md#Contents	Navigation: table of contents of the source file, replaced by the two decisions/mcp-vs-cli-* files.
+audit-agentic-mcp/references/patterns/model-behavior.md#Contents	Navigation: table of contents of the source file, replaced by the split fresh/model-behavior-* files.
+audit-agentic-mcp/references/patterns/registry-and-distribution.md#Contents	Navigation: table of contents of the source file, replaced by the split fresh/registry-* files.

@@ -88,7 +88,11 @@ def record_trace(root, session, take_dir):
     return led
 
 
-def fix(root, session, finding_ids, verified_ids, trace_norm=None):
+def _covered(path, targets):
+    return any(path == t or path.startswith(t.rstrip(os.sep) + os.sep) for t in targets)
+
+
+def fix(root, session, finding_ids, verified_ids, trace_norm=None, findings_path=None):
     led, p = load(root, session=session)
     bad = [f for f in finding_ids if f not in verified_ids]
     if bad:
@@ -97,6 +101,15 @@ def fix(root, session, finding_ids, verified_ids, trace_norm=None):
     for fid in finding_ids:
         led["findings"][fid] = {"status": "fixing", "since": now_iso()}
     led["status"] = "fixing"
+    if findings_path:
+        # the gate must watch every file a fix will touch, even one the opening --target list missed
+        data = read_json(findings_path)
+        for f in (data.get("findings") if isinstance(data, dict) else data) or []:
+            ct = (f or {}).get("controlling_text") or {}
+            if f.get("id") in finding_ids and ct.get("file"):
+                fp = ct["file"] if os.path.isabs(ct["file"]) else os.path.abspath(os.path.join(root, ct["file"]))
+                if not _covered(fp, led["targets"]):
+                    led["targets"].append(fp)
     if trace_norm and os.path.exists(trace_norm):
         # the trace these findings came from is the evidence the fix must be re-tested against
         led["fix_base_epoch"] = max(led.get("fix_base_epoch", 0.0), os.path.getmtime(trace_norm))

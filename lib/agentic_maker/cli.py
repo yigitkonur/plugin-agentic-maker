@@ -46,7 +46,7 @@ def build():
            "examples:\n  agentic-maker run .agentic-maker/scenarios/add-json.md --dry-run\n"
            "  agentic-maker run .agentic-maker/scenarios/add-json.md --session \"$CLAUDE_SESSION_ID\"\n"
            "  agentic-maker run s.md --runner existing --from ~/.claude/projects/<cwd>/<session>.jsonl")
-    r.add_argument("scenario", help="scenario file (front matter + Prompt/Fixtures/Receipts sections)")
+    r.add_argument("scenario", help="scenario file, or just its name when it lives in .agentic-maker/scenarios/")
     r.add_argument("--runner", choices=["headless", "existing"], default=None, help="default: the scenario's `runner`")
     r.add_argument("--from", dest="from_file", help="existing: the stream-json file or session transcript to ingest")
     r.add_argument("--workspace", help="existing: directory whose files the receipts should check")
@@ -144,6 +144,15 @@ def _split_globals(argv):
     return out, force_json, force_human, root
 
 
+def _scenario_path(root, s):
+    """A scenario is a path, or just its name: `release-notes` means .agentic-maker/scenarios/release-notes.md."""
+    p = s if os.path.isabs(s) else os.path.join(root, s)
+    if os.path.exists(p):
+        return p
+    named = os.path.join(root, ".agentic-maker", "scenarios", s if s.endswith(".md") else s + ".md")
+    return named if os.path.exists(named) else p
+
+
 def dispatch(args, root, out):
     cmd = args.cmd
     if cmd == "doctor":
@@ -158,7 +167,7 @@ def dispatch(args, root, out):
         return out.ok(res, nxt, human)
 
     if cmd == "run":
-        sc = sc_mod.parse(args.scenario if os.path.isabs(args.scenario) else os.path.join(root, args.scenario))
+        sc = sc_mod.parse(_scenario_path(root, args.scenario))
         runner = args.runner or sc["meta"]["runner"]
         a = {"run_id": args.run_id, "dry_run": args.dry_run, "from_file": args.from_file, "workspace": args.workspace,
              "self_annotate": args.self_annotate}
@@ -274,7 +283,7 @@ def dispatch_ledger(args, root, out):
     if w == "fix":
         chk = check_mod.check_findings(args.findings, args.trace, root)
         led = ledger_mod.fix(root, args.session, args.ids, set(chk["verified_ids"]),
-                             args.trace if os.path.isabs(args.trace) else os.path.join(root, args.trace))
+                             args.trace if os.path.isabs(args.trace) else os.path.join(root, args.trace), args.findings)
         return out.ok({"run_id": led["run_id"], "status": led["status"], "findings": led["findings"]},
                       [{"command": "agentic-maker check diff --findings %s --finding %s" % (args.findings, args.ids[0]), "why": "after the edit, check it fixed the cause"},
                        {"command": "agentic-maker run <scenario> --session %s" % args.session, "why": "a fresh run is the only proof"}],

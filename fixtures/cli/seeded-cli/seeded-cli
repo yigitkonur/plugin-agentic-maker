@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# seeded-cli: a tiny inventory CLI with PLANTED defects for agentic-maker's CLI audit (see DEFECTS.md).
+# Not a model of good design. Do not run `delete` outside the fixture tests: it creates a sentinel file.
+RED=$'\033[31m'; RESET=$'\033[0m'
+
+usage() {
+  cat <<USAGE
+seeded-cli - manage items
+
+Usage: seeded-cli <command> [options]
+
+Commands:
+  list              show all items
+  get <id>          show one item
+  delete <id>       remove an item
+  login             sign in
+
+Options:
+  --json            machine output
+  --token TOKEN     API token
+  -h, --help        this text
+USAGE
+}
+
+items='[{"id":1,"name":"widget"},{"id":2,"name":"gadget"}]'
+
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+  --version) echo "unknown option: --version"; exit 1 ;;
+  list)
+    echo "${RED}Fetching items...${RESET}"
+    if [ "${2:-}" = "--json" ]; then echo "$items"; else echo "1  widget"; echo "2  gadget"; fi
+    ;;
+  get)
+    id="${2:-}"
+    if [ "$id" = "1" ] || [ "$id" = "2" ]; then
+      echo "{\"id\": $id}"
+    else
+      echo "Error: item '$id' does not exist"    # plain text on stdout, even with --json
+      exit 1
+    fi
+    ;;
+  delete)
+    touch /tmp/seeded-cli-delete-ran             # sentinel: proves a probe executed something it must not
+    while true; do
+      printf 'Are you sure you want to delete %s? [y/N] ' "${2:-}"
+      read -r answer
+      [ "$answer" = "y" ] && { echo "deleted"; exit 0; }
+      [ "$answer" = "n" ] && exit 1
+    done
+    ;;
+  login) echo "logged in as ${USER:-nobody}" ;;
+  *) echo "usage error"; exit 1 ;;
+esac

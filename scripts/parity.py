@@ -167,6 +167,7 @@ def main(argv=None):
     ap.add_argument("--no-write", action="store_true", help="do not write docs/parity/*.tsv")
     ap.add_argument("--only", action="append", default=[], metavar="PREFIX", help="limit to source paths starting with PREFIX (repeatable); implies --no-write")
     ap.add_argument("--list", action="store_true", help="print every unmapped heading key")
+    ap.add_argument("--strict-soft", action="store_true", help="with --soft: fail while a missing table key or token has no row in accounted.tsv")
     args = ap.parse_args(argv)
 
     if not os.path.isdir(args.src):
@@ -239,15 +240,16 @@ def main(argv=None):
 
     if args.soft:
         corpus = corpus_text(args.dest)
+        accounted = {(r[0], r[1]) for r in read_tsv(os.path.join(parity_dir, "accounted.tsv")) if len(r) >= 3 and len(r[2].strip()) >= 10}
         miss_keys, miss_tokens = [], []
         for rel in md:
             with open(os.path.join(args.src, rel), encoding="utf-8") as f:
                 text = f.read()
             for k in table_keys(text):
-                if re.sub(r"\s+", " ", k.lower()) not in corpus:
+                if re.sub(r"\s+", " ", k.lower()) not in corpus and (rel, k) not in accounted:
                     miss_keys.append((rel, k))
             for t in sorted(tokens_of(text)):
-                if t.lower() not in corpus:
+                if t.lower() not in corpus and (rel, t) not in accounted:
                     miss_tokens.append((rel, t))
         if not args.no_write:
             for name, rows in (("table-keys-missing.tsv", miss_keys), ("tokens-missing.tsv", miss_tokens)):
@@ -255,7 +257,10 @@ def main(argv=None):
                     w = csv.writer(f, delimiter="\t", lineterminator="\n")
                     w.writerow(["source_file", "item"])
                     w.writerows(rows)
-        print("soft: table keys not found in the new corpus: %d | tokens/thresholds not found: %d" % (len(miss_keys), len(miss_tokens)))
+        print("soft: table keys not found and not accounted: %d | tokens/thresholds not found and not accounted: %d (accounted rows: %d)"
+              % (len(miss_keys), len(miss_tokens), len(accounted)))
+        if args.strict_soft and (miss_keys or miss_tokens):
+            return 1
 
     bad = len(unmapped) + len(dangling) + len(bad_reasons) + len(dangling_dropped) + len(unlisted_files)
     return 1 if bad else 0

@@ -1,0 +1,5 @@
+# commands the audit may run (read-only); one per line, args only
+list
+list --json
+get 1 --json
+get missing --json

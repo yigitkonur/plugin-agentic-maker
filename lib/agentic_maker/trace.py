@@ -17,12 +17,12 @@ from agentic_maker.envelope import CliError
 IGNORED = {
     "stream_event", "rate_limit_event", "api-request", "api-request-blob", "mode", "permission-mode",
     "last-prompt", "atis-latch", "ai-title", "agent-name", "queue-operation", "file-history-snapshot",
-    "file-history-delta", "custom-title", "summary", "api-request-shape",
+    "file-history-delta", "custom-title", "summary", "api-request-shape", "tool_progress",
 }
 SYSTEM_BRIEF = {"hook_started", "hook_response", "background_tasks_changed", "task_started", "task_updated",
                 "task_notification", "status", "compact_boundary", "api_retry", "stop_hook_summary", "turn_duration",
                 "permission_denied"}
-SYSTEM_IGNORED = {"thinking_tokens"}
+SYSTEM_IGNORED = {"thinking_tokens", "task_progress"}
 EXCERPT = 360
 FULL_LIMIT = 200000
 

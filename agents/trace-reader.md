@@ -27,7 +27,7 @@ The brief that spawned you lists absolute paths:
 3. For each drift, find the **controlling text** in the target's files: the exact sentence, example, row, help line or message that led the worker there, or `ABSENT` if nothing said what was needed. Quote it exactly.
 4. State what the worker believed. Thinking text is normally not exposed in the trace, so the belief is `inferred` unless a cited event contains the reasoning itself.
 5. Propose the fix as a **rewrite or deletion of the controlling text**. Do not propose adding a "do / don't" rule next to text that stays. Use `add` only when the controlling text is `ABSENT`.
-6. State a `rerun_predicate` a script can check on the next run's trace (for example `{"type":"tool_used","tool":"Skill"}`).
+6. State a `rerun_predicate` a script can check on the next run's trace, about behaviour and not wording: `{"type":"tool_used","tool":"Skill"}`, `{"type":"reads_file","path":"references/format.md"}`, `{"type":"order","before":"Read","after":"Write"}`. Never a regex over an exact command line.
 7. Record what the text got right as `nice` items with the sentence that prevented an error.
 
 ## Evidence rules

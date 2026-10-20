@@ -1,0 +1,10 @@
+audit-agentic-cli/references/agent-integration.md#Agent Integration Guide	Document title; the content is split by decision across cli/caller-*.md and the frameworks files
+audit-agentic-cli/references/agent-integration.md#Table of Contents	Navigation list only; the new files are small enough to open directly
+audit-agentic-cli/references/discovery-and-auth.md#Discovery and Authentication	Document title; content is split across cli/discovery-and-help, auth-and-secrets and config-and-env
+audit-agentic-cli/references/discovery-and-auth.md#Table of Contents	Navigation list only; the new files are small enough to open directly
+audit-agentic-cli/references/discovery-and-auth.md#Quick Reference	Grouping heading with no content of its own; its four subsections are mapped individually
+audit-agentic-cli/references/examples.md#Agent-Friendly CLI: Code Examples	Document title; code is split per stack under frameworks/ and audits under cli/case-studies.md
+audit-agentic-cli/references/examples.md#Table of Contents	Navigation list only; the new files are small enough to open directly
+audit-agentic-cli/references/examples.md#16. Testing CLI Output	Grouping heading with no content of its own; each 16.x subsection is mapped to its stack's examples-tests.md
+audit-agentic-cli/references/iterative-cli.md#Iterative CLI Patterns	Document title and intro; the intro idea is restated in cli/iterative-repair.md
+audit-agentic-cli/references/mcp-vs-cli-decision.md#MCP vs CLI Decision Guide	Document title; content is split into decisions/surface-choice.md and fresh/mcp-vs-cli-decision-dated.md

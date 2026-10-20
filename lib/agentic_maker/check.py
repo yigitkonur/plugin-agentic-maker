@@ -146,6 +146,7 @@ def _one_receipt(r, ws, run):
 
 
 def check_receipts(take_dir, workspace=None):
+    take_dir = os.path.abspath(take_dir)
     run = read_json(os.path.join(take_dir, "run.json"))
     sc = sc_mod.parse(run["scenario_file"])
     ws = os.path.realpath(workspace or run.get("workspace") or "")

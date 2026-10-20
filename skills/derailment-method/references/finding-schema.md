@@ -41,7 +41,7 @@ The reader returns **one JSON object as its final message**. It never writes fil
 
 ## `rerun_predicate`: how the next run will be judged
 
-A predicate is a machine-checkable test over the next run's trace, stated before the fix.
+A predicate is a machine-checkable test over the next run's trace, stated before the fix. Write it about **behaviour** - was the skill used, was the file opened, did a command exit 0 - and not about the exact wording of a command line or a message, which a correct run may phrase differently (`python3 -I /abs/path/scripts/x.py` and `python3 scripts/x.py` are the same behaviour).
 
 | `type` | Fields | Passes when |
 |---|---|---|
