@@ -101,7 +101,7 @@ else echo "  claude not found: skipped"; fi
 step "hygiene: no personal path, email or token anywhere in the tree"
 # scan what git would publish (tracked + untracked, minus ignored); fall back to the whole tree outside git
 if git rev-parse --git-dir >/dev/null 2>&1; then files=$(git ls-files -co --exclude-standard); else files=$(find . -path ./.git -prune -o -type f -print); fi
-leaks=$(printf '%s\n' "$files" | grep -vE '(^|/)(check\.sh|lint-refs\.py|what-is-true\.md)$' | tr '\n' '\0' | xargs -0 grep -In -E '/Users/[A-Za-z]|@gmail\.|ghp_[A-Za-z0-9]{10,}|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{12,}|BEGIN (RSA |OPENSSH )?PRIVATE KEY' 2>/dev/null || true)
+leaks=$(printf '%s\n' "$files" | grep -vE '(^|/)(check\.sh|lint-refs\.py|what-is-true\.md)$' | tr '\n' '\0' | xargs -0 grep -In -E '/Users/[A-Za-z]|/var/folders/|@gmail\.|ghp_[A-Za-z0-9]{10,}|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{12,}|BEGIN (RSA |OPENSSH )?PRIVATE KEY' 2>/dev/null || true)
 [ -z "$leaks" ] || { printf '%s\n' "$leaks" | head -20; bad "personal data pattern"; }
 big=$(printf '%s\n' "$files" | while read -r f; do [ -f "$f" ] && [ "$(wc -c < "$f")" -gt 1000000 ] && echo "$f"; done)
 [ -z "$big" ] || { echo "$big"; bad "file over 1 MB"; }

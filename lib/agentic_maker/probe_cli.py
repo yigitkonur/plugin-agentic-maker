@@ -122,12 +122,15 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
         top_help = help_text
         listed_top = extract_commands(help_text, True)
         danger = DESTRUCTIVE_WORD.search(" ".join("%s %s" % kv for kv in listed_top.items()) if listed_top else help_text)
-        if not subcommands and help_r is not None:
-            # flags usually live on the subcommands (clap, cobra): read --help of the listed ones that do not sound destructive
+        if help_r is not None:
+            # flags usually live on the subcommands (clap, cobra): read --help of the listed ones that do not sound destructive,
+            # in addition to any the caller named (naming one must not hide the others, or a flag on `list` reads as missing)
             listed = extract_commands(help_r["stdout"] + "\n" + help_r["stderr"], True)
-            subcommands = [n for n, ln in listed.items() if n != "help" and not DESTRUCTIVE_WORD.search(n + " " + ln)][:8]
-            if subcommands:
-                outputs["auto_subcommand_help"] = subcommands
+            auto = [n for n, ln in listed.items() if n != "help" and not DESTRUCTIVE_WORD.search(n + " " + ln)][:8]
+            named = list(subcommands or [])
+            subcommands = named + [a for a in auto if a not in named]
+            if auto:
+                outputs["auto_subcommand_help"] = [a for a in auto if a not in named]
         for line in subcommands or []:
             r = go(shlex.split(line) + ["--help"], "sub")
             if r:
