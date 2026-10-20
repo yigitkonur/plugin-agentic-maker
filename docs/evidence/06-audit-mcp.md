@@ -38,3 +38,12 @@ The HTTP transport was exercised against the same fixtures in `--http` mode: `pr
 - Fixtures are small and written alongside the probe. They show the checks work and the numbers are right, not that the thresholds are right for every server; the thresholds are cues (the references say so).
 - Only unauthenticated servers are measured. OAuth servers are reported as not measured, with a route to `mcpc` / MCP Inspector.
 - The token estimate is chars/4, labelled as such.
+
+## The skill, run for real
+
+`/agentic-maker:audit "python3 .../seeded-server.py"` in a fresh session with only the plugin loaded: two `agentic-maker` calls (`probe mcp`, `scan mcp`), the MCP hard rules and the scoring rubric read from the references, and a report with a scorecard, all fifteen probe findings plus source-level findings, what was executed, what was not run (`tools/call` for anything), and assumptions. Cost about $0.075, no permission denials.
+
+Friction found by running it, fixed afterwards:
+
+- `scan mcp <file>` failed (it wanted a directory): it now accepts a file.
+- The agent said the probe output "was truncated in the middle (about 2.3k characters)" and filled the gap from source. The envelope was 12 KB, mostly a per-tool table; a tool for agents must not exceed what an agent reads. The per-tool rows are now omitted by default (`--full` brings them back; the five largest definitions are always in `budget.largest`): 12.3 KB -> 8.0 KB, with the audit skill told to read the whole reply.

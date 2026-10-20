@@ -25,7 +25,7 @@ def load_rules(path):
     return rules
 
 
-def detect(root, rules, kinds=None, evidence=3):
+def detect(root, rules, kinds=None, evidence=3, only=None):
     cand = {}
     seen = 0
 
@@ -38,6 +38,8 @@ def detect(root, rules, kinds=None, evidence=3):
     for dp, dns, fns in os.walk(root):
         dns[:] = sorted(d for d in dns if d not in SKIP_DIRS)
         for fn in sorted(fns):
+            if only and fn != only:
+                continue
             seen += 1
             if seen > MAX_FILES:
                 break
@@ -91,7 +93,7 @@ MCP_FRAMEWORKS = {"mcp-use": r"mcp-use", "@modelcontextprotocol/sdk": r"@modelco
                   "python FastMCP": r"FastMCP|from mcp\.server", "rmcp": r"rmcp::", "mcp-go": r"mark3labs/mcp-go|modelcontextprotocol/go-sdk"}
 
 
-def mcp_signals(root, limit=6):
+def mcp_signals(root, limit=6, only=None):
     """Static triage: where the registrations are and which risky patterns occur. Locates; the runtime probe measures."""
     pats = {k: re.compile(v) for k, v in MCP_SIGNALS.items()}
     fw = {k: re.compile(v) for k, v in MCP_FRAMEWORKS.items()}
@@ -100,6 +102,8 @@ def mcp_signals(root, limit=6):
     for dp, dns, fns in os.walk(root):
         dns[:] = sorted(d for d in dns if d not in SKIP_DIRS)
         for fn in sorted(fns):
+            if only and fn != only:
+                continue
             if not fn.endswith((".ts", ".tsx", ".js", ".mjs", ".cjs", ".py", ".rs", ".go", ".json", ".toml")):
                 continue
             seen += 1

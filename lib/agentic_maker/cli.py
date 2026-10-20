@@ -84,6 +84,7 @@ def build():
             "  agentic-maker probe mcp .mcp.json --server docs\nA server that needs OAuth is reported as not measured (use mcpc or the MCP Inspector).")
     pm.add_argument("target", help="a command line, an http(s) URL, or an .mcp.json file (with --server)")
     pm.add_argument("--budget", action="store_true", help="print the budget table (always computed; kept for compatibility)")
+    pm.add_argument("--full", action="store_true", help="include the per-tool table (omitted by default: the 5 largest definitions are in budget.largest)")
     pm.add_argument("--call", action="append", default=[], metavar="NAME=JSON", help="call this tool with these arguments (declare read-only tools only); repeatable")
     pm.add_argument("--server", help="server name when the target is an .mcp.json with several")
     pm.add_argument("--cwd", help="working directory for a stdio server (default: an empty temp dir)")
@@ -259,13 +260,16 @@ def dispatch(args, root, out):
         return dispatch_probe(args, root, out)
     if cmd in ("detect", "scan"):
         base = args.path if os.path.isabs(args.path) else os.path.join(root, args.path)
+        only = None
+        if os.path.isfile(base):
+            base, only = os.path.dirname(base), os.path.basename(base)
         if not os.path.isdir(base):
-            raise CliError("not_found", "path_not_found", "no such directory: %s" % base)
+            raise CliError("not_found", "path_not_found", "no such directory or file: %s" % base)
         rules = detect_mod.load_rules(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "surfaces.tsv"))
         kinds = [args.kind] if cmd == "scan" else (args.kind or None)
-        res = detect_mod.detect(os.path.abspath(base), rules, kinds, evidence=(5 if cmd == "scan" else 2))
+        res = detect_mod.detect(os.path.abspath(base), rules, kinds, evidence=(5 if cmd == "scan" else 2), only=only)
         if cmd == "scan" and args.kind == "mcp":
-            res["mcp"] = detect_mod.mcp_signals(os.path.abspath(base))
+            res["mcp"] = detect_mod.mcp_signals(os.path.abspath(base), only=only)
         nxt = []
         kinds_found = set(res["by_kind"])
         if "cli" in kinds_found:
@@ -338,6 +342,9 @@ def dispatch_probe(args, root, out):
             target, {"description_chars": args.description_chars, "schema_chars": args.schema_chars, "response_chars": args.response_chars,
                      "tool_threshold": args.tool_threshold}, args.call, args.timeout, args.cwd, env_pairs, args.server))
         b = res["budget"]
+        if not args.full:
+            res["tools_omitted"] = len(res.pop("tools"))        # keep the envelope small: it is read by a model (O8 applies to us)
+            res["note"] = "per-tool rows omitted; rerun with --full to include them"
         lines = ["# MCP audit: %s (%s)" % (res["server"]["name"], res["transport"]),
                  "tools: %d | definitions: %d chars, ~%d tokens (chars/4, heuristic) | avg ~%s/tool | findings: %s" % (
                      b["tools"], b["definition_chars"], b["est_tokens"], b["avg_tokens_per_tool"], json.dumps(res["summary"]["by_severity"]))]
