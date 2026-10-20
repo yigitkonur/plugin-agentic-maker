@@ -50,6 +50,12 @@ step "skills: every injected !command must end in || true (a failing one aborts 
 if [ -d skills ]; then
   hits=$(grep -rn -E '!`[^`]*`' skills --include=SKILL.md | grep -v '|| true' || true)
   [ -z "$hits" ] || { printf '%s\n' "$hits"; bad "injected command without || true"; }
+  # an injected command the skill's allowed-tools does not cover aborts the invocation too (watched: design, 0 turns)
+  for f in skills/*/SKILL.md; do
+    if grep -qE '!`[^`]*\$\{CLAUDE_PLUGIN_ROOT\}/bin/agentic-maker' "$f"; then
+      grep -E '^allowed-tools:' "$f" | grep -qF 'Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker' || bad "$f injects the CLI by absolute path but allowed-tools does not cover it"
+    fi
+  done
 fi
 
 step "manifests"

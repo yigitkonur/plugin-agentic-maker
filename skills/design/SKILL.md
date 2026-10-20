@@ -3,7 +3,7 @@ name: design
 description: Design an agent-facing CLI, MCP server or skill from an idea: choose the surface, interview, sketch before any code. Started by you.
 disable-model-invocation: true
 argument-hint: "<what the agent should be able to do>"
-allowed-tools: Bash(agentic-maker *) Read Grep Glob
+allowed-tools: Bash(agentic-maker *) Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker *) Read Grep Glob
 ---
 
 # Design
