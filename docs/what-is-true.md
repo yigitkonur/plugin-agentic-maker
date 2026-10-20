@@ -42,3 +42,14 @@ Verdicts: **TRUE** (the plan's assumption holds) · **FALSE** (it did not; conse
 4. §5 / §8: `!`-line lint, `|| true`, hook path via `${CLAUDE_PLUGIN_ROOT}`.
 5. §6.2 herdr row and 03 harness notes: agy is never launched; Codex/agy adapters are `documented only` unless the user supplies a live session.
 6. §12: the sixteen unknowns now carry these verdicts.
+
+
+## S6 - the live round (2026-10-20)
+
+Details and the command sequence: [evidence/07-live-herdr.md](evidence/07-live-herdr.md).
+
+| U | Verdict | Observed |
+|---|---|---|
+| **U6** transcript locations | **TRUE for Claude, PARTIAL for Codex, UNVERIFIED for agy** | Claude: `<session id>.jsonl` under `~/.claude/projects/<cwd with non-alphanumerics as ->/`; a `--restricted` worker reports no `agent_session` to herdr, so the id is chosen up front with `--session-id`. Codex: rollout files exist and a rollout adapter parses a real one (189 events); a live Codex worker was not started. agy: never launched. |
+| **U7** `Ctrl+O` | **TRUE for Claude, UNVERIFIED for Codex and agy** | Claude Code: a toggle of a detailed transcript view with a visible hint and footer; a second press restores the view. Codex and agy not run (cost, trust entry, account rotation); the old skill's agy claim stays attributed to the old skill. |
+| **E9** | new | `--restricted` confines the file tools to the working directory, so a skill cannot read its own `references/` unless the plugin directory is added with `--add-dir`. Without it the worker honestly reports that it cannot follow its skill, and the finding would have been harness-induced drift (O6). Found in the first headless run. |

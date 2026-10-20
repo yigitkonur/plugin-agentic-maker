@@ -32,6 +32,7 @@ python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d["re
 bin/agentic-maker run nope.md --json >/dev/null 2>&1; [ "$?" = 3 ] || bad "missing scenario must exit 3"
 bin/agentic-maker run --json >/dev/null 2>&1; [ "$?" = 2 ] || bad "missing argument must exit 2"
 printf 'not json' | bin/agentic-maker ledger gate >/dev/null 2>&1; [ "$?" = 0 ] || bad "gate must never fail a hook"
+bin/agentic-maker normalize fixtures/traces/codex-rollout-sample.jsonl --out "$tmp/cx" --json >"$tmp/cx.json" 2>/dev/null; python3 -c 'import json,sys; d=json.load(open(sys.argv[1]))["result"]; sys.exit(0 if d["events"]>=6 and d["tool_calls"]==1 else 1)' "$tmp/cx.json" || bad "codex rollout adapter"
 rm -f /tmp/seeded-cli-delete-ran
 bin/agentic-maker probe cli fixtures/cli/seeded-cli/seeded-cli --safe-cmds fixtures/cli/seeded-cli/safe-cmds.txt --json >"$tmp/p1.json" 2>/dev/null; [ "$?" = 8 ] || bad "probe cli on the seeded CLI should exit 8"
 python3 -c 'import json,sys; d=json.load(open(sys.argv[1]))["result"]; sys.exit(0 if d["summary"]["findings"]>=10 else 1)' "$tmp/p1.json" || bad "probe cli should find at least 10 planted defects"

@@ -1,6 +1,6 @@
 # Runner: herdr (a live, interactive worker)
 
-> Read when: the scenario needs what a person would see - trust dialogs, approvals, multi-turn, the real TUI - or the user asks for a live round. Status: written from the herdr-conductor 0.1.2 reference and herdr 0.9.5; the live round that checks it is recorded in `docs/what-is-true.md` (S6).
+> Read when: the scenario needs what a person would see - trust dialogs, approvals, multi-turn, the real TUI - or the user asks for a live round. Status: watched working on herdr 0.9.5 with a Claude worker (2026-10-20): the sequence below ran as written; evidence in `docs/evidence/07-live-herdr.md`. Codex and agy workers were not started.
 
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#Herdr Native Runner & CLI Orchestration Guide -->
 herdr is a terminal workspace manager that runs coding agents in tabs and panes and reports their state (`idle`, `working`, `blocked`, `done`). This plugin does **not** re-document herdr. If the `herdr-conductor` plugin is installed, follow its `herdr` skill for syntax and rules; otherwise `herdr --help`, `herdr agent --help` and `herdr --skill` are the authority. What follows is only what a derailment round needs and where it differs from the old runner guide.
@@ -29,12 +29,12 @@ List workspaces, panes and agents only to find ids; the replies already carry th
 Prefer a new tab in the current workspace over a new workspace; a workspace is only needed if the user wants the round isolated.
 
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#Create a Tab & Resolve its Pane ID -->
-`herdr tab create --workspace <w> --cwd <fresh workspace dir> --label derail-<name> --no-focus`. Take the ids from the reply: `.result.tab.tab_id` and `.result.root_pane.pane_id` (observed on 0.9.5; the old guide's `.result.pane.id` does not exist). The tab's cwd is the seeded temp workspace from `run`'s fixtures, never the target project.
+Prepare first: `agentic-maker run <scenario> --prepare` seeds the workspace, writes the wrapper plugin and prints the exact `claude_args`, the prompt and a `session_id`; it launches nothing (`--workspace-dir <dir>` reuses one scratch directory, so the trust dialog below is answered once). Then `herdr tab create --workspace <w> --cwd <the prepared workspace> --label derail-<name> --no-focus`. Take the ids from the reply: `.result.tab.tab_id` and `.result.root_pane.pane_id` (observed on 0.9.5; the old guide's `.result.pane.id` does not exist). The tab's cwd is the seeded temp workspace from `run`'s fixtures, never the target project.
 
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#3. Launching Worker Agents (`herdr agent start`) -->
 ## 3. Start the worker
 
-`herdr agent start <name> --kind claude --pane <pane_id> --timeout 30000 -- <claude args>`. For a clean room pass the same isolation flags as the headless recipe (`--restricted --strict-mcp-config --plugin-dir <target> --add-dir <target> --model <m>`; see [clean-room](../clean-room.md)). Then **read the screen once**: a first run in a folder stops at a trust dialog (`agent_not_ready`), and herdr-managed claude reads the user's settings unless `--restricted` is given. Answer only dialogs listed in the scenario's `approvals:`; any other dialog is a finding (real friction for a real user) and the run ends `needs_decision`.
+`herdr agent start <name> --kind claude --pane <pane_id> --timeout 30000 -- <claude args>`. For a clean room pass the same isolation flags as the headless recipe (`--restricted --strict-mcp-config --plugin-dir <target> --add-dir <target> --model <m>`; see [clean-room](../clean-room.md)). Then **read the screen once**: a first run in a folder stops at a trust dialog (`agent_not_ready`, observed: the screen names the workspace and offers "No, exit" / "Yes, I trust this folder"; `down`, then confirm on screen, then `enter`). Check that the folder named is the one you prepared. The answer is stored in `~/.claude.json` (`projects[<folder>].hasTrustDialogAccepted`) and outlives the run: a fresh temp directory adds one entry per round, which is why `--workspace-dir` exists. Herdr-managed claude reads the user's settings unless `--restricted` is given. Answer only dialogs listed in the scenario's `approvals:`; any other dialog is a finding (real friction for a real user) and the run ends `needs_decision`.
 
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#4. Prompting Worker Agents (`herdr agent prompt`) -->
 ## 4. Prompt it

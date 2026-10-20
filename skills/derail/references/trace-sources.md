@@ -32,7 +32,7 @@ A reader of that scrollback cannot tell whether the agent ran the right flags, c
 | Harness | What `Ctrl+O` does | Source |
 |---|---|---|
 | agy | unfolds thoughts, full command lines and raw output ("verbose view") | the old skill's notes; not re-tested (agy is never launched by this plugin) |
-| Claude Code | toggles the **transcript viewer** (detail, timestamps, model) | Claude Code documentation, 2026-10 |
+| Claude Code | toggles a detailed transcript view: observed in a herdr pane on 2026-10-20 - folded tool output ends with "… +12 lines (ctrl+o to expand)"; after `ctrl+o` the footer reads "Showing detailed transcript · ctrl+o to toggle · ctrl+e to show all", and a second `ctrl+o` returned to the normal view (`ctrl+e` shows all) | observed, herdr 0.9.5, claude 2.1.302; documented as the transcript viewer |
 | Codex | not verified | - |
 
 Do not assume the table is current; the rule is conditional. **Probe, then toggle, then probe again**: look for expanded-output markers in a scrollback capture first; send `ctrl+o` only if the capture is collapsed; capture again and confirm.

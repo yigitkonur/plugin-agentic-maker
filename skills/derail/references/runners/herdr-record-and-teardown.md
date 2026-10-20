@@ -14,7 +14,7 @@ The old guide had the coordinator pass its own pane id and tell the worker to ru
 - Do not teach the worker herdr commands.
 
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#3. Bi-Directional Dialogue Flow -->
-- Flow: orchestrator prompts the worker -> the worker works and writes its deliverables to disk -> the orchestrator waits (below), reads the worker's record (`agent get <name>` -> `.result.agent.agent_session.value` is the Claude session id -> `~/.claude/projects/<cwd with / as ->/<id>.jsonl`), ingests it with `run --runner existing --from <jsonl> --workspace <dir>`, and runs `check receipts`.
+- Flow: orchestrator prompts the worker -> the worker works and writes its deliverables to disk -> the orchestrator waits (below), reads the worker's record, ingests it with `run <scenario> --runner existing --from <jsonl> --workspace <dir>` (the ingest reuses the prepared seed manifest and takes the run window from the transcript's own timestamps, so `unchanged`, `no-extra-files` and `mtime-in-window` receipts work), and runs `check receipts`. The transcript is `<session_id>.jsonl` under `~/.claude/projects/<the workspace path with every non-alphanumeric character as ->/`: `--prepare` starts the worker with a known `--session-id`, because a `--restricted` worker does not report `agent_session` to herdr (observed: `agent get` showed `agent_session: null`; the hook that reports it belongs to the user settings that `--restricted` ignores).
 
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#5. Detecting Task Completion (`herdr agent wait`) -->
 ## 6. Wait

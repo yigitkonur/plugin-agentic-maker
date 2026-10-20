@@ -69,6 +69,53 @@ class _Builder(object):
         })
 
 
+def _codex_text(items):
+    parts = []
+    for it in items or []:
+        if isinstance(it, dict):
+            parts.append(it.get("text") if it.get("text") is not None else json.dumps(it, ensure_ascii=False))
+        else:
+            parts.append(str(it))
+    return "\n".join(parts)
+
+
+def _codex(b, line, ev, t, ignored):
+    """Codex rollout files (~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl). Observed on codex-cli 0.163."""
+    ty, p = ev.get("type"), ev.get("payload") or {}
+    pt = p.get("type")
+    if ty == "session_meta":
+        b.add(line, "system", "init", name="init", t=t, args={k: p.get(k) for k in ("id", "cwd", "model", "originator", "cli_version")},
+              text="codex session %s cwd=%s" % (p.get("id"), p.get("cwd")))
+    elif ty == "response_item":
+        if pt == "message":
+            b.add(line, p.get("role") or "assistant", "text", text=_codex_text(p.get("content")), t=t)
+        elif pt in ("function_call", "custom_tool_call", "local_shell_call"):
+            args = p.get("arguments") if p.get("arguments") is not None else p.get("input", p.get("action"))
+            if isinstance(args, str):
+                try:
+                    args = json.loads(args)
+                except ValueError:
+                    args = {"input": args}
+            b.tool_names[p.get("call_id")] = p.get("name") or pt
+            b.add(line, "assistant", "tool_use", name=p.get("name") or pt, tool_use_id=p.get("call_id"), args=args, t=t)
+        elif pt in ("function_call_output", "custom_tool_call_output"):
+            out = p.get("output")
+            text = out if isinstance(out, str) else _codex_text(out)
+            b.add(line, "tool", "tool_result", name=b.tool_names.get(p.get("call_id")), tool_use_id=p.get("call_id"), text=text,
+                  is_error=bool(re.search(r"(?i)exit code:?\s*[1-9]|error", text[:200])) if text else False, exit_code=_exit_of(text), t=t)
+        elif pt == "reasoning":
+            b.add(line, "assistant", "thinking", text=_codex_text(p.get("summary")), t=t)
+        else:
+            ignored["response_item/%s" % pt] += 1
+    elif ty == "event_msg":
+        if pt in ("task_started", "task_complete"):
+            b.add(line, "system", "system", name=pt, t=t, text=json.dumps({k: p.get(k) for k in ("turn_id", "duration_ms", "time_to_first_token_ms") if p.get(k) is not None}))
+        else:
+            ignored["event_msg/%s" % pt] += 1
+    else:
+        ignored[ty] += 1
+
+
 def _message(b, line, ev, t):
     msg = ev.get("message") or {}
     role = msg.get("role") or ev.get("type")
@@ -140,6 +187,8 @@ def normalize_file(src):
                           text="%s%s" % (sub, (" exit=%s %s" % (ev.get("exit_code"), out[:200])) if sub == "hook_response" else ""))
                 else:
                     b.add(line_no, "system", "system", name=sub, t=t, text=json.dumps({k: v for k, v in ev.items() if k not in ("type", "subtype", "uuid", "session_id")}, ensure_ascii=False)[:400])
+            elif ty in ("session_meta", "response_item", "event_msg", "turn_context", "world_state", "token_usage_record"):
+                _codex(b, line_no, ev, t, ignored)
             elif ty in ("assistant", "user"):
                 _message(b, line_no, ev, t)
             elif ty == "attachment":

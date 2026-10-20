@@ -296,6 +296,30 @@ def run_headless(root, sc, args):
     return result, warnings, (0 if status == "completed" else 8)
 
 
+def _epoch(ts):
+    import calendar
+    try:
+        return calendar.timegm(time.strptime(ts[:19], "%Y-%m-%dT%H:%M:%S")) + (float(ts[19:23]) if ts[19:20] == "." and ts[19:23].replace(".", "").isdigit() else 0.0)
+    except (TypeError, ValueError):
+        return None
+
+
+def _prepared_manifest(root, workspace):
+    """A live round's workspace was seeded by `run --prepare`; reuse its manifest so `unchanged` and `no-extra-files` work."""
+    if not workspace:
+        return {}
+    base = runs_dir(root)
+    for dp, _, fns in os.walk(base):
+        if "run.json" in fns:
+            try:
+                r = read_json(os.path.join(dp, "run.json"))
+            except CliError:
+                continue
+            if r.get("runner") == "herdr" and r.get("workspace") and os.path.realpath(r["workspace"]) == os.path.realpath(workspace):
+                return r.get("seed_manifest") or {}
+    return {}
+
+
 def run_existing(root, sc, args):
     src = args.get("from_file")
     if not src:
@@ -313,12 +337,66 @@ def run_existing(root, sc, args):
     norm, md = trace_mod.write_outputs(recs, stats, dst, take)
     cont = contamination(dst, set())
     write_json(os.path.join(take, "env.json"), cont)
+    stamps = [e for e in (_epoch(r.get("t")) for r in recs) if e]
+    started = min(stamps) if stamps else os.path.getmtime(src) - 1
+    finished = max(stamps) if stamps else os.path.getmtime(src)
     write_json(os.path.join(take, "run.json"), {
         "run_id": run_id, "scenario": meta["name"], "scenario_file": sc["path"], "kind": meta["kind"], "runner": "existing",
-        "status": "ingested", "source": src, "workspace": args.get("workspace"), "seed_manifest": {}, "stats": stats,
-        "started_at_epoch": os.path.getmtime(src) - 1, "finished_at_epoch": os.path.getmtime(src)})
+        "status": "ingested", "source": src, "workspace": args.get("workspace"),
+        "seed_manifest": _prepared_manifest(root, args.get("workspace")), "stats": stats,
+        "started_at_epoch": started, "finished_at_epoch": finished})
     result = {"run_id": run_id, "take_dir": take, "status": "ingested", "source": src, "events": stats["events"],
               "tool_calls": stats["tool_calls"], "tool_errors": stats["tool_errors"], "trace_md": md, "trace_norm": norm,
               "env_json": os.path.join(take, "env.json"), "isolated": cont.get("isolated"), "unparsed": stats["unparsed"],
               "unknown_event_types": stats["unknown"]}
     return result, sc_mod.target_name_warnings(sc), 0
+
+
+def prepare_live(root, sc, args):
+    """Everything a live (herdr) round needs except the agent itself: a take directory, a seeded workspace, the
+    wrapper plugin, and the exact arguments for `herdr agent start ... -- <args>`. Nothing is launched here."""
+    meta = sc["meta"]
+    claude = shutil.which(os.environ.get("AGENTIC_MAKER_CLAUDE", "claude")) or "claude"
+    args = dict(args, claude=claude, session_id=args.get("session_id") or str(uuid.uuid4()))
+    run_id = args.get("run_id") or "%s-%s" % (time.strftime("%Y%m%d-%H%M%S"), slug(meta["name"]))
+    take = next_take_dir(root, run_id, meta["name"])
+    cmd, exposure, warnings, path_dirs, toolset = plan(root, sc, args, take)
+    if args.get("workspace_dir"):
+        # a stable directory: the trust dialog is answered once, not once per round. It is emptied and reseeded every time.
+        ws = os.path.realpath(_abs(root, args["workspace_dir"]))
+        if ws in ("/", os.path.expanduser("~"), os.path.realpath(root)) or len(ws) < 12:
+            raise CliError("validation", "workspace_dir_unsafe", "refusing to empty %s" % ws, suggestion="pass a dedicated scratch directory")
+        shutil.rmtree(ws, ignore_errors=True)
+        os.makedirs(ws)
+    else:
+        ws = os.path.realpath(tempfile.mkdtemp(prefix="am-ws-"))
+    manifest = seed_workspace(root, sc, ws)
+    if path_dirs:
+        bindir = os.path.join(ws, ".am-bin")
+        os.makedirs(bindir)
+        for binp, name in path_dirs:
+            os.symlink(binp, os.path.join(bindir, name))
+    prompt_file = os.path.join(take, "prompt.txt")
+    with open(prompt_file, "w", encoding="utf-8") as f:
+        f.write(cmd[PROMPT_INDEX] + "\n")
+    # arguments after `claude`: drop `-p <prompt>` (interactive agent) and the headless-only output flags
+    skip_with_value = {"--output-format", "--max-turns", "--max-budget-usd"}
+    tail = cmd[3:]            # drop: claude, -p, <prompt>
+    out_args, k = [], 0
+    while k < len(tail):
+        a = tail[k]
+        if a in skip_with_value:
+            k += 2
+        elif a in ("--verbose", "--include-hook-events"):
+            k += 1
+        else:
+            out_args.append(a)
+            k += 1
+    write_json(os.path.join(take, "run.json"), {
+        "run_id": run_id, "scenario": meta["name"], "scenario_file": sc["path"], "kind": meta["kind"], "runner": "herdr",
+        "status": "prepared", "workspace": ws, "seed_manifest": manifest, "exposure": exposure, "toolset": toolset,
+        "started_at_epoch": time.time(), "finished_at_epoch": None})
+    return {"run_id": run_id, "take_dir": take, "workspace": ws, "prompt_file": prompt_file, "prompt": cmd[PROMPT_INDEX],
+            "claude_args": out_args, "session_id": args["session_id"],
+            "transcript": "find ~/.claude/projects -name '%s.jsonl'" % args["session_id"], "note": "the worker runs in a herdr pane, so herdr sets its own HERDR_* variables there; that is normal for a live round",
+            "after": "the worker is started with --session-id, so its transcript is <session_id>.jsonl under ~/.claude/projects/ (a --restricted worker does not report agent_session to herdr); ingest it with: run <scenario> --runner existing --from <that file> --workspace <workspace>"}, warnings

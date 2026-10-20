@@ -57,6 +57,9 @@ def build():
     r.add_argument("--run-id", help="group takes under this run id (default: timestamp-scenario)")
     r.add_argument("--session", help="orchestrator session id: records the trace in that session's ledger")
     r.add_argument("--dry-run", action="store_true", help="print the plan, cost ceiling and command; launch nothing")
+    r.add_argument("--prepare", action="store_true",
+                   help="live (herdr) rounds: seed the workspace and print the exact `agent start` arguments and prompt; launches nothing")
+    r.add_argument("--workspace-dir", help="with --prepare: seed this dedicated scratch directory (emptied each time) instead of a new temp dir, so the trust dialog is answered once")
     r.add_argument("--self-annotate", action="store_true",
                    help="ask the worker to tag its own [STUCK]/[GUESSED]/[BROKE]/[NICE] moments (cheap, but biased: it changes what the worker does)")
 
@@ -217,7 +220,10 @@ def dispatch(args, root, out):
         sc = sc_mod.parse(_scenario_path(root, args.scenario))
         runner = args.runner or sc["meta"]["runner"]
         a = {"run_id": args.run_id, "dry_run": args.dry_run, "from_file": args.from_file, "workspace": args.workspace,
-             "self_annotate": args.self_annotate}
+             "self_annotate": args.self_annotate, "workspace_dir": args.workspace_dir}
+        if args.prepare:
+            res, warns = runner_mod.prepare_live(root, sc, a)
+            return out.ok(res, [{"command": "herdr tab create --cwd %s --label derail --no-focus" % res["workspace"], "why": "then follow skills/derail/references/runners/herdr.md; one herdr command per reply"}], json.dumps(res, indent=2), warnings=warns)
         if runner == "headless":
             res, warns, code = runner_mod.run_headless(root, sc, a)
         elif runner == "existing":
