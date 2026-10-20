@@ -77,3 +77,52 @@ def detect(root, rules, kinds=None, evidence=3):
     out = sorted(cand.values(), key=lambda e: (e["kind"], e["path"]))
     return {"root": root, "candidates": out, "files_scanned": min(seen, MAX_FILES),
             "truncated": seen > MAX_FILES, "by_kind": {k: sum(1 for e in out if e["kind"] == k) for k in sorted({e["kind"] for e in out})}}
+
+
+MCP_SIGNALS = {
+    "tool_registrations": r"server\.tool|registerTool|@mcp\.tool|@server\.tool|@tool\b|\.AddTool\(|#\[tool\]|\btool\(",
+    "schemas": r"inputSchema|outputSchema|z\.object|z\.string|z\.number|BaseModel|Field\(|jsonschema|JsonSchema",
+    "annotations": r"annotations|readOnlyHint|destructiveHint|idempotentHint|openWorldHint",
+    "error_handling": r"isError|McpError|ProtocolError|try\s*\{|catch\s*\(|except\s",
+    "legacy_sse_transport": r"SSEServerTransport|/sse\b|transport=[\"']sse|transport:\s*[\"']sse|EventSource",
+    "stdout_logging": r"console\.log|process\.stdout|\bprint\(|sys\.stdout",
+}
+MCP_FRAMEWORKS = {"mcp-use": r"mcp-use", "@modelcontextprotocol/sdk": r"@modelcontextprotocol/sdk", "@modelcontextprotocol/server": r"@modelcontextprotocol/server",
+                  "python FastMCP": r"FastMCP|from mcp\.server", "rmcp": r"rmcp::", "mcp-go": r"mark3labs/mcp-go|modelcontextprotocol/go-sdk"}
+
+
+def mcp_signals(root, limit=6):
+    """Static triage: where the registrations are and which risky patterns occur. Locates; the runtime probe measures."""
+    pats = {k: re.compile(v) for k, v in MCP_SIGNALS.items()}
+    fw = {k: re.compile(v) for k, v in MCP_FRAMEWORKS.items()}
+    out = {k: {"count": 0, "first": []} for k in pats}
+    frameworks, seen = set(), 0
+    for dp, dns, fns in os.walk(root):
+        dns[:] = sorted(d for d in dns if d not in SKIP_DIRS)
+        for fn in sorted(fns):
+            if not fn.endswith((".ts", ".tsx", ".js", ".mjs", ".cjs", ".py", ".rs", ".go", ".json", ".toml")):
+                continue
+            seen += 1
+            if seen > MAX_FILES:
+                break
+            full = os.path.join(dp, fn)
+            try:
+                if os.path.getsize(full) > MAX_BYTES:
+                    continue
+                text = open(full, encoding="utf-8", errors="replace").read()
+            except OSError:
+                continue
+            for k, r in fw.items():
+                if r.search(text):
+                    frameworks.add(k)
+            if fn.endswith(".json") or fn.endswith(".toml"):
+                continue
+            rel = os.path.relpath(full, root)
+            for n, ln in enumerate(text.splitlines(), 1):
+                for k, r in pats.items():
+                    if r.search(ln):
+                        out[k]["count"] += 1
+                        if len(out[k]["first"]) < limit:
+                            out[k]["first"].append("%s:%d: %s" % (rel, n, ln.strip()[:110]))
+    return {"signals": out, "frameworks": sorted(frameworks),
+            "notes": ["regex over source: counts are candidates, not confirmed tools", "run probe mcp for the real tool list and budget"]}

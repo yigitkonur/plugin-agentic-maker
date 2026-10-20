@@ -37,6 +37,9 @@ bin/agentic-maker probe cli fixtures/cli/seeded-cli/seeded-cli --safe-cmds fixtu
 python3 -c 'import json,sys; d=json.load(open(sys.argv[1]))["result"]; sys.exit(0 if d["summary"]["findings"]>=10 else 1)' "$tmp/p1.json" || bad "probe cli should find at least 10 planted defects"
 [ ! -e /tmp/seeded-cli-delete-ran ] || bad "SAFETY: probe cli executed the destructive command"
 bin/agentic-maker probe cli fixtures/cli/clean-cli/clean-cli --safe-cmds fixtures/cli/clean-cli/safe-cmds.txt --json >/dev/null 2>&1; [ "$?" = 0 ] || bad "probe cli must report nothing on the clean twin"
+bin/agentic-maker probe mcp "python3 fixtures/mcp/seeded-server.py" --call 'get_user={"id":"nope"}' --call 'export_all={}' --json >"$tmp/m1.json" 2>/dev/null; [ "$?" = 8 ] || bad "probe mcp on the seeded server should exit 8"
+python3 -c 'import json,sys; d=json.load(open(sys.argv[1]))["result"]; ids=" ".join(f["id"] for f in d["findings"]); need=["stdio.pollution","response.error_as_success.get_user","response.big.export_all","destructive.unmarked.delete_account","description.missing.ping_thing"]; sys.exit(0 if all(n in ids for n in need) and d["budget"]["tools"]==24 and d["budget"]["definition_chars"]==5724 else 1)' "$tmp/m1.json" || bad "probe mcp: planted defects or the hand-counted budget (24 tools, 5724 chars) not matched"
+bin/agentic-maker probe mcp "python3 fixtures/mcp/clean-server.py" --call 'get_user={"id":"zz"}' --json >/dev/null 2>&1; [ "$?" = 0 ] || bad "probe mcp must report nothing on the clean server"
 rm -rf "$tmp"
 
 step "reference files: shape and size"

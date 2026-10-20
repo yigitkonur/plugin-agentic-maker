@@ -1,6 +1,6 @@
-# The probes
+# The CLI probes
 
-> Read when: you run, or have to explain, `agentic-maker probe cli`, `probe cli-diff`, `probe mcp` or `scan mcp`, including what replaced the old helper scripts.
+> Read when: you run, or have to explain, `agentic-maker probe cli` or `probe cli-diff`, including what replaced the old help-scan and help-diff scripts. MCP probes: [probes-mcp](probes-mcp.md).
 
 The probes observe a surface the way an agent meets it. They replace helper scripts that only scanned text.
 

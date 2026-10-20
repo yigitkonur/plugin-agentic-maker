@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import re
 import sys
 import traceback
 
@@ -10,6 +11,7 @@ from agentic_maker import check as check_mod
 from agentic_maker import detect as detect_mod
 from agentic_maker import doctor as doctor_mod
 from agentic_maker import probe_cli as probe_cli_mod
+from agentic_maker import probe_mcp as probe_mcp_mod
 from agentic_maker import ledger as ledger_mod
 from agentic_maker import runner as runner_mod
 from agentic_maker import scenario as sc_mod
@@ -76,6 +78,21 @@ def build():
     pc.add_argument("--subcommands", help="file of subcommands whose --help to check (one per line)")
     pc.add_argument("--sub", action="append", default=[], metavar="SUBCOMMAND", help="one subcommand whose --help to check; repeatable")
     pc.add_argument("--timeout", type=int, default=10, help="seconds per invocation (default 10)")
+    pm = _p(psub, "mcp", "Connect to an MCP server (stdio command or unauthenticated Streamable HTTP URL), read its real tools/list and measure the budget "
+            "and the definition quality. Sends only initialize, tools/list (and prompts/list, resources/list when advertised) plus tools/call for tools you declare read-only with --call.",
+            "examples:\n  agentic-maker probe mcp \"python3 /abs/path/server.py\" --budget\n  agentic-maker probe mcp http://127.0.0.1:8000/mcp --call 'get_user={\"id\":\"1\"}'\n"
+            "  agentic-maker probe mcp .mcp.json --server docs\nA server that needs OAuth is reported as not measured (use mcpc or the MCP Inspector).")
+    pm.add_argument("target", help="a command line, an http(s) URL, or an .mcp.json file (with --server)")
+    pm.add_argument("--budget", action="store_true", help="print the budget table (always computed; kept for compatibility)")
+    pm.add_argument("--call", action="append", default=[], metavar="NAME=JSON", help="call this tool with these arguments (declare read-only tools only); repeatable")
+    pm.add_argument("--server", help="server name when the target is an .mcp.json with several")
+    pm.add_argument("--cwd", help="working directory for a stdio server (default: an empty temp dir)")
+    pm.add_argument("--env", action="append", default=[], metavar="K=V", help="environment variable for a stdio server; repeatable")
+    pm.add_argument("--timeout", type=int, default=20, help="seconds per request (default 20)")
+    pm.add_argument("--description-chars", type=int, default=400, help="flag descriptions over N characters (default 400)")
+    pm.add_argument("--schema-chars", type=int, default=2000, help="flag input schemas over N characters (default 2000)")
+    pm.add_argument("--response-chars", type=int, default=4000, help="flag --call responses over N characters (default 4000)")
+    pm.add_argument("--tool-threshold", type=int, default=20, help="flag more than N tools (default 20)")
     pd = _p(psub, "cli-diff", "Compare two saved help snapshots (runs nothing): added/removed commands and flags, likely breaking changes.",
             "example:\n  agentic-maker probe cli-diff help-v1.txt help-v2.txt")
     pd.add_argument("old")
@@ -247,6 +264,8 @@ def dispatch(args, root, out):
         rules = detect_mod.load_rules(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "surfaces.tsv"))
         kinds = [args.kind] if cmd == "scan" else (args.kind or None)
         res = detect_mod.detect(os.path.abspath(base), rules, kinds, evidence=(5 if cmd == "scan" else 2))
+        if cmd == "scan" and args.kind == "mcp":
+            res["mcp"] = detect_mod.mcp_signals(os.path.abspath(base))
         nxt = []
         kinds_found = set(res["by_kind"])
         if "cli" in kinds_found:
@@ -305,7 +324,29 @@ def dispatch_probe(args, root, out):
         if res["likely_breaking"]:
             return out.partial(res, "%d likely breaking change(s)" % len(res["likely_breaking"]), [], human)
         return out.ok(res, [], human)
-    raise CliError("usage", "no_surface", "choose a surface: cli|cli-diff", suggestion="agentic-maker probe --help")
+    if w == "mcp":
+        env_pairs = {}
+        for kv in args.env:
+            if "=" not in kv:
+                raise CliError("usage", "bad_env", "--env expects K=V, got %r" % kv)
+            k, v = kv.split("=", 1)
+            env_pairs[k] = v
+        target = args.target
+        if not re.match(r"^https?://", target) and os.path.exists(os.path.join(root, target)) and target.endswith(".json"):
+            target = os.path.join(root, target)
+        res = probe_mcp_mod.finalize(probe_mcp_mod.probe(
+            target, {"description_chars": args.description_chars, "schema_chars": args.schema_chars, "response_chars": args.response_chars,
+                     "tool_threshold": args.tool_threshold}, args.call, args.timeout, args.cwd, env_pairs, args.server))
+        b = res["budget"]
+        lines = ["# MCP audit: %s (%s)" % (res["server"]["name"], res["transport"]),
+                 "tools: %d | definitions: %d chars, ~%d tokens (chars/4, heuristic) | avg ~%s/tool | findings: %s" % (
+                     b["tools"], b["definition_chars"], b["est_tokens"], b["avg_tokens_per_tool"], json.dumps(res["summary"]["by_severity"]))]
+        lines += ["- [%s] %s: %s (fix: %s)" % (f["severity"], f["id"], f["why_it_matters"], f["fix"]) for f in res["findings"]]
+        nxt = [] if args.call else [{"command": "agentic-maker probe mcp %s --call '<read_only_tool>={}'" % args.target, "why": "measure a real response of a read-only tool (size, isError)"}]
+        if res["findings"]:
+            return out.partial(res, "%d finding(s) on the MCP surface" % len(res["findings"]), nxt, "\n".join(lines))
+        return out.ok(res, nxt, "\n".join(lines))
+    raise CliError("usage", "no_surface", "choose a surface: cli|cli-diff|mcp", suggestion="agentic-maker probe --help")
 
 
 def dispatch_check(args, root, out):
