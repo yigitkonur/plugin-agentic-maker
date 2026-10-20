@@ -34,6 +34,13 @@ DEFAULT_ALLOWED = {
 }
 STATUS_BY_SUBTYPE = {"success": "completed", "error_max_turns": "max_turns", "error_max_budget_usd": "budget"}
 PROMPT_INDEX = 2  # position of the prompt in the command list
+SELF_ANNOTATE = """
+
+As you work, flag only the moments where the provided text changes your path:
+- [STUCK] if it leaves you unable to continue; name the missing or conflicting instruction
+- [GUESSED] if you had to invent a decision the text should have made explicit; point to the section that should have answered it
+- [BROKE] if following it led to a command or pattern that failed; include the command and the instruction that led you there
+- [NICE] if a specific sentence, example or routing cue saved you from a mistake"""
 
 
 def clean_env(meta, extra=None):
@@ -73,7 +80,8 @@ def plan(root, sc, args, run_dir):
     meta = sc["meta"]
     kind = meta["kind"]
     target = str(meta["target"])
-    cmd = [args["claude"], "-p", sc["sections"]["prompt"], "--restricted", "--strict-mcp-config"]
+    prompt = sc["sections"]["prompt"] + (SELF_ANNOTATE if args.get("self_annotate") else "")
+    cmd = [args["claude"], "-p", prompt, "--restricted", "--strict-mcp-config"]
     exposure, warnings, path_dirs = {}, [], []
     allowed = list(meta["allowed_tools"] if meta["allowed_tools"] is not None else DEFAULT_ALLOWED[kind])
     tools = list(meta["tools"] if meta["tools"] is not None else DEFAULT_TOOLS[kind])
@@ -240,7 +248,7 @@ def run_headless(root, sc, args):
         extra_env["PATH"] = bindir + os.pathsep + os.environ.get("PATH", "")
     env, env_names = clean_env(meta, extra_env)
     with open(os.path.join(take, "prompt.txt"), "w", encoding="utf-8") as f:
-        f.write(sc["sections"]["prompt"] + "\n")
+        f.write(cmd[PROMPT_INDEX] + "\n")
     stream_p, err_p = os.path.join(take, "stream.jsonl"), os.path.join(take, "stderr.txt")
     started, timed_out = time.time(), False
     with open(stream_p, "w", encoding="utf-8") as out, open(err_p, "w", encoding="utf-8") as err:
@@ -273,7 +281,7 @@ def run_headless(root, sc, args):
     write_json(os.path.join(take, "run.json"), {
         "run_id": run_id, "scenario": meta["name"], "scenario_file": sc["path"], "kind": meta["kind"], "runner": "headless",
         "started_at_epoch": started, "finished_at_epoch": finished, "status": status, "claude_exit": rc,
-        "session_id": args["session_id"], "workspace": ws, "seed_manifest": manifest,
+        "session_id": args["session_id"], "workspace": ws, "seed_manifest": manifest, "self_annotated": bool(args.get("self_annotate")),
         "command": [("<prompt in prompt.txt>" if i == PROMPT_INDEX else c) for i, c in enumerate(cmd)],
         "exposure": exposure, "env_names": env_names, "toolset": toolset, "stats": stats})
     write_json(os.path.join(take, "env.json"), cont)

@@ -337,3 +337,68 @@ def check_nice(findings_path, root):
             out.append({"quote": n.get("quote"), "status": "REMOVED", "file": ct["file"],
                         "reason": "text a good behaviour depended on is gone and no finding supersedes it"})
     return {"nice": out, "removed": [o for o in out if o["status"] == "REMOVED"]}
+
+
+# ---------------------------------------------------------------- rerun predicates
+def _calls(norm):
+    return [r for r in sorted(norm.values(), key=lambda r: r["n"]) if r["kind"] == "tool_use"]
+
+
+def _call_matches(r, spec):
+    if isinstance(spec, str):
+        spec = {"tool": spec}
+    if r.get("name") != spec.get("tool"):
+        return False
+    im = spec.get("input_match")
+    return re.search(im, json.dumps(r.get("args"), ensure_ascii=False)) is not None if im else True
+
+
+def eval_predicate(pred, norm):
+    """Judge one rerun_predicate against a new trace. Returns {passed: True|False|None, detail}."""
+    t = pred.get("type")
+    recs = sorted(norm.values(), key=lambda r: r["n"])
+    blob = "\n".join("%s %s" % (r.get("text") or "", json.dumps(r.get("args"), ensure_ascii=False) if r.get("args") else "") for r in recs)
+    if t == "tool_used":
+        n = sum(1 for r in _calls(norm) if _call_matches(r, pred))
+        return {"passed": n >= 1, "detail": "%d matching call(s)" % n}
+    if t == "regex":
+        ok = re.search(pred["pattern"], blob, re.S) is not None
+        return {"passed": ok, "detail": "pattern %s" % ("found" if ok else "not found")}
+    if t == "not_regex":
+        ok = re.search(pred["pattern"], blob, re.S) is None
+        return {"passed": ok, "detail": "pattern %s" % ("absent" if ok else "present")}
+    if t == "order":
+        idx = {}
+        for key in ("before", "after"):
+            idx[key] = next((r["n"] for r in _calls(norm) if _call_matches(r, pred[key])), None)
+        ok = idx["before"] is not None and idx["after"] is not None and idx["before"] < idx["after"]
+        return {"passed": ok, "detail": "before at %s, after at %s" % (idx["before"], idx["after"])}
+    if t == "reads_file":
+        hit = [r["n"] for r in _calls(norm) if r.get("name") in ("Read", "Bash", "Grep", "Glob") and pred["path"] in json.dumps(r.get("args"))]
+        return {"passed": bool(hit), "detail": "opened at event(s) %s" % hit if hit else "never opened"}
+    if t == "exit_code":
+        by_id = {r["tool_use_id"]: r for r in _calls(norm)}
+        for r in recs:
+            if r["kind"] == "tool_result" and r.get("tool_use_id") in by_id:
+                if pred["command"] in json.dumps(by_id[r["tool_use_id"]].get("args")):
+                    got = r.get("exit") if r.get("exit") is not None else (1 if r.get("is_error") else 0)
+                    return {"passed": got == int(pred["equals"]), "detail": "exit %s" % got}
+        return {"passed": False, "detail": "no matching command in the trace"}
+    if t == "judged":
+        return {"passed": None, "detail": "needs a judge: %s" % pred.get("criteria")}
+    return {"passed": False, "detail": "unknown predicate type %r" % t}
+
+
+def check_predicates(findings_path, trace_norm, ids=None):
+    data = read_json(findings_path)
+    items = data.get("findings") if isinstance(data, dict) else data
+    norm = trace_mod.load_norm(trace_norm)
+    out = []
+    for f in items or []:
+        if ids and f.get("id") not in ids:
+            continue
+        res = eval_predicate(f.get("rerun_predicate") or {}, norm)
+        out.append(dict(res, id=f.get("id"), type=(f.get("rerun_predicate") or {}).get("type")))
+    passed = sum(1 for o in out if o["passed"] is True)
+    return {"results": out, "passed": passed, "failed": sum(1 for o in out if o["passed"] is False),
+            "needs_judgement": sum(1 for o in out if o["passed"] is None), "total": len(out)}

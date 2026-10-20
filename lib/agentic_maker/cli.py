@@ -53,6 +53,8 @@ def build():
     r.add_argument("--run-id", help="group takes under this run id (default: timestamp-scenario)")
     r.add_argument("--session", help="orchestrator session id: records the trace in that session's ledger")
     r.add_argument("--dry-run", action="store_true", help="print the plan, cost ceiling and command; launch nothing")
+    r.add_argument("--self-annotate", action="store_true",
+                   help="ask the worker to tag its own [STUCK]/[GUESSED]/[BROKE]/[NICE] moments (cheap, but biased: it changes what the worker does)")
 
     n = _p(sub, "normalize", "Turn a record into trace.norm.jsonl and trace.md with [n] evidence references.",
            "example:\n  agentic-maker normalize .agentic-maker/runs/<run>/<scenario>/01")
@@ -76,6 +78,11 @@ def build():
     cd.add_argument("--finding", required=True, help="finding id")
     cd.add_argument("--base", default="HEAD", help="git revision to diff against (default HEAD)")
     cd.add_argument("--justify", help="record why a flagged edit is nevertheless right (turns a flag into ok)")
+    cp = _p(csub, "predicate", "Judge the findings' rerun_predicates against a NEW trace (did the fix change the behaviour?).",
+            "example:\n  agentic-maker check predicate --findings f1.json --trace <new take>/trace.norm.jsonl")
+    cp.add_argument("--findings", required=True)
+    cp.add_argument("--trace", required=True, help="the new take's trace.norm.jsonl")
+    cp.add_argument("--finding", nargs="*", help="only these ids")
     cn = _p(csub, "nice", "Did an edit remove text that a [NICE] behaviour depended on?")
     cn.add_argument("--findings", required=True)
 
@@ -153,7 +160,8 @@ def dispatch(args, root, out):
     if cmd == "run":
         sc = sc_mod.parse(args.scenario if os.path.isabs(args.scenario) else os.path.join(root, args.scenario))
         runner = args.runner or sc["meta"]["runner"]
-        a = {"run_id": args.run_id, "dry_run": args.dry_run, "from_file": args.from_file, "workspace": args.workspace}
+        a = {"run_id": args.run_id, "dry_run": args.dry_run, "from_file": args.from_file, "workspace": args.workspace,
+             "self_annotate": args.self_annotate}
         if runner == "headless":
             res, warns, code = runner_mod.run_headless(root, sc, a)
         elif runner == "existing":
@@ -232,13 +240,23 @@ def dispatch_check(args, root, out):
         if res["verdict"] == "no_change":
             raise CliError("validation", "no_change", res["reason"], details=res, suggestion="apply the fix first")
         return out.ok(res, [], "%s: %s" % (res["verdict"], res.get("reason") or res.get("note", "")))
+    if w == "predicate":
+        res = check_mod.check_predicates(args.findings, args.trace, args.finding)
+        human = "%d passed, %d failed, %d need a judge" % (res["passed"], res["failed"], res["needs_judgement"]) + "".join(
+            "\n  %s %s: %s" % ({True: "PASS", False: "FAIL", None: "JUDGE"}[r["passed"]], r["id"], r["detail"]) for r in res["results"])
+        if res["total"] and res["passed"] == res["total"]:
+            return out.ok(res, [], human)
+        if res["passed"] == 0 and res["total"]:
+            raise CliError("validation", "predicates_not_met", "no rerun predicate passed", details=res,
+                           suggestion="the controlling text still misleads: reread the new trace for the same drift")
+        return out.partial(res, "%d of %d predicates not (yet) met" % (res["total"] - res["passed"], res["total"]), [], human)
     if w == "nice":
         res = check_mod.check_nice(args.findings, root)
         if res["removed"]:
             raise CliError("validation", "nice_removed", "%d [NICE] behaviour(s) lost their supporting text" % len(res["removed"]), details=res,
                            suggestion="restore the text, or set superseded_by on the nice item with the finding that replaces it")
         return out.ok(res, [], "%d nice item(s) intact" % len(res["nice"]))
-    raise CliError("usage", "no_gate", "choose a gate: receipts|findings|diff|nice", suggestion="agentic-maker check --help")
+    raise CliError("usage", "no_gate", "choose a gate: receipts|findings|diff|predicate|nice", suggestion="agentic-maker check --help")
 
 
 def dispatch_ledger(args, root, out):

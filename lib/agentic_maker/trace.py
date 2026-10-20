@@ -154,12 +154,20 @@ def normalize_file(src):
                       args={k: ev.get(k) for k in ("num_turns", "total_cost_usd", "duration_ms", "stop_reason", "terminal_reason")} | {"permission_denials": ev.get("permission_denials")})
             else:
                 unknown["%s/%s" % (ty, sub) if sub else str(ty)] += 1
+    fmt = "jsonl"
+    if not b.recs and unparsed:
+        # not JSON at all: a terminal capture. Keep every line as a `screen` event so it can still be cited as [n].
+        fmt, unparsed = "text", 0
+        with open(src, encoding="utf-8", errors="replace") as f:
+            for line_no, raw in enumerate(f, 1):
+                if raw.strip():
+                    b.add(line_no, "screen", "screen", text=raw.rstrip("\n"))
     if not b.recs:
         raise CliError("validation", "empty_trace", "%s holds no events this parser understands" % src,
                        details={"ignored": dict(ignored), "unknown": dict(unknown), "unparsed": unparsed},
                        suggestion="pass a Claude stream-json file or a session transcript JSONL")
     stats = {
-        "events": len(b.recs), "unparsed": unparsed, "ignored": dict(ignored), "unknown": dict(unknown),
+        "format": fmt, "events": len(b.recs), "unparsed": unparsed, "ignored": dict(ignored), "unknown": dict(unknown),
         "results": len(results),
         "cost_usd": round(max([r.get("total_cost_usd") or 0 for r in results] or [0]), 6),
         "turns": sum((r.get("num_turns") or 0) for r in results),
