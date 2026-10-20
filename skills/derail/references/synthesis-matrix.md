@@ -26,4 +26,4 @@ Before editing the target, summarize a multi-session audit in one table:
 | `<id>` | `<repo>` | static site | full local build | skipped remote triggers | C1, M1 | add a two-tier contract |
 | `<id>` | `<repo>` | no-build | contract checks | left a 30 KB workflow un-audited | C2, O1 | add staged deprecation |
 
-The rows are the shape of the old template with the repository names removed; the codes show how one table feeds the fix list.
+The codes show how one table feeds the fix list.

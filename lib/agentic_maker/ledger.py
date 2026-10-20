@@ -8,10 +8,11 @@ claimed with no fresh evidence. Every other situation passes silently.
 import json
 import os
 import re
+import shutil
 import sys
 import time
 
-from agentic_maker.common import newest_mtime, now_iso, read_json, runs_dir, state_dir, write_json
+from agentic_maker.common import ensure_state_gitignore, newest_mtime, now_iso, read_json, runs_dir, state_dir, write_json
 from agentic_maker.envelope import CliError
 
 PASS_STATUSES = {"awaiting_user", "closed", "unverified-recorded", "abandoned"}
@@ -65,6 +66,7 @@ def init(root, session, targets, run_id=None, budget_usd=10.0, rounds=5, ttl_hou
         "budget_usd_total": budget_usd, "spent_usd": 0.0, "traces": [], "last_trace_epoch": 0.0,
         "findings": {}, "unverified": [], "events": [{"t": now_iso(), "event": "init"}],
     }
+    ensure_state_gitignore(root)
     p = _path(root, run_id)
     write_json(p, led)
     write_json(ptr, {"run_id": run_id, "ledger": p})
@@ -99,12 +101,37 @@ def _covered(path, targets):
     return any(path == t or path.startswith(t.rstrip(os.sep) + os.sep) for t in targets)
 
 
+def refuse_if_over_budget(root, session):
+    """`run --session` calls this before it spends: the ceiling covers the workers' recorded cost (readers are not metered)."""
+    try:
+        led, _ = load(root, session=session)
+    except CliError:
+        return          # no ledger: nothing to enforce (the caller warns)
+    if led.get("spent_usd", 0) >= led.get("budget_usd_total", 1e9):
+        raise CliError("conflict", "budget_exhausted", "the ledger's budget is spent: $%s of $%s" % (led["spent_usd"], led["budget_usd_total"]),
+                       suggestion="agentic-maker ledger close --session %s --outcome open --reason \"budget spent\"; or start a new ledger with a larger --budget-usd" % session)
+
+
+def _snapshot(root, led, fid, findings, fp):
+    """Keep the controlling file as it was when this fix started: `check diff` judges the edit against it, not against git HEAD."""
+    rel = os.path.relpath(fp, root)
+    rel = rel if not rel.startswith("..") else os.path.join("_outside", fp.lstrip(os.sep))
+    dest = os.path.join(runs_dir(root), led["run_id"], "snapshots", fid, rel)
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    shutil.copy2(fp, dest)
+    led.setdefault("snapshots", {}).setdefault(fid, []).append({"file": fp, "snapshot": dest})
+
+
 def fix(root, session, finding_ids, verified_ids, trace_norm=None, findings_path=None):
     led, p = load(root, session=session)
     bad = [f for f in finding_ids if f not in verified_ids]
     if bad:
         raise CliError("validation", "finding_not_verified", "refusing to fix unverified finding(s): %s" % ", ".join(bad),
                        suggestion="agentic-maker check findings <file> --trace <trace.norm.jsonl>; the reader's claims are leads until the quotes check out")
+    if led.get("rounds_used", 0) >= led.get("rounds_max", 5):
+        raise CliError("conflict", "rounds_exhausted", "round limit reached: %d of %d fix rounds used" % (led.get("rounds_used", 0), led.get("rounds_max", 5)),
+                       suggestion="agentic-maker ledger close --session %s --outcome open --reason \"round limit\"; the remaining findings are reported as open" % session)
+    led["rounds_used"] = led.get("rounds_used", 0) + 1
     for fid in finding_ids:
         led["findings"][fid] = {"status": "fixing", "since": now_iso()}
     led["status"] = "fixing"
@@ -117,6 +144,8 @@ def fix(root, session, finding_ids, verified_ids, trace_norm=None, findings_path
                 fp = ct["file"] if os.path.isabs(ct["file"]) else os.path.abspath(os.path.join(root, ct["file"]))
                 if not _covered(fp, led["targets"]):
                     led["targets"].append(fp)
+                if os.path.isfile(fp):
+                    _snapshot(root, led, f["id"], data, fp)
     if trace_norm and os.path.exists(trace_norm):
         # the trace these findings came from is the evidence the fix must be re-tested against
         led["fix_base_epoch"] = max(led.get("fix_base_epoch", 0.0), os.path.getmtime(trace_norm))

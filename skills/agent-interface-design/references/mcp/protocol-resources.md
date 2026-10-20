@@ -38,7 +38,7 @@ Resources beat tools for data access when:
 
 - the data is read-only and changes infrequently;
 - the same data is referenced by multiple tools or prompts;
-- the data benefits from caching (resources support ETags);
+- the data benefits from caching or change tracking (resources carry a `lastModified` annotation and support subscriptions; there is no ETag mechanism);
 - you want URI-addressable content for cross-server referencing.
 
 Use a tool instead when the read has parameters beyond a URI path: complex filters, pagination, sorting.

@@ -46,6 +46,6 @@ Compare file times with the run window. A file older than the run was recycled, 
 <!-- src: audit-skill-by-derailment/references/disk-evidence-and-anti-sycophancy.md#3. Automated Artifact Auditing Recipe -->
 ## 3. The automated recipe
 
-The old recipe was a shell loop over `find` printing name, byte size, `file` type and a VALID/SUSPICIOUS verdict for a hard-coded set of media extensions. It is replaced by `check receipts`, which prints one line per receipt with its detail (`2 bytes`, `mtime outside the run window (stale file?)`, `unexpected: scratch/tmp.dat`), covers any artifact kind through the receipt kinds above, and refuses paths that leave the workspace.
+`check receipts` does the checking. It prints one line per receipt with its detail (`2 bytes`, `mtime outside the run window (stale file?)`, `unexpected: scratch/tmp.dat`), covers any artifact kind through the receipt kinds above, and refuses paths that leave the workspace.
 
 If a scenario has no `## Receipts`, `check receipts` says so, and completion rests on the agent's own report: write receipts for anything the task is meant to leave behind.

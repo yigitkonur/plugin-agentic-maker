@@ -11,7 +11,7 @@ Development workflow:
 
 ```
 1. Start:     run the framework's dev command with the Inspector attached
-2. Open:      MCP Inspector at http://localhost:5173
+2. Open:      MCP Inspector at the URL it prints on start (`npx @modelcontextprotocol/inspector`)
 3. Edit:      Modify tool descriptions, add parameters, fix bugs
 4. Automatic: Server restarts, Inspector reconnects
 5. Test:      Call tools in Inspector to verify changes

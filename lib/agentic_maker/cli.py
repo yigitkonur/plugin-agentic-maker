@@ -106,7 +106,7 @@ def build():
             "examples:\n  agentic-maker probe mcp \"python3 /abs/path/server.py\" --budget\n  agentic-maker probe mcp http://127.0.0.1:8000/mcp --call 'get_user={\"id\":\"1\"}'\n"
             "  agentic-maker probe mcp .mcp.json --server docs\nA server that needs OAuth is reported as not measured (use mcpc or the MCP Inspector).")
     pm.add_argument("target", help="a command line, an http(s) URL, or an .mcp.json file (with --server)")
-    pm.add_argument("--budget", action="store_true", help="print the budget table (always computed; kept for compatibility)")
+    pm.add_argument("--budget", action="store_true", help="accepted so a command line can say what it is for; the budget is always computed")
     pm.add_argument("--full", action="store_true", help="include the per-tool table (omitted by default: the 5 largest definitions are in budget.largest)")
     pm.add_argument("--call", action="append", default=[], metavar="NAME=JSON", help="call this tool with these arguments (declare read-only tools only); repeatable")
     pm.add_argument("--server", help="server name when the target is an .mcp.json with several")
@@ -145,10 +145,11 @@ def build():
     cf.add_argument("--trace", required=True, help="the take's trace.norm.jsonl")
     cf.add_argument("--out", help="also write {verified_ids: [...]} here")
     cd = _p(csub, "diff", "Did the applied edit fix the cause, or only add a rule beside the unchanged cause?",
-            "example:\n  agentic-maker check diff --findings f1.json --finding F2")
+            "example:\n  agentic-maker check diff --findings f1.json --finding F2 --session \"$CLAUDE_SESSION_ID\"")
     cd.add_argument("--findings", required=True, help="the verified findings file")
     cd.add_argument("--finding", required=True, help="finding id")
-    cd.add_argument("--base", default="HEAD", help="git revision to diff against (default HEAD)")
+    cd.add_argument("--session", help="the orchestrator session: judge the edit against the copy `ledger fix` kept (this fix only, no git needed)")
+    cd.add_argument("--base", default="HEAD", help="without --session: the git revision to diff against (default HEAD; cumulative across rounds)")
     cd.add_argument("--justify", help="record why a flagged edit is nevertheless right (turns a flag into ok)")
     cp = _p(csub, "predicate", "Judge the findings' rerun_predicates against a NEW trace (did the fix change the behaviour?).",
             "example:\n  agentic-maker check predicate --findings f1.json --trace <new take>/trace.norm.jsonl")
@@ -167,8 +168,8 @@ def build():
     li.add_argument("--session", required=True, help="the orchestrator's session id (${CLAUDE_SESSION_ID}); the Stop gate keys on it")
     li.add_argument("--target", nargs="+", required=True, help="files or directories the fixes will edit")
     li.add_argument("--run-id", help="name of the run directory (default: a timestamp); an existing id is refused")
-    li.add_argument("--budget-usd", type=float, default=10.0, help="ceiling for workers and readers together (default 10)")
-    li.add_argument("--rounds", type=int, default=5, help="fix-and-rerun rounds before the loop must stop (default 5)")
+    li.add_argument("--budget-usd", type=float, default=10.0, help="ceiling for the workers' recorded cost; `run --session` refuses to start another run once it is spent (readers are not metered) (default 10)")
+    li.add_argument("--rounds", type=int, default=5, help="fix-and-rerun rounds: `ledger fix` refuses once this many are used (default 5)")
     li.add_argument("--ttl-hours", type=float, default=6.0, help="after this long the Stop gate stops blocking (default 6)")
     li.add_argument("--force", action="store_true", help="replace this session's open ledger pointer (the old run directory is kept)")
     ls = _p(lsub, "status", "Show the ledger.", "example:\n  agentic-maker ledger status --session \"$CLAUDE_SESSION_ID\"")
@@ -257,6 +258,8 @@ def dispatch(args, root, out):
                                suggestion="agentic-maker run %s --dry-run  (the plan and cost ceiling), then --prepare without --dry-run" % args.scenario)
             res, warns = runner_mod.prepare_live(root, sc, a)
             return out.ok(res, [{"command": "herdr tab create --cwd %s --label derail --no-focus" % res["workspace"], "why": "then follow skills/derail/references/runners/herdr.md; one herdr command per reply"}], json.dumps(res, indent=2), warnings=warns)
+        if args.session and runner == "headless" and not args.dry_run:
+            ledger_mod.refuse_if_over_budget(root, args.session)
         if runner == "headless":
             res, warns, code = runner_mod.run_headless(root, sc, a)
         elif runner == "existing":
@@ -409,6 +412,14 @@ def dispatch_probe(args, root, out):
     raise CliError("usage", "no_surface", "choose a surface: cli|cli-diff|mcp", suggestion="agentic-maker probe --help")
 
 
+def _finding_file(findings_path, fid):
+    data = read_json(findings_path)
+    for f in (data.get("findings") if isinstance(data, dict) else data) or []:
+        if isinstance(f, dict) and f.get("id") == fid:
+            return (f.get("controlling_text") or {}).get("file") or ""
+    raise CliError("not_found", "finding_not_found", "no finding %r in %s" % (fid, findings_path))
+
+
 def dispatch_check(args, root, out):
     w = args.what
     if w == "receipts":
@@ -442,7 +453,17 @@ def dispatch_check(args, root, out):
                            suggestion="the reader must quote the trace verbatim and cite existing [n] events")
         return out.partial(res, "%d of %d findings were rejected" % (res["rejected"], res["total"]), nxt, human)
     if w == "diff":
-        res = check_mod.check_diff(args.findings, args.finding, root, args.base, args.justify)
+        snap = None
+        if args.session:
+            led, _ = ledger_mod.load(root, session=args.session)
+            fnd = _finding_file(args.findings, args.finding)
+            entries = (led.get("snapshots") or {}).get(args.finding) or []
+            match = [e for e in entries if os.path.realpath(e["file"]) == os.path.realpath(fnd if os.path.isabs(fnd) else os.path.join(root, fnd))]
+            if not match:
+                raise CliError("not_found", "no_snapshot", "`ledger fix` kept no copy of %s for finding %s" % (fnd, args.finding),
+                               suggestion="run `agentic-maker ledger fix %s --session %s --findings %s --trace <norm>` before editing" % (args.finding, args.session, args.findings))
+            snap = match[-1]["snapshot"]
+        res = check_mod.check_diff(args.findings, args.finding, root, args.base, args.justify, snap)
         if res["verdict"] == "flag":
             raise CliError("validation", "patch_by_rule", res["reason"], details=res,
                            suggestion="rewrite or delete the quoted controlling text; if a rule truly is the fix, rerun with --justify \"<why>\"")
@@ -487,7 +508,7 @@ def dispatch_ledger(args, root, out):
         led = ledger_mod.fix(root, args.session, args.ids, set(chk["verified_ids"]),
                              args.trace if os.path.isabs(args.trace) else os.path.join(root, args.trace), args.findings)
         return out.ok({"run_id": led["run_id"], "status": led["status"], "findings": led["findings"]},
-                      [{"command": "agentic-maker check diff --findings %s --finding %s" % (args.findings, args.ids[0]), "why": "after the edit, check it fixed the cause"},
+                      [{"command": "agentic-maker check diff --findings %s --finding %s --session %s" % (args.findings, args.ids[0], args.session), "why": "after the edit, check it fixed the cause"},
                        {"command": "agentic-maker run <scenario> --session %s" % args.session, "why": "a fresh run is the only proof"}],
                       "fixing: %s" % ", ".join(args.ids))
     if w == "set-status":
@@ -539,7 +560,7 @@ def main(argv):
     except CliError as e:
         return out.fail(e)
     except KeyboardInterrupt:
-        return out.fail(CliError("transient", "interrupted", "interrupted before it finished", suggestion="run it again"))
+        return out.fail(CliError("internal", "interrupted", "interrupted before it finished", suggestion="run it again", retryable=True, exit_code=130))
     except Exception as e:  # never a traceback on stdout
         if os.environ.get("AGENTIC_MAKER_DEBUG"):
             traceback.print_exc()

@@ -42,6 +42,8 @@ def lint(path):
             head = "\n".join(lines[1:end])
             if "as_of:" not in head or "verify_before_citing:" not in head:
                 errs.append("fresh/ front matter lacks as_of or verify_before_citing")
+            elif re.search(r"^as_of:\s*(unknown|)\s*$", head, re.M):
+                errs.append("fresh/ as_of must be a date (YYYY, YYYY-MM or YYYY-MM-DD), not unknown")
             body = lines[end + 1:]
     nonblank = [l for l in body if l.strip()]
     if not nonblank or not nonblank[0].startswith("# "):

@@ -54,8 +54,11 @@ def parse(path):
         k, v = ln.split(":", 1)
         meta[k.strip()] = _value(v, path, k.strip())
     for req in ("name", "kind", "target"):
-        if not meta.get(req):
+        if meta.get(req) in (None, ""):
             raise CliError("validation", "scenario_missing", "%s: front matter needs `%s`" % (path, req))
+    for k in ("name", "target", "wrapper_name", "bin", "bin_name", "model", "kind"):
+        if k in meta and not isinstance(meta[k], str):
+            meta[k] = str(meta[k])      # `name: 12` is a name, not a number
     if meta["kind"] not in KINDS:
         raise CliError("validation", "scenario_kind", "%s: kind must be one of %s, got %r" % (path, "|".join(KINDS), meta["kind"]))
     sections = {}
@@ -98,6 +101,25 @@ def fixture_steps(sc):
             copies.append((m.group(1).strip(), (m.group(2) or "").strip()))
     sh = re.search(r"```(?:sh|bash)\n(.*?)```", text, re.S)
     return copies, (sh.group(1) if sh else "")
+
+
+def writability_warnings(sc, allowed):
+    """A worker that cannot write files cannot satisfy a receipt that expects one: the run ends in permission denials the reader
+    would report as drift (O6, a defect of the run). Say so before the spend."""
+    if any(t.split("(")[0] in ("Write", "Edit", "NotebookEdit", "Bash") for t in allowed):
+        return []
+    copies, _ = fixture_steps(sc)
+    seeded = {(d or os.path.basename(s.rstrip("/"))) for s, d in copies}
+    need = []
+    for r in receipt_specs(sc):
+        if r["kind"] in ("exists", "nonempty", "regex", "type", "json"):
+            p = r["spec"].split()[0] if r["spec"].split() else ""
+            if p and p not in seeded:
+                need.append(p)
+    if not need:
+        return []
+    return ["allowed_tools has no Write, Edit or Bash, so the worker cannot create %s which the receipts expect; add the tools the task needs "
+            "to `allowed_tools`, or the run ends in permission denials that look like drift" % ", ".join(sorted(set(need)))]
 
 
 def receipt_specs(sc):

@@ -3,7 +3,7 @@
 > Read when: you audit a skill or tool from sessions you or a fleet already ran - other repos, other harnesses, a live pane you must not disturb.
 
 <!-- src: audit-skill-by-derailment/SKILL.md#Mode B: Live Herdr Multi-Pane Fleet Audit | audit-skill-by-derailment/references/herdr-pane-audit.md#Herdr Multi-Pane Live Session Audit & Agent Fleet Coordination -->
-This is the old "Mode B". Nothing is launched: `agentic-maker run <scenario> --runner existing --from <record>` copies the record into a take directory, normalizes it and writes the same `env.json`, `run.json`, `trace.md`, so the reader and every check work unchanged. A fleet audit repeats the ingest per record, then merges the findings ([synthesis-matrix](../synthesis-matrix.md)).
+Nothing is launched: `agentic-maker run <scenario> --runner existing --from <record>` copies the record into a take directory, normalizes it and writes the same `env.json`, `run.json`, `trace.md`, so the reader and every check work unchanged. A fleet audit repeats the ingest per record, then merges the findings ([synthesis-matrix](../synthesis-matrix.md)).
 
 Two honest limits: a session transcript has no `init` event, so what the agent could see is **unknown** (`env.json` says so); and without a seeded workspace the Receipts cannot run unless you pass `--workspace <dir>` for the directory the agent worked in.
 
@@ -47,16 +47,16 @@ Never prompt an agent while you are capturing its run - the prompt becomes part 
 3. Wait for the state change with a single background wait; do not poll. Read the result from the machine (files, exit codes), not from the agent's report.
 
 <!-- src: audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#audit-worker-pane.sh -->
-## Replacing `audit-worker-pane.sh`
-The script extracted scrollback, crash lines, tool commands, thoughts and a media-file artifact table from one pane. The parts survive as: scrollback capture (above), `normalize` (tool calls, errors, exit codes), `check receipts` (disk verification for any artifact kind). The media-type table and the result-delimiter extraction were specific to a video skill and are dropped.
+## Auditing one pane
+A pane's evidence is: its scrollback capture (above), `normalize` (tool calls, errors, exit codes) and `check receipts` (disk verification for any artifact kind). Receipts are generic: no file type or result delimiter is built in.
 
 <!-- src: audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#Usage -->
 ### Usage
-The old `bash scripts/audit-worker-pane.sh <pane-id> -d <output-dir>` becomes: capture the pane, `run --runner existing --from capture.txt --workspace <output-dir>`, then `check receipts`.
+Capture the pane, run `run --runner existing --from capture.txt --workspace <output-dir>`, then `check receipts`.
 
 <!-- src: audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#Arguments -->
 ### Arguments
-`<pane-id>` -> the agent or pane you capture; `--workspace` replaces the old output-dir argument.
+The agent or pane you capture; `--workspace` is the directory the agent worked in.
 
 <!-- src: audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#Options -->
 ### Options
@@ -67,8 +67,8 @@ The old `bash scripts/audit-worker-pane.sh <pane-id> -d <output-dir>` becomes: c
 Registration metadata, crash lines, tool commands, receipts and the artifact check are now `env.json`, `trace.md`, `receipts.json`.
 
 <!-- src: audit-skill-by-derailment/scripts/read-herdr-panes.sh.md#`read-herdr-panes.sh` -->
-## Replacing `read-herdr-panes.sh`
-It read and formatted scrollback and thought blocks from several panes. Capture each pane to a file and ingest each as its own take.
+## Several panes
+Capture each pane to a file and ingest each as its own take.
 
 <!-- src: audit-skill-by-derailment/scripts/read-herdr-panes.sh.md#Usage -->
 ### Usage

@@ -3,7 +3,7 @@
 > Read when: you are producing findings as the reader, or checking that a findings file is well-formed.
 
 <!-- src: audit-skill-by-derailment/references/forensic-subagent-briefs.md#2. Universal Forensic Auditor Subagent Brief Template -->
-The reader returns **one JSON object as its final message**. It never writes files. The orchestrator saves it as `findings/<reader>.json` and runs `agentic-maker check findings` on it; only verified findings can be fixed. This replaces the old markdown report with a pane-coordinates handback.
+The reader returns **one JSON object as its final message**. It never writes files. The orchestrator saves it as `findings/<reader>.json` and runs `agentic-maker check findings` on it; only verified findings can be fixed.
 
 ```json
 {

@@ -5,7 +5,7 @@
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#4b. The Inter-Agent Communication & Return-Address Contract -->
 ## 5. Reporting back (replaces the return-address law)
 
-The old guide had the coordinator pass its own pane id and tell the worker to run `herdr agent prompt <coordinator pane> "<report>"`. That is replaced, for three reasons: the conductor's guard hook denies a prompt aimed at the caller's own pane; a worker that must also run herdr commands is no longer behaving as a user's agent (O6); and a report is only a claim. The record is the evidence, collected by the orchestrator:
+The worker does not report back by prompting the coordinator's pane. Three reasons: the conductor's guard hook denies a prompt aimed at the caller's own pane; a worker that must also run herdr commands is no longer behaving as a user's agent (O6); and a report is only a claim. The record is the evidence, collected by the orchestrator:
 
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#1. The Coordinator Return-Address Law -->
 - Do not discover or hand out the coordinator's pane id.
@@ -40,9 +40,9 @@ There is no polling fallback. A lost wait is restarted; time passing is not a st
 Close only the tab this run created (`herdr tab close <tab_id>`), after stopping any waiter you started on it. Look first (`agent get`): hands off a pane whose input box holds text this run did not type or that the user focused.
 
 <!-- src: audit-skill-by-derailment/SKILL.md#Mode C: The Native Two-Tier Herdr Loop (Recommended) -->
-## The loop in one view (old "Mode C")
+## The loop in one view
 
-Provision a tab -> start the worker -> prompt it with the scenario -> wait -> collect the record -> receipts -> `trace-reader` -> verified findings -> fix -> rerun. Mode C was "recommended"; here it is the **confirming** round, not the inner loop: iterate in the cheaper headless runner, then confirm once live, because a live round costs wall-clock time, runs sequentially and is only as clean as the user's herdr.
+Provision a tab -> start the worker -> prompt it with the scenario -> wait -> collect the record -> receipts -> `trace-reader` -> verified findings -> fix -> rerun. The live round is the **confirming** round, not the inner loop: iterate in the cheaper headless runner, then confirm once live, because a live round costs wall-clock time, runs sequentially and is only as clean as the user's herdr.
 
 <!-- src: audit-skill-by-derailment/SKILL.md#Step 1: Provision a Dedicated Tab & Resolve Pane ID -->
 **Step 1 - provision the tab:** section 2 above (new tab, `--no-focus`, ids from the reply).

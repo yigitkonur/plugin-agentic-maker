@@ -3,7 +3,7 @@
 > Read when: you decide which record of a run to analyse, a source is missing, or you wonder whether to toggle a verbose view.
 
 <!-- src: audit-skill-by-derailment/references/ctrl-o-verbose-physics.md#AGY Terminal TUI Physics & The Ctrl+O Verbose Audit Protocol -->
-The invariant behind the old `Ctrl+O` rule is **never judge from a view that hides what the agent did**. A terminal view that folds tool arguments, reasoning and output is such a view. The old method answered it with one keystroke for one harness; the plugin answers it with a ranking of sources by trust, because most harnesses leave a better record than their screen.
+The rule behind `Ctrl+O` is **never judge from a view that hides what the agent did**. A terminal view that folds tool arguments, reasoning and output is such a view. One keystroke answers it for one harness; a ranking of sources by trust answers it everywhere, because most harnesses leave a better record than their screen.
 
 ## The ladder
 
@@ -31,7 +31,7 @@ A reader of that scrollback cannot tell whether the agent ran the right flags, c
 
 | Harness | What `Ctrl+O` does | Source |
 |---|---|---|
-| agy | unfolds thoughts, full command lines and raw output ("verbose view") | the old skill's notes; not re-tested (agy is never launched by this plugin) |
+| agy | unfolds thoughts, full command lines and raw output ("verbose view") | not re-tested here (agy is never launched by this plugin) |
 | Claude Code | toggles a detailed transcript view: observed in a herdr pane on 2026-10-20 - folded tool output ends with "… +12 lines (ctrl+o to expand)"; after `ctrl+o` the footer reads "Showing detailed transcript · ctrl+o to toggle · ctrl+e to show all", and a second `ctrl+o` returned to the normal view (`ctrl+e` shows all) | observed, herdr 0.9.5, claude 2.1.302; documented as the transcript viewer |
 | Codex | not verified | - |
 

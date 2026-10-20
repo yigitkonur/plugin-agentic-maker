@@ -1,9 +1,9 @@
 # Runner: headless (the default)
 
-> Read when: you start fresh workers with `agentic-maker run`, or you are replacing the old synthetic-subagent test, the launch script or the trace parser.
+> Read when: you start fresh workers with `agentic-maker run`, or need to know what a take directory holds and what its exit codes mean.
 
 <!-- src: audit-skill-by-derailment/SKILL.md#Mode A: Synthetic Subagent Execution -->
-The old "Mode A" was a fast in-process simulation run by a subagent that shared the parent's skills and settings. That is not a fresh session, so it is replaced by a real fresh process in a clean room ([clean-room](../clean-room.md)). The cheap smoke check survives as `run <scenario> --dry-run` (plan only) and a small scenario with `max_turns: 8`.
+A worker is a real fresh process in a clean room ([clean-room](../clean-room.md)), not a subagent of this session: a subagent inherits the parent's skills and settings, so it is not a fresh session. The cheap smoke check is `run <scenario> --dry-run` (plan only) and a small scenario with `max_turns: 8`.
 
 1. Write a prompt with everyday user energy and two or three implicit constraints ([scenarios](../scenarios.md)).
 2. `agentic-maker run <scenario> --session ${CLAUDE_SESSION_ID}` launches the worker, waits (the scenario's `timeout_s`), and writes the take directory.
@@ -19,12 +19,12 @@ The old "Mode A" was a fast in-process simulation run by a subagent that shared 
 `status`: `completed`, `max_turns`, `budget`, `timeout`, `error`. A natural finish exits **0**; any other status exits **8** (partial: the trace was kept and is still evidence). A worker that produced no usable record exits **7** (dependency_failed) with its stderr.
 
 <!-- src: audit-skill-by-derailment/scripts/launch-derailment.sh.md#launch-derailment.sh -->
-## Replacing `launch-derailment.sh`
-The old script rendered the worker's prompt and optionally piped it to a configured agent command. `run` renders the prompt from the scenario - **without** the old sentence that handed the worker the skill's path - and launches `claude` itself.
+## How `run` renders the prompt
+`run` renders the prompt from the scenario's `## Prompt` and nothing else - **no** sentence that hands the worker the skill's path - and launches `claude` itself.
 
 <!-- src: audit-skill-by-derailment/scripts/launch-derailment.sh.md#Usage -->
 ### Usage
-`agentic-maker run <scenario.md> [--runner headless] [--run-id ID] [--session ID] [--dry-run] [--self-annotate]`. The old `--skill-path` and `--task` become the scenario's `target` and `## Prompt`; `--round` becomes the run id and take number; `--trace-out` is the take directory; `--agent-cmd` is replaced by the verified recipe.
+`agentic-maker run <scenario.md> [--runner headless] [--run-id ID] [--session ID] [--dry-run] [--self-annotate]`. The scenario's `target` and `## Prompt` say what is tested and what is asked; the run id and take number name the record; the take directory holds the trace; the launch recipe is the verified one in [clean-room](../clean-room.md).
 
 <!-- src: audit-skill-by-derailment/scripts/launch-derailment.sh.md#Examples -->
 ### Examples
@@ -33,22 +33,22 @@ agentic-maker run .agentic-maker/scenarios/typed-client.md --dry-run
 agentic-maker run .agentic-maker/scenarios/typed-client.md --session "$CLAUDE_SESSION_ID"
 agentic-maker run .agentic-maker/scenarios/typed-client.md --self-annotate     # biased, cheap
 ```
-`--self-annotate` appends the old marker request (`[STUCK] [GUESSED] [BROKE] [NICE]`) to the prompt. It changes what the worker does and what it reports, so use it only as a quick smoke test; the reader assigns markers from the trace in normal runs.
+`--self-annotate` appends a marker request (`[STUCK] [GUESSED] [BROKE] [NICE]`) to the prompt. It changes what the worker does and what it reports, so use it only as a quick smoke test; the reader assigns markers from the trace in normal runs.
 
 <!-- src: audit-skill-by-derailment/scripts/launch-derailment.sh.md#Exit codes -->
 ### Exit codes
 | Code | Meaning |
 |---|---|
 | 0 | the worker finished normally |
-| 2 | bad arguments (the old script's 2) |
+| 2 | bad arguments |
 | 3 | scenario, target, binary or record not found |
 | 6 | scenario invalid, fixture script failed |
 | 7 | the worker produced no usable record |
 | 8 | the run ended as max_turns / budget / timeout; trace kept |
 
 <!-- src: audit-skill-by-derailment/scripts/parse-derailment-trace.sh.md#parse-derailment-trace.sh -->
-## Replacing `parse-derailment-trace.sh`
-`agentic-maker normalize` reads Claude `stream-json` and Claude session transcripts and writes `trace.norm.jsonl` and `trace.md`. Unlike the old parser it never drops silently: `ignored` counts what it skipped on purpose, `unknown` counts event types it does not know, `unparsed` counts lines that were not JSON. A file that is not JSON at all is kept as a terminal capture, one `screen` event per line.
+## `normalize`
+`agentic-maker normalize` reads Claude `stream-json` and Claude session transcripts and writes `trace.norm.jsonl` and `trace.md`. It never drops silently: `ignored` counts what it skipped on purpose, `unknown` counts event types it does not know, `unparsed` counts lines that were not JSON. A file that is not JSON at all is kept as a terminal capture, one `screen` event per line.
 
 <!-- src: audit-skill-by-derailment/scripts/parse-derailment-trace.sh.md#Usage -->
 ### Usage

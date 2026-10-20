@@ -39,6 +39,16 @@ def runs_dir(root):
     return os.path.join(state_dir(root), "runs")
 
 
+def ensure_state_gitignore(root):
+    """Transcripts and run state must not be committed by accident; scenarios/ is meant to be committed."""
+    d = state_dir(root)
+    os.makedirs(d, exist_ok=True)
+    p = os.path.join(d, ".gitignore")
+    if not os.path.exists(p):
+        with open(p, "w", encoding="utf-8") as f:
+            f.write("# written by agentic-maker: run records (full transcripts) and ledger pointers stay out of git; scenarios/ is committed\nruns/\nactive/\n")
+
+
 def read_json(path):
     try:
         with open(path, encoding="utf-8") as f:

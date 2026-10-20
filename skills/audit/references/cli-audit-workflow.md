@@ -42,7 +42,7 @@ Judge every result against `skills/agent-interface-design/references/cli/checks.
 <!-- src: audit-agentic-cli/SKILL.md#Bundled Scripts -->
 ## Probe commands
 
-The two former shell scripts are replaced by plugin probes:
+Two probes do the work:
 
 | Probe | Use for |
 |---|---|

@@ -1,13 +1,13 @@
 # The CLI probes
 
-> Read when: you run, or have to explain, `agentic-maker probe cli` or `probe cli-diff`, including what replaced the old help-scan and help-diff scripts. MCP probes: [probes-mcp](probes-mcp.md).
+> Read when: you run, or have to explain, `agentic-maker probe cli` or `probe cli-diff`, what each one runs and what it cannot see. MCP probes: [probes-mcp](probes-mcp.md).
 
 The probes observe a surface the way an agent meets it. They replace helper scripts that only scanned text.
 
 <!-- src: audit-agentic-cli/scripts/audit-cli-help.md#audit-cli-help.sh -->
-## `probe cli` (replaces `audit-cli-help.sh`)
+## `probe cli`
 
-The old script was a read-only discoverability scan. `probe cli` keeps that scan (standard flags, examples, exit codes) and adds what the script said it could not do - separation of stdout and stderr, real JSON parsing and failure paths - by running the commands you declare safe.
+`probe cli` scans the help for discoverability (standard flags, examples, exit codes) and, by running the commands you declare safe, checks what a text scan cannot: separation of stdout and stderr, real JSON parsing and failure paths.
 
 <!-- src: audit-agentic-cli/scripts/audit-cli-help.md#Inputs -->
 ### Inputs
@@ -33,7 +33,7 @@ agentic-maker probe cli ./target/debug/mycli --safe-cmds safe.txt --human
 A black-box probe of read-only commands: it does not prove a CLI is agent-ready. Flag detection is text-based and can miss unusual help formats. Commands not declared safe were not run, so destructive flows are judged from the help text only. Subcommand lines are split with shell quoting rules.
 
 <!-- src: audit-agentic-cli/scripts/diff-cli-help.md#diff-cli-help.sh -->
-## `probe cli-diff` (replaces `diff-cli-help.sh`)
+## `probe cli-diff`
 Compares two saved help snapshots without running the CLI.
 
 <!-- src: audit-agentic-cli/scripts/diff-cli-help.md#Inputs -->

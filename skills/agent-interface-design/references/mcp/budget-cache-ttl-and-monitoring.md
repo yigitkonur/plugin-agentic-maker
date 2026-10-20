@@ -52,7 +52,7 @@ Don't:
 <!-- src: audit-agentic-mcp/references/patterns/caching-economics.md#Pattern 10: Monitor Cache Creation Ratios — Vendor Defaults Drift -->
 ## Monitor cache-creation ratios; vendor defaults drift
 
-The usage response exposes separate counters for 5-minute and 1-hour cache creation (`cache_creation_input_tokens_5m`, `cache_creation_input_tokens_1h`). Their ratio is the single most useful signal that something changed upstream.
+The usage response exposes cache writes split by TTL in a nested object (`cache_creation.ephemeral_5m_input_tokens`, `cache_creation.ephemeral_1h_input_tokens`; `cache_creation_input_tokens` is their sum) and reads in `cache_read_input_tokens`. Their ratio is the single most useful signal that something changed upstream.
 
 Do:
 - Log both counters per request, with `cache_read_input_tokens`.

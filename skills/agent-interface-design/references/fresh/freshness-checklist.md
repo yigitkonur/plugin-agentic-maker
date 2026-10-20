@@ -1,5 +1,5 @@
 ---
-as_of: unknown
+as_of: 2026-10-08
 verify_before_citing: true
 ---
 

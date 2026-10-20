@@ -1,5 +1,5 @@
 ---
-as_of: unknown
+as_of: 2025-11-25
 verify_before_citing: true
 ---
 # MCP client and SDK behaviour reported in the sources

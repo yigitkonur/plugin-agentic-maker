@@ -20,8 +20,9 @@ RETRYABLE = {"rate_limit", "timeout", "network", "dependency_failed"}
 
 
 class CliError(Exception):
-    def __init__(self, cls, code, message, suggestion=None, details=None, next_actions=None, retryable=None):
+    def __init__(self, cls, code, message, suggestion=None, details=None, next_actions=None, retryable=None, exit_code=None):
         Exception.__init__(self, message)
+        self._exit_code = exit_code
         self.cls = cls
         self.code = code
         self.message = message
@@ -32,7 +33,7 @@ class CliError(Exception):
 
     @property
     def exit_code(self):
-        return CLASS_EXIT.get(self.cls, 1)
+        return self._exit_code if self._exit_code is not None else CLASS_EXIT.get(self.cls, 1)
 
 
 def _mark_templates(next_actions):

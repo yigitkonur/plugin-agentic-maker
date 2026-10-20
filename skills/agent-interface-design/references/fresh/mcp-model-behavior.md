@@ -1,10 +1,12 @@
 ---
-as_of: unknown
+as_of: 2026-04
 verify_before_citing: true
 ---
 # Model-specific behaviour reported for MCP tool design
 
 > Read when: you need per-model figures behind the MCP rules (tool-response authority, tool-count limits, schema support, enum size); verify before citing any of them.
+
+> `as_of` is inferred from the source corpus's April 2026 refresh: the figures below carry no date of their own, so re-check them before citing.
 
 The source gives no date for these reports; they come from API documentation, community testing and vendor posts. Core rules that depend on them: `../decisions/steering-contract.md`, `../mcp/budget-tool-definitions.md`, `../mcp/schemas-coercion-and-portability.md`, `../mcp/schemas-flat-and-sized.md`.
 
