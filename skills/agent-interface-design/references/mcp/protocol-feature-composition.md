@@ -13,7 +13,7 @@ Rule: the advanced features compose. The three highest-leverage compositions:
 
 The worked example is a `research` tool: (1) elicit research preferences and return "cancelled" unless the action is `accept`; (2) loop over sources, checking cancellation and reporting progress `i+1` of N with the source name; (3) synthesize through sampling with `max_tokens=2048`. Code: `../frameworks/mcp-python/advanced-protocol.md`.
 
-> Reconciled: the source used a key under the reserved `io.modelcontextprotocol` prefix, which `protocol-meta-keys.md` keeps for the spec. Do not invent a progress-notification signal for URL-mode elicitation: the spec sends `notifications/elicitation/complete` with the `elicitationId` (`protocol-elicitation.md`).
+> Note: never use a key under the reserved `io.modelcontextprotocol` prefix; `protocol-meta-keys.md` keeps it for the spec. Do not invent a progress-notification signal for URL-mode elicitation: the spec sends `notifications/elicitation/complete` with the `elicitationId` (`protocol-elicitation.md`).
 
 When to use: any agentic tool that runs more than 5 seconds, has ambiguous inputs, and should avoid shipping an API key.
 

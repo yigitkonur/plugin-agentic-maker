@@ -113,4 +113,4 @@ main() {
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"
 ```
 
-> Reconciled: the source captured `2>&1`, mixing stderr text into the JSON it then parsed; this file captures stdout only. It reads list items from `.result.items` (was `.result.resources`) and passes `$id` to jq with `--arg` instead of splicing it into the program text.
+> Note: capture stdout only, never `2>&1`, so stderr text does not mix into the JSON being parsed. List items are read from `.result.items`, and `$id` is passed to jq with `--arg` instead of being spliced into the program text.

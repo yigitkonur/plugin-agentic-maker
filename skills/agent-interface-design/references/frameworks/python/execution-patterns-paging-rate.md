@@ -6,7 +6,7 @@
 
 Contract: `../../cli/pagination.md` (`result.items`, `result.next_cursor`, `result.has_more`, optional `result.total`).
 
-> Reconciled: the source's `Page` used `data` / `total_count` and printed `{"ok": True, "data": items, "pagination": {"total_fetched": n}}`. This file uses `items`, `total` and puts the page in `result`.
+> Note: the page uses `items` and `total` and is placed in `result`.
 
 ```python
 import click

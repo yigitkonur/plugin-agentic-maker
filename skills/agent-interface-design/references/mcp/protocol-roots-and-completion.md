@@ -15,7 +15,7 @@ When to use: any server that reads or writes files (filesystem, code search, git
 
 When NOT to use: the client does not support roots. Provide an explicit `workspace_path` tool argument instead.
 
-> Reconciled: the source pointed to "Pattern 12 matrix" for which clients lack roots, but the matrix is its own "Client Support Matrix" section, not Pattern 12; this file links `../fresh/mcp-advanced-feature-support.md`, which holds the matrix and the list of clients without roots support.
+> Note: the client support matrix and the list of clients without roots support are in `../fresh/mcp-advanced-feature-support.md`.
 
 <!-- src: audit-agentic-mcp/references/patterns/advanced-protocol.md#Pattern 7: Implement `completion/complete` With Context-Aware Narrowing -->
 ## Implement completion/complete with context narrowing

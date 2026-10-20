@@ -177,4 +177,4 @@ delete_resource() {
 }
 ```
 
-> Reconciled: the source labelled 1 `EXIT_ERROR` and stopped at 7; this file uses `EXIT_CRASH` and adds `EXIT_PARTIAL=8`. `json_error` wrote the envelope to stderr; it now writes to stdout. The source's `retry_with_backoff` read `$?` after the `if`, which is always 0, so it never retried and reported failures as success; it now captures the status of the command itself. `delete_resource` now exits 2 naming the flag when there is no TTY instead of blocking on `read`.
+> Note: `EXIT_ERROR` is not used; 1 is `EXIT_CRASH`, and `EXIT_PARTIAL=8` follows 7. `json_error` writes the envelope to stdout. `retry_with_backoff` captures the status of the command itself, because `$?` after an `if` is always 0. `delete_resource` exits 2 naming the flag when there is no TTY instead of blocking on `read`.

@@ -51,8 +51,11 @@ Each row says what was watched on 2026-10-20 (Claude Code 2.1.302 to 2.1.304, he
 |---|---|---|
 | Derail loop on a skill (headless, clean room) | watched working, the whole loop with no human in it | [04](docs/evidence/04-derail-loop.md) |
 | Stop gate blocks a premature "fixed" | watched working in the real harness | [04](docs/evidence/04-derail-loop.md) |
-| `audit` of a CLI (`probe cli`) | watched working; fixture-tested: 10 of 11 planted defects found directly, 11 counting causes (the old script: 4, or 5), clean twin silent | [05](docs/evidence/05-audit-cli.md) |
+| `audit` of a CLI (`probe cli`) | watched working; fixture-tested: 10 of 11 planted defects found directly, 11 counting causes (the old script: 4, or 5), clean twin silent under the default probe (an audit that adds its own probe commands finds ordinary gaps in it) | [05](docs/evidence/05-audit-cli.md), [09](docs/evidence/09-second-review.md) |
 | `audit` of an MCP server (`probe mcp`, stdio and HTTP) | watched working; budget equals a hand count | [06](docs/evidence/06-audit-mcp.md) |
+| Round limit, budget ceiling and the per-fix snapshot of `check diff` | watched: `rounds_exhausted` and `budget_exhausted` (exit 5), a rule added beside an unchanged cause flagged, a rewritten cause passes | [09](docs/evidence/09-second-review.md) |
+| Derail loop on a CLI and on an MCP server | watched working on the seeded fixtures, one scenario each: the reader found a harness-induced stop (O6) on the CLI and tools listed with no handler on the MCP server; fixes verified by 3/3 receipts on two reruns | [09](docs/evidence/09-second-review.md) |
+| `claude plugin eval` over `evals/` | watched once: two trigger cases score +1.00 over the no-plugin baseline, two stay-quiet cases 1.00 / 1.00 | [09](docs/evidence/09-second-review.md) |
 | Live herdr round with a Claude worker | watched working, two rounds; receipts 11/11 (the first round needed an ingest fix first, the second passed at once) | [07](docs/evidence/07-live-herdr.md) |
 | Ingest a Claude session transcript or `stream-json` | watched working | 04, 07 |
 | Ingest a Codex rollout | parser built from real rollout files; no live Codex worker run | [07](docs/evidence/07-live-herdr.md) |

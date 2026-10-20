@@ -39,7 +39,7 @@ What this unlocks:
 
 Keep examples minimal: one or two records, not a full page. The agent extrapolates the pattern.
 
-> Reconciled: the source put a full example response inside the description. That exceeds the length rule in `descriptions-structure-and-length.md` (about 100 tokens, never above 200), so the shape now goes in a clause, the output schema, or this page.
+> Note: keep a description to about 100 tokens, never above 200 (`descriptions-structure-and-length.md`); put an example response shape in a clause, the output schema, or this page, not in the description.
 
 <!-- src: audit-agentic-mcp/references/patterns/tool-responses.md#Pattern 11: Return a Search Frontier, Not Just the First SERP -->
 ## Return a search frontier, not just the first result page

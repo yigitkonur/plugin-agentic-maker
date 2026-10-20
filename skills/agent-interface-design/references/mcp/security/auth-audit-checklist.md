@@ -20,6 +20,6 @@ Run every item. Failing any single item is a spec violation or a known attack ve
 - [ ] Tool schemas signed and verified on load (see [tool-schema-integrity.md](tool-schema-integrity.md)).
 - [ ] Streamable HTTP returns `403` for invalid `Origin`.
 
-> Reconciled: the sources split CIMD and DCR across files (CIMD "recommended", DCR "baseline"); the two conditional items above stay as written and are evaluated per deployment: decide by the rule in [auth-client-identity.md](auth-client-identity.md), not by assuming either.
+> Note: the two conditional items above are evaluated per deployment: decide by the rule in [auth-client-identity.md](auth-client-identity.md), not by assuming either CIMD or DCR.
 
 Sources: composite of the current MCP authorization spec and the attack primitives; OWASP MCP Top 10.

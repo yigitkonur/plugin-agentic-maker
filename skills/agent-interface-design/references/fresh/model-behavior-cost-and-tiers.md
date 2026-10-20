@@ -36,10 +36,10 @@ Assumptions: 20 active tools, 10-step average conversation, 30K static context (
 | Grok 4 | ≈ $4.05 | ≈ $2.75 | No public MCP benchmark; measure before committing |
 | Llama 4 Maverick (Fireworks) | ≈ $0.23 | no standard cache | MCP-Atlas 0.8%, plan for heavy scaffolding |
 
-> Reconciled: the source called GPT-5 mini "~10x cheaper than GPT-5"; its own prices and totals ($0.41 vs $2.06; $0.25 vs $1.25 input) give about 5x, which this file uses.
+> Note: GPT-5 mini is about 5x cheaper than GPT-5, from the listed prices and totals ($0.41 vs $2.06; $0.25 vs $1.25 input).
 
 Three concrete picks:
 
-- **Cheap broad-MCP:** Gemini 2.5 Flash at about $0.35 per 10 sessions, only if you can tolerate the low pass rates (3.4% MCP-Atlas, 9.1% MCPMark; the source wrote "3-9%") and you have hard-flattened schemas.
+- **Cheap broad-MCP:** Gemini 2.5 Flash at about $0.35 per 10 sessions, only if you can tolerate the low pass rates (3.4% MCP-Atlas, 9.1% MCPMark; one write-up rounded this to "3-9%") and you have hard-flattened schemas.
 - **Best quality/dollar for real MCP workflows:** GPT-5 + caching + freeform tool calling at about $1.50 per 10 sessions with 57.5% MCPMark Pass@1.
 - **Best absolute quality:** Claude Opus 4.5 at about $3.35 cached per 10 sessions with 62.3% MCP-Atlas, amplified by the 65-76% output-token reduction over Sonnet 4.5.

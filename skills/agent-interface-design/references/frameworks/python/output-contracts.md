@@ -47,7 +47,7 @@ def filter_fields(data: dict, fields: list[str]) -> dict:
 
 Contract: `../../cli/streams-and-jsonl.md`. These emitters run in stream mode (`--stream`); plain `--json` mode puts one envelope on stdout and no JSON on stderr.
 
-> Reconciled: the source printed progress to stdout and always exited 1 from `emit_error`. Progress goes to stderr; the terminal result goes to stdout; `emit_error` exits with the code for its class.
+> Note: progress goes to stderr and the terminal result to stdout; `emit_error` exits with the code for its error class.
 
 ```python
 import json

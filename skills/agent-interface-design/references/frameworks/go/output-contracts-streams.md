@@ -57,7 +57,7 @@ func emitCompleted(status string, result interface{}) {
 }
 ```
 
-> Reconciled: the source wrote `emitProgress` to `os.Stdout`; progress events go to stderr per the stream rule.
+> Note: progress events (`emitProgress`) go to stderr, per the stream rule.
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Never Do This -->
 ## Never do this

@@ -118,7 +118,7 @@ async function handleClaudeToolCall(
 }
 ```
 
-> Reconciled: the tool description above runs past the length guidance. Target at most about 100 tokens and never above 200, start with Verb + Resource ("Execute CLI commands"), and move the command list and flag examples into the `command` parameter description of the input schema.
+> Note: keep a tool description to about 100 tokens and never above 200. Start with Verb + Resource ("Execute CLI commands") and put the command list and flag examples in the `command` parameter description of the input schema.
 
 <!-- src: audit-agentic-cli/references/agent-integration.md#OpenAI Function Calling -->
 ## OpenAI function calling

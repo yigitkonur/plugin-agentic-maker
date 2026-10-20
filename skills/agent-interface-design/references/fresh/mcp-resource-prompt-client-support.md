@@ -6,7 +6,7 @@ verify_before_citing: true
 
 > Read when: you are about to rely on a client fetching resources, saving prompt arguments, or offering completions, and need to know what was reported.
 
-The source gives no survey date for these remarks; treat each as a practitioner report and test with the target client. Core guidance: `../mcp/protocol-resources.md`, `../mcp/protocol-prompts.md`, `../mcp/protocol-resources-vs-tools.md`. Wider matrix: `client-compatibility.md`.
+No survey date is given for these remarks; treat each as a practitioner report and test with the target client. Core guidance: `../mcp/protocol-resources.md`, `../mcp/protocol-prompts.md`, `../mcp/protocol-resources-vs-tools.md`. Wider matrix: `client-compatibility.md`.
 
 <!-- src: audit-agentic-mcp/references/patterns/resources-and-prompts.md#1. Use Resources as On-Demand Documentation Referenced in Errors -->
 ## Automatic resource fetching

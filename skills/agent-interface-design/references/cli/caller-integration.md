@@ -31,8 +31,6 @@ Route on the exit code first, then read the body. The canonical table is in `exi
 | `7` | transient | Retry with backoff | Yes | network timeout, rate limit, 503 |
 | `8` | partial | Read the per-item results and handle failures | No (check details) | batch where some items failed |
 
-> Reconciled: the sources gave a 0-7 table here and in the examples; this file uses the one table 0-8 from `exit-codes.md`, with 1 = crash and partial = 8, never 3.
-
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#Scripting with Exit Codes -->
 ## Scripting with exit codes
 
@@ -72,8 +70,6 @@ Map `error.class` to the next step:
 | exit-7 group (`rate_limit`, `timeout`, `network`, `dependency_failed`) | Temporary failure; the retry loop handles it |
 | anything else | Report `error.message` |
 
-> Reconciled: the sources keyed this table by `authentication` and `transient`; this file uses the class `auth`, and treats `transient` as the name of the exit-7 group, not a class.
-
 <!-- src: audit-agentic-cli/references/agent-integration.md#5. Batch Processing with Partial Failure -->
 ## Batch processing with partial failure
 
@@ -81,7 +77,7 @@ Map `error.class` to the next step:
 - Collect `succeeded` (item plus result), `failed` (item plus error) and `total`.
 - Report the outcome as partial (exit 8) when both lists are non-empty.
 
-> Reconciled: the source did not say when a batch stops. Read-only and idempotent batches default to continue and report partial (exit 8); destructive batches default to stop at the first error. `--stop-on-error` / `--continue-on-error` override either.
+> Note: read-only and idempotent batches default to continue and report partial (exit 8); destructive batches default to stop at the first error. `--stop-on-error` / `--continue-on-error` override either.
 
 <!-- src: audit-agentic-cli/references/agent-integration.md#9. Debugging Agent CLI Failures -->
 ## Debugging agent CLI failures
@@ -94,4 +90,4 @@ Map `error.class` to the next step:
 | Retry storms | No Retry-After header | Add header to rate limit responses |
 | Partial data | Pagination not handled | Return `result.next_cursor` and `result.has_more`, implement `--all` |
 
-> Reconciled: the source said only "return cursor"; the pagination fields are `result.items`, `result.next_cursor`, `result.has_more` and optional `result.total`.
+> Note: the pagination fields are `result.items`, `result.next_cursor`, `result.has_more` and optional `result.total`.

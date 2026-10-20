@@ -37,9 +37,9 @@ Linear serializes tool responses as JSON stringified inside a text block (no `st
 <!-- src: audit-agentic-mcp/references/patterns/exemplar-servers.md#Avoid 5: Asana V2 — OAuth without DCR and workspace-scoping break -->
 ### Avoid 5: Asana V2, OAuth without DCR and workspace-scoping break
 
-V2 requires a pre-registered `client_id` + `client_secret` per integrator and does not support Dynamic Client Registration; tokens issued for MCP apps do not work with the REST API. Docker MCP Gateway is blocked on the product decision (`github.com/docker/mcp-gateway/issues/479`) pending the 2026-05-11 V1 sunset (a date that has passed as of 2026-10-20; verify the current status). The source called supporting DCR "table-stakes for gateway integrations in 2026".
+V2 requires a pre-registered `client_id` + `client_secret` per integrator and does not support Dynamic Client Registration; tokens issued for MCP apps do not work with the REST API. Docker MCP Gateway is blocked on the product decision (`github.com/docker/mcp-gateway/issues/479`) pending the 2026-05-11 V1 sunset (a date that has passed as of 2026-10-20; verify the current status). The vendor called supporting DCR "table-stakes for gateway integrations in 2026".
 
-> Reconciled: the source said supporting DCR is table-stakes; the corpus stance is to prefer Client ID Metadata Documents where the client supports them, keep DCR for clients without them, and never assume either (detect from authorization-server metadata; `mcp/security/*`).
+> Note: prefer Client ID Metadata Documents where the client supports them, keep DCR for clients without them, and never assume either (detect from authorization-server metadata; `mcp/security/*`).
 
 <!-- src: audit-agentic-mcp/references/patterns/exemplar-servers.md#Avoid 6: PayPal / similar — token-only deploy with no sandbox/prod toggle in the tool surface -->
 ### Avoid 6: PayPal and similar, token-only deploy with no sandbox/prod toggle in the tool surface

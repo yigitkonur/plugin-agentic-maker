@@ -183,4 +183,4 @@ def resolve_credential(
     raise AuthError("No credentials found. Run 'mycli auth login' first.")  # exit 4
 ```
 
-> Reconciled: the source accepted a `--token <value>` argument (visible in `ps`) and listed OIDC in the docstring without implementing it; this file drops the argv branch, implements OIDC, and follows the one credential precedence.
+> Note: the token is never accepted as an argv value (it would be visible in `ps`); OIDC is implemented, and credentials follow the one precedence order.

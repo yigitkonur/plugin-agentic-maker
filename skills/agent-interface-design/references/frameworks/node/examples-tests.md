@@ -96,4 +96,4 @@ describe('CLI JSON Output', () => {
 });
 ```
 
-> Reconciled: the source parsed `stdout || stderr`; the envelope is always on stdout, so this test parses stdout only.
+> Note: the envelope is always on stdout, so the test parses stdout only.

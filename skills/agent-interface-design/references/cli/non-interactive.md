@@ -11,7 +11,7 @@
 | `--yes` / `-y` | Auto-confirm prompts (still validates) |
 | `--force` / `-f` | Bypass safety checks (explicit risk) |
 
-> Reconciled: the sources had a confirm helper that returned an error in one language, returned false (then exited 1) in two others. This file uses one rule. Without a TTY and without `--yes`/`--force`, a confirming command fails with exit 2 (`usage`) and the message names the flag to add (`--yes` or `--force`). It never returns false silently and never hangs. In `--json` mode the failure is the usual error envelope on stdout with `class: usage`.
+> Note: without a TTY and without `--yes`/`--force`, a confirming command fails with exit 2 (`usage`) and the message names the flag to add (`--yes` or `--force`). It never returns false silently and never hangs. In `--json` mode the failure is the usual error envelope on stdout with `class: usage`.
 
 ```bash
 $ mycli delete resource res_001 --json < /dev/null
@@ -27,7 +27,7 @@ Rules:
 - `--yes` auto-confirms but still validates input; `--force` additionally bypasses safety checks.
 - Pair destructive commands with `--dry-run` (`dry-run.md`).
 
-> Reconciled: the Python source printed "Aborted" and exited 1 when a human answered "no", but 1 means `crash`. A declined confirmation exits 2, the same code as a confirmation that cannot be asked: in both cases the confirmation was not given and nothing was changed. Print `Aborted: confirmation not given` on stderr.
+> Note: a declined confirmation exits 2 (not 1, which means `crash`), the same code as a confirmation that cannot be asked: in both cases the confirmation was not given and nothing was changed. Print `Aborted: confirmation not given` on stderr.
 
 <!-- src: audit-agentic-cli/references/execution-patterns.md#TTY Detection -->
 ## TTY detection

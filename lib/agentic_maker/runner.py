@@ -22,6 +22,8 @@ from agentic_maker.envelope import CliError
 PASS_PREFIXES = ("CLAUDE_CODE_", "ANTHROPIC_", "CLAUDE_CONFIG_DIR")
 PROVIDER_PREFIXES = {"CLAUDE_CODE_USE_BEDROCK": ("AWS_",), "CLAUDE_CODE_USE_VERTEX": ("CLOUD_ML_", "GOOGLE_", "VERTEX_"),
                      "CLAUDE_CODE_USE_FOUNDRY": ("AZURE_",)}
+# these identify or authenticate the orchestrator's own session (its messaging socket and token); a worker must not hold them
+NEVER_PASS = ("CLAUDE_CODE_MESSAGING_", "CLAUDE_CODE_SESSION_", "CLAUDE_CODE_CHILD_SESSION", "HERDR_")
 PASS_NAMES = ("PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "LC_ALL", "LC_CTYPE", "TMPDIR", "TERM", "TZ")
 DEFAULT_TOOLS = {
     "skill": ["Read", "Glob", "Grep", "Skill", "Bash", "Write", "Edit", "Agent"],
@@ -52,7 +54,7 @@ def clean_env(meta, extra=None):
     env, names = {}, []
     prefixes = PASS_PREFIXES + tuple(p for flag, ps in PROVIDER_PREFIXES.items() if os.environ.get(flag) not in (None, "", "0", "false") for p in ps)
     for k, v in os.environ.items():
-        if k == "ANTHROPIC_MODEL" or k.startswith("HERDR_"):
+        if k == "ANTHROPIC_MODEL" or k.startswith(NEVER_PASS):
             continue
         if k in PASS_NAMES or k.startswith(prefixes) or k in (meta.get("env") or []):
             env[k] = v

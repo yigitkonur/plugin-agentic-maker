@@ -138,7 +138,7 @@ def handle_cli_error(result: CLIResult, context: dict) -> str:
     return RECOVERY_ACTIONS.get(error_class, f"Unknown error: {error.get('message')}")
 ```
 
-> Reconciled: the source keyed this dict by `authentication` and `transient`; this file uses the class `auth` and lists the exit-7 classes (`timeout`, `network`, `dependency_failed`) instead of the group name `transient`. `EXIT_CODE_ACTIONS` gains `8: "partial"`.
+> Note: the dict is keyed by class `auth` and lists the exit-7 classes (`timeout`, `network`, `dependency_failed`) individually; `EXIT_CODE_ACTIONS` includes `8: "partial"`.
 
 ## Batch with partial failure
 

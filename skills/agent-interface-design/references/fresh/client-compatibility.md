@@ -56,7 +56,7 @@ Also held, with its own provenance, in `fresh/mcp-advanced-feature-support.md`. 
 
 ## Conflicts
 
-No silent merge: where the matrices or the source's own text disagree, both claims are listed. Matrix A is newer (2026-02) than B (2025-12), which is not proof that A is right.
+No silent merge: where the matrices or their own text disagree, both claims are listed. Matrix A is newer (2026-02) than B (2025-12), which is not proof that A is right.
 
 | Item | Claim 1 | Claim 2 |
 |---|---|---|
@@ -73,7 +73,7 @@ No silent merge: where the matrices or the source's own text disagree, both clai
 | Dynamic resource templates, Cline | Matrix A: `?` | Pattern 1 text: the same server works in Cline and VS Code |
 | Structured output round-trip | Pattern 4 text: only VS Code fully round-trips structured output, annotations and progress | Matrix A: Codex CLI is also native for outputSchema / structuredContent (`--output-schema`) |
 
-> Unresolved: the rows above cannot be settled from the sources; re-test the client before relying on either claim. Both matrices agree everywhere else (for example sampling native only in VS Code).
+> Unresolved: the rows above cannot be settled from the page's own data; re-test the client before relying on either claim. Both matrices agree everywhere else (for example sampling native only in VS Code).
 
 Patterns, profiles, silent failures: `client-compatibility-content-and-tools.md`, `-auth-and-transport.md`, `-protocol-features.md`, `-silent-failures.md`, `-profiles-desktop-and-editors.md`, `-profiles-extensions-and-clis.md` (all in `fresh/`).
 

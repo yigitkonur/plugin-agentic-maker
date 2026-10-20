@@ -12,7 +12,7 @@ verify_before_citing: true
 
 Before making version-sensitive claims, verify current MCP SDK, `mcp-use`, client compatibility, pricing, CVEs, and registry status from primary sources. Start with npm package metadata (`npm view <package> version dist-tags --json`, see `fresh/mcp-framework-picker.md`) and the official TypeScript SDK repository and release notes when framework guidance depends on SDK state.
 
-Time-sensitive references, re-check before citing (the source's list, mapped to this corpus):
+Time-sensitive references, re-check before citing (mapped to this reference set):
 
 - auth and identity (OAuth profile, CIMD, OBO): `mcp/security/*`
 - client compatibility: `fresh/client-compatibility.md`

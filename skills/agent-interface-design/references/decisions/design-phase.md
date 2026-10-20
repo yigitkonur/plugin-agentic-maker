@@ -39,7 +39,7 @@ START: How many API endpoints does this server wrap?
     +-- Parameter names: Unambiguous, self-documenting --> mcp/schemas-*
 ```
 
-> Reconciled: the sources gave "under 100 tokens total" here and other length limits elsewhere; this file uses a target of at most about 100 tokens, never above 200, the first five words Verb + Resource, and long examples in the parameter descriptions of the input schema.
+> Note: a description targets at most about 100 tokens, never above 200, the first five words Verb + Resource, and long examples go in the parameter descriptions of the input schema.
 
 <!-- src: audit-agentic-mcp/references/decision-trees/design-phase.md#Key Decision Factors -->
 ## Key decision factors

@@ -35,6 +35,6 @@ Every row cites a primary source with YYYY-MM in `../../fresh/mcp-threat-attack-
 
 Rows 8-11 are detailed against the capability that enables them in `../protocol-sampling.md` and `../protocol-elicitation.md`.
 
-> Reconciled: the sources variously recommended CIMD over DCR or treated DCR as the baseline; this file prefers Client ID Metadata Documents where the client supports them, keeps Dynamic Client Registration for clients without them, and never assumes either: detect support from the authorization-server metadata (see auth-client-identity.md).
+> Note: prefer Client ID Metadata Documents (CIMD) where the client supports them; keep Dynamic Client Registration (DCR) for clients without them; never assume either. Detect support from the authorization-server metadata (see auth-client-identity.md).
 
 Scanner and wrapper-proxy product names: `../../fresh/mcp-defense-tooling.md`.

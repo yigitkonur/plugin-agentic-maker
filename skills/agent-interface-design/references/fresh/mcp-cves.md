@@ -9,7 +9,7 @@ verify_before_citing: true
 <!-- src: audit-agentic-mcp/references/patterns/threat-catalog.md#5. CVE List (≥5 dated) -->
 ## CVE list
 
-The source lists these as dated entries (latest date in the list: 2025-10-21). Verify each against the advisory before citing.
+These are dated entries (latest date in the list: 2025-10-21). Verify each against the advisory before citing.
 
 | CVE | Component | Severity | Date | Impact | Fix |
 |---|---|---|---|---|---|

@@ -55,7 +55,7 @@ Empirical survey of 16 production MCP servers shipped by major SaaS vendors in 2
 | Supabase schema | `outputSchema` on every tool | README: `structuredContent` is not sent |
 | HubSpot SSE quote | "SSE requires long-lived connections, harder for load balancers in auto-scaling environments" | "Supporting SSE would have introduced load balancer and scaling complexity" (same blog, cited in two places) |
 
-> Unresolved: Atlassian 54 vs 69 and Figma 15 vs 16 cannot be settled from the source; re-count against the vendor's current tool page. The other rows are different readings of one source and are kept as written.
+> Unresolved: Atlassian 54 vs 69 and Figma 15 vs 16 cannot be settled from the page's own data; re-count against the vendor's current tool page. The other rows are different readings of one document and are kept as written.
 
 <!-- src: audit-agentic-mcp/references/patterns/exemplar-servers.md#7.6 How this file relates to its siblings -->
 ## How this file relates to its siblings

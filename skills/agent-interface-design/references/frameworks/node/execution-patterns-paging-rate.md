@@ -6,7 +6,7 @@
 
 Contract: `../../cli/pagination.md` (`result.items`, `result.next_cursor`, `result.has_more`, optional `result.total`).
 
-> Reconciled: the source used `data`, `pagination.hasNext`, `totalCount`; the code uses `items`, `hasMore`, `nextCursor`, `total`, serialized flat as `has_more`, `next_cursor`.
+> Note: the code uses `items`, `hasMore`, `nextCursor`, `total`, serialized flat as `has_more`, `next_cursor`.
 
 ```typescript
 // Assumed from your app: program (Commander), api, Item.

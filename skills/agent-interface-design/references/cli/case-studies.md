@@ -92,8 +92,6 @@ The source's point total and grade are dropped (see the note at the top); the fi
 - Strengths: JSON output by default, `--query` for JMESPath filtering, structured error responses, `--dry-run` for EC2, excellent pagination with `--max-items`.
 - Weaknesses: exit codes not semantic (255 for API errors), no streaming JSONL for long operations, waiter output not machine-parseable.
 
-> Reconciled: the source's per-check points, category subtotals, totals and grades are removed (see the note at the top); the per-check results, strengths and weaknesses are kept as recorded.
-
 <!-- src: audit-agentic-cli/references/examples.md#Key Takeaways from Real-World Audits -->
 ## Key takeaways
 

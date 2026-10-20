@@ -25,7 +25,7 @@ const (
 <!-- src: audit-agentic-cli/references/output-contracts.md#Mapping Classes to Exit Codes -->
 ## Mapping classes to exit codes
 
-> Reconciled: the source used `ExitAuthDenied` here and `ExitError` for the default, neither defined by the constants above, and had no case for `usage`, `dependency_failed` or `partial_success`. This file uses `ExitAuth`, `ExitCrash` as the default, and maps the missing classes per `../../cli/error-classes.md`.
+> Note: the mapping uses `ExitAuth` and defaults to `ExitCrash`; the `usage`, `dependency_failed` and `partial_success` classes map per `../../cli/error-classes.md`.
 
 ```go
 func errorClassToExitCode(class string) int {
@@ -75,7 +75,7 @@ func filterFields(data map[string]interface{}, fields []string) map[string]inter
 <!-- src: audit-agentic-cli/references/output-contracts.md#Implementation~2 -->
 ## Pagination structs
 
-> Reconciled: the source used a `PaginationInfo` sibling with `Total`, `Page`, `PerPage`, `HasMore`, `NextCursor` and a bare-array `Result`. The field names below follow `../../cli/pagination.md`: `result.items`, `result.next_cursor`, `result.has_more`, optional `result.total`.
+> Note: field names follow `../../cli/pagination.md`: `result.items`, `result.next_cursor`, `result.has_more`, optional `result.total`.
 
 ```go
 type PageResult[T any] struct {

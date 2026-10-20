@@ -78,7 +78,7 @@ func exitWithError(err error, jsonMode bool) {
 }
 ```
 
-> Reconciled: the sources named the auth constant `ExitAuthDenied` in one file and `ExitAuth` in another, and stopped at 7; this file uses `ExitAuth` and adds `ExitPartial = 8` (and an `ErrPartial` case) for the 0-8 table.
+> Note: the auth constant is `ExitAuth`, and `ExitPartial = 8` (with an `ErrPartial` case) completes the 0-8 exit-code table.
 
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#Implementation Example (Go/Cobra) -->
 ## Help with examples

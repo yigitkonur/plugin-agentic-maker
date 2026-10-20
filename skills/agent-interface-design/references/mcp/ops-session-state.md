@@ -30,8 +30,6 @@ Sources: NearForm (Implementing MCP), FastMCP state docs. For rotating and bindi
 
 A shared pool of about 10 sessions delivers roughly 8 to 10x the throughput of a unique session per request. The bottleneck is connection setup overhead (TLS handshake, protocol negotiation, state initialization); pooling amortizes it. A single stdio process is the slowest configuration measured.
 
-> Reconciled: the source title and text say "10x" but its own rows (30-36 req/s unique sessions vs 290-300 req/s shared pool) give about 8 to 10x; this file says "roughly 8 to 10x".
-
 Rules:
 - Pool connections (example settings: min 2, max 10, idle timeout 60 s) and acquire/release around every call.
 - Externalize session state (for example Redis with a 3600 s TTL under `session:<sid>`) so any pooled connection can serve any request.

@@ -31,8 +31,6 @@ mycli bulk-create \
 | `--dry-run` | Preview without executing | false |
 | `--retry-failed <n>` | Retry failed items n times | 0 |
 
-> Reconciled: the source table listed `--stop-on-error` as "false (default: continue)" while the example used `--continue-on-error` explicitly. The table now states those defaults. Read-only and idempotent batches continue and report partial (exit 8); destructive batches stop at the first error. The flags override either default (`batch-and-partial.md`).
-
 <!-- src: audit-agentic-cli/references/execution-patterns.md#Partial Failure Response -->
 ## Full partial-failure report
 
@@ -72,7 +70,5 @@ Exit 8. Same shape as `batch-and-partial.md`, with counts, timing, batch account
   }
 }
 ```
-
-> Reconciled: the source example showed `"exit_code": 3`; partial is 8, never 3.
 
 Implementations: `../frameworks/go/execution-patterns-batch.md`, `../frameworks/python/execution-patterns-batch.md`.

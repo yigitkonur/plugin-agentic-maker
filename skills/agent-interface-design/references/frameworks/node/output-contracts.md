@@ -59,7 +59,7 @@ export type ExitCodeValue = typeof ExitCode[keyof typeof ExitCode];
 
 ## JSONL emitters
 
-> Reconciled: the source wrote progress with `console.log` (stdout). Progress events go to stderr (`console.error`); the terminal result goes to stdout (`../../cli/streams-and-jsonl.md`).
+> Note: progress events go to stderr (`console.error`); the terminal result goes to stdout (`../../cli/streams-and-jsonl.md`).
 
 ```typescript
 interface ProgressEvent {

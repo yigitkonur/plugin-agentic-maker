@@ -5,7 +5,7 @@ verify_before_citing: true
 
 # Named MCP trust incidents of 2025
 
-> Read when: you assess supply-chain risk for an MCP registry, gateway, or third-party server, or need the real incidents (Smithery path traversal, postmark-mcp rug pull, CVE-2025-6514) and their lessons. Dates are as the source gave them.
+> Read when: you assess supply-chain risk for an MCP registry, gateway, or third-party server, or need the real incidents (Smithery path traversal, postmark-mcp rug pull, CVE-2025-6514) and their lessons. Dates are as reported.
 
 <!-- src: audit-agentic-mcp/references/patterns/registry-and-distribution.md#5. Named Trust Incidents (2025) -->
 ## Named trust incidents (2025)

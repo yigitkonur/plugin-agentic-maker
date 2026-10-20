@@ -23,7 +23,7 @@ Affected clients: Claude Desktop (confirmed), Zed (no resource subsystem at all)
 
 Cursor enforced a hard 40-tool cap from launch until 2025-09, when it was doubled to 80. Over the limit, tools appear enabled in the UI but are not callable; the agent apologizes that it "cannot find the tool." Windsurf documents a 100 cap. Claude Code does not cap but suffers context bloat of roughly 15-30k tokens per server; four servers consume about 67k before the first prompt, and community reports show many-server setups hitting about 150k tokens up-front. Tool Search (rolled out late 2025) claims a 46.9% reduction: 51k to 8.5k.
 
-> Reconciled: the source says "46.9% reduction" and "51k to 8.5k"; from the numbers in the same file, 51k to 8.5k is an 83% reduction (8.5/51 = 16.7% remains). Both claims are kept as stated; do not cite 46.9% together with 51k to 8.5k.
+> Note: 51k to 8.5k is an 83% reduction (8.5/51 = 16.7% remains). Both claims are kept as stated; do not cite 46.9% together with 51k to 8.5k.
 
 Prefer aggregated "router" tools that dispatch via an `action` parameter (the Toolhost facade, see `mcp/design-*`). Active-set guidance: `decisions/tool-count.md`.
 

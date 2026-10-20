@@ -43,7 +43,7 @@ A 100-turn Opus coding session that would cost **$50-100** without caching runs 
 <!-- src: audit-agentic-mcp/references/patterns/caching-economics.md#Case 4 — MCP caching SaaS rebuild: 73% per-analysis cost cut -->
 ### Case 4: MCP caching SaaS rebuild, 73% per-analysis cost cut
 
-Full stack: prompt caching + L1 in-memory + L2 Redis + data-type-specific TTLs (stock quote 300s, financials 86400s, SEC filings 604800s). Per-analysis API cost **$0.40 to $0.11 (-73%)**. The source also claims **$912,500/year saved** at enterprise scale (1M requests/day); that figure does not follow from the per-analysis cost ($0.29 saved x 1M x 365 is about $106M), so its basis is unstated and it is not a number to plan with. Cache-hit latency 84ms; miss 256ms (2025-10-14).
+Full stack: prompt caching + L1 in-memory + L2 Redis + data-type-specific TTLs (stock quote 300s, financials 86400s, SEC filings 604800s). Per-analysis API cost **$0.40 to $0.11 (-73%)**. One write-up also claims **$912,500/year saved** at enterprise scale (1M requests/day); that figure does not follow from the per-analysis cost ($0.29 saved x 1M x 365 is about $106M), so its basis is unstated and it is not a number to plan with. Cache-hit latency 84ms; miss 256ms (2025-10-14).
 
 <!-- src: audit-agentic-mcp/references/patterns/caching-economics.md#Case 5 — Long-horizon agent benchmark (arXiv 2601.06007v2, 2026-01) -->
 ### Case 5: Long-horizon agent benchmark (arXiv 2601.06007v2, 2026-01)

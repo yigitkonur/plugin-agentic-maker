@@ -6,7 +6,7 @@
 
 Contract: `../../cli/non-interactive.md`.
 
-> Reconciled: the source `confirm` returned `false` when non-interactive. Here a confirmation that cannot be asked fails with exit 2 naming `--yes` / `--force`, and prompts go to stderr.
+> Note: a confirmation that cannot be asked (non-interactive) fails with exit 2 naming `--yes` / `--force`, and prompts go to stderr.
 
 ```typescript
 import * as readline from 'readline';

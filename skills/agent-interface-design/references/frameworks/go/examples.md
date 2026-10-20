@@ -139,7 +139,7 @@ func ErrTransient(message string) *AppError {
 }
 ```
 
-> Reconciled: the source labelled 1 `ExitError`/"General error", used class `transient`, and stopped at 7; this file uses `ExitCrash`, the class `network` with code `NETWORK_ERROR` for the exit-7 example, and adds `ExitPartial = 8`. It also adds the missing `fmt` import.
+> Note: exit 1 is `ExitCrash`, the exit-7 example uses class `network` with code `NETWORK_ERROR`, and `ExitPartial = 8` completes the 0-8 table.
 
 <!-- src: audit-agentic-cli/references/examples.md#10. Complete CLI Skeleton (Go with Cobra) -->
 ## Complete CLI skeleton
@@ -252,4 +252,4 @@ func listResources(cmd *cobra.Command, args []string) {
 }
 ```
 
-> Reconciled: the source exited 1 when Cobra rejected the command line and used the literal `5`; this file exits 2 (`ExitUsage`) and uses `ExitConflict`.
+> Note: when Cobra rejects the command line the program exits 2 (`ExitUsage`); conflicts use `ExitConflict`.

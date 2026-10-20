@@ -7,7 +7,7 @@ verify_before_citing: true
 
 > Read when: you decide where to publish an MCP server, which gateway to route consumers through, or how to judge the trust of a third-party MCP, and need the three-tier taxonomy and the platform comparison. Verify before citing.
 
-The source states no overall date; items inside carry their own dates (latest cited: 2026-04-12). Generic meta-server gateway pattern: `mcp/design-*` (composition); hosting substrate: `mcp/ops-*`. This file family covers the distribution and trust layer: catalogs, namespaces, federation, and the named incidents of 2025.
+No overall date is stated; items inside carry their own dates (latest cited: 2026-04-12). Generic meta-server gateway pattern: `mcp/design-*` (composition); hosting substrate: `mcp/ops-*`. This file family covers the distribution and trust layer: catalogs, namespaces, federation, and the named incidents of 2025.
 
 <!-- src: audit-agentic-mcp/references/patterns/registry-and-distribution.md#MCP Registry, Gateway, and Trust Ecosystem | audit-agentic-mcp/references/patterns/registry-and-distribution.md#The Three-Tier Taxonomy -->
 ## The three-tier taxonomy

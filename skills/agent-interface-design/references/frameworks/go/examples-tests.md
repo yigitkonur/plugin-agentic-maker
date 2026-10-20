@@ -111,4 +111,4 @@ func lookupPath(m map[string]any, path string) any {
 }
 ```
 
-> Reconciled: the source fell back to stderr when stdout was empty; the envelope is always on stdout, so this test reads stdout only. It also adds the missing `strings` import.
+> Note: the envelope is always on stdout, so the test reads stdout only.

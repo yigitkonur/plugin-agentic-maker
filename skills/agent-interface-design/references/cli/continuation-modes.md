@@ -14,7 +14,7 @@ Research and SEO workflows often need more than one search wave. Apply the steer
 | `prefetch` | Execute a bounded next wave and return both current and prefetched results | Read-only research loops with strong evals |
 | `closed-loop` | Continue until stop conditions fire | Only in secure, bounded, well-observed environments |
 
-> Reconciled: the mode table calls `none` the default ("lowest surprise") and `suggest` the best choice for an agent, while the rules said "Default to `suggest`". The flag default is `none`; an agent caller opts in with `--continuation-mode suggest`.
+> Note: the flag default is `none`; an agent caller opts in with `--continuation-mode suggest`.
 
 Example flags:
 

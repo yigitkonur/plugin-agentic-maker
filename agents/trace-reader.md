@@ -32,7 +32,7 @@ The brief that spawned you lists absolute paths:
 
 ## Evidence rules
 
-- Every `quote` must be copied exactly from an event you cite in `trace_refs`; a script rejects findings whose quotes are not verbatim.
+- Every `quote` must be copied exactly from an event you cite in `trace_refs`; a script rejects findings whose quotes are not verbatim. Start the quote after the label `trace.md` puts in front of an event (`(tool, ERROR) `, `assistant text: `): the label is not part of the text.
 - The worker's closing message is a claim. If it disagrees with `receipts.json`, the receipts win; say so as a finding (C1).
 - If the run ended by `max_turns`, a budget or a timeout, say where it was when it stopped.
 - Do not invent a finding because a dimension "should" have one.

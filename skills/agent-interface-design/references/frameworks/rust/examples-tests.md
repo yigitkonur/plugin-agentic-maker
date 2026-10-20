@@ -104,4 +104,4 @@ fn test_invalid_command_exits_usage() {
 }
 ```
 
-> Reconciled: the source fell back to stderr when stdout was empty; the envelope is always on stdout, so the helper parses stdout only.
+> Note: the envelope is always on stdout, so the helper parses stdout only.

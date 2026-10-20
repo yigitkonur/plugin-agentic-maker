@@ -6,7 +6,7 @@ verify_before_citing: true
 
 > Read when: you need minimum prefix sizes, TTLs, write premiums, read discounts, breakpoint limits or invalidators for a provider's prompt cache; verify before citing.
 
-Column dates are the source's own (Anthropic 2026-04, OpenAI 2026-04, Gemini API 2026-03, Vertex AI 2026-04, Bedrock 2026-01); the pages were pulled 2026-04-14. Rules that use these facts: `../mcp/budget-cache-stable-prefix.md`, `../mcp/budget-cache-ttl-and-monitoring.md`. Cost math: `prompt-caching-cost-math.md`. Links: `prompt-caching-sources.md`.
+Column dates are each provider page's own (Anthropic 2026-04, OpenAI 2026-04, Gemini API 2026-03, Vertex AI 2026-04, Bedrock 2026-01); the pages were pulled 2026-04-14. Rules that use these facts: `../mcp/budget-cache-stable-prefix.md`, `../mcp/budget-cache-ttl-and-monitoring.md`. Cost math: `prompt-caching-cost-math.md`. Links: `prompt-caching-sources.md`.
 
 <!-- src: audit-agentic-mcp/references/patterns/caching-economics.md#Per-Provider Mechanics Reference -->
 ## Per-provider mechanics
@@ -23,4 +23,4 @@ The first decision is which cache surface you optimize against. Minimums, TTLs, 
 | **Storage fee** | None | None | **$4.50 / 1M tok / hour** (2.5 Pro ≤200K); **$1.00 / 1M tok / hour** (2.5 Flash) | Hourly, prorated by minute for explicit caches; 0 for implicit | None |
 | **Primary invalidators** | Tool-def change (name/desc/params); toggling `web_search`, `citations`, or `speed:"fast"`; adding/removing images; `tool_choice` change (messages only); extended-thinking setting change; any byte change at or before a breakpoint | Prefix change; tool list change; image/detail change; model or version change; inactivity; spillover above ~15 rpm at a single `prompt_cache_key` | Anything beyond `ttl` / `expire_time` updates is unsupported; implicit caches also require identical prefix + temporal locality | Same as Gemini API | Same as Anthropic |
 
-Anthropic's 1h write premium (+100%) is 4x its 5m premium (+25%); the source's "8x" was an arithmetic error (see the Reconciled note in `../mcp/budget-cache-ttl-and-monitoring.md`).
+Anthropic's 1h write premium (+100%) is 4x its 5m premium (+25%); an "8x" figure would be an arithmetic error (100% divided by 25% is 4).

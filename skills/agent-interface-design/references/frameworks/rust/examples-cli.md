@@ -186,4 +186,4 @@ fn run(cli: &Cli) -> Result<serde_json::Value, AppError> {
 }
 ```
 
-> Reconciled: the source's `output_error` wrote the JSON envelope to stderr; this file writes it to stdout and keeps `eprintln!` for the human line. The list result uses `items` and `total` (was `resources`/`total`).
+> Note: `output_error` writes the JSON envelope to stdout and keeps `eprintln!` for the human line. The list result uses `items` and `total`.

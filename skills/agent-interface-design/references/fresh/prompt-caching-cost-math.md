@@ -6,7 +6,7 @@ verify_before_citing: true
 
 > Read when: you need to estimate what caching saves for a 20-tool MCP agent session, or how many cache reads a write premium needs to pay off; verify the prices before citing.
 
-Prices are those the source used in April 2026 and will move. Provider mechanics: `prompt-caching-providers.md`. Rules: `../mcp/budget-cache-ttl-and-monitoring.md`.
+Prices are those of April 2026 and will move. Provider mechanics: `prompt-caching-providers.md`. Rules: `../mcp/budget-cache-ttl-and-monitoring.md`.
 
 <!-- src: audit-agentic-mcp/references/patterns/caching-economics.md#Cost Math Worksheet — 20-Tool MCP Server, 10-Turn Agent Session -->
 ## Cost worksheet: 20-tool MCP server, 10-turn agent session
@@ -42,7 +42,7 @@ Reference workload: 20 MCP tools in the stable tool block, 10 agentic turns insi
 
 The storage drag on Gemini 2.5 Pro at this prefix size is why explicit caching only pays off once the prefix is at least 100K tokens or the reuse rate is high (rule: TTL section of `../mcp/budget-cache-ttl-and-monitoring.md`).
 
-Arithmetic check done during migration: the turn-1 rows, the percentages in the totals table and the break-even figures below recompute from the numbers given. The 10-turn totals were not re-derived because the source does not say how the growing tail is priced.
+Arithmetic check: the turn-1 rows, the percentages in the totals table and the break-even figures below recompute from the numbers given. The 10-turn totals were not re-derived because the page does not say how the growing tail is priced.
 
 <!-- src: audit-agentic-mcp/references/patterns/caching-economics.md#Break-Even Analysis — How Many Reads Before a Write Pays Off -->
 ## Break-even: how many reads before a write pays off

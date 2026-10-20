@@ -25,7 +25,7 @@ The first-connection sequence below is the reference. Any deviation means the se
 9. **Token exchange.** The client POSTs `/token` with `grant_type=authorization_code`, `code`, `code_verifier`, `redirect_uri`, `client_id`, and **`resource=https://mcp.example.com`** (MUST). The AS returns an access token with `aud="https://mcp.example.com"` plus, optionally, a rotating refresh token.
 10. **Authenticated retry.** The client retries the original MCP call with `Authorization: Bearer <token>`. The server validates the signature, `iss`, `exp`, `nbf`, `aud` (exactly equal to its canonical URI) and scope, then dispatches.
 
-> Reconciled: the sources listed DCR as the "last resort" in the flow and CIMD as the recommended default in the revision table; this file follows the 2025-11-25 spec order (pre-registered, CIMD, DCR, ask the user) and detects support from the AS metadata (rule and detection fields: [auth-client-identity.md](auth-client-identity.md)).
+> Note: follow the 2025-11-25 spec order (pre-registered, CIMD, DCR, ask the user) and detect support from the AS metadata (rule and detection fields: [auth-client-identity.md](auth-client-identity.md)).
 
 <!-- src: audit-agentic-mcp/references/patterns/auth-identity.md#4. Flow Walkthrough — Step-Up / Incremental Scope -->
 ## Step-up and incremental scope

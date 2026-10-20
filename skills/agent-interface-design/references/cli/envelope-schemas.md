@@ -7,7 +7,7 @@
 
 Formal schemas enable compile-time validation and IDE support for agent integrations. A validation example for a Node integration is in `../frameworks/node/output-contracts.md`. The pagination schema is in `pagination.md`; the JSONL event schema is in `jsonl-event-schema.md`.
 
-> Reconciled: the sources disagreed on `schema_version` (`"v1"` vs `"1.0"`), on whether a failure carries `"result": null, "error": null` (minimal) or omits them (full), and the schemas below closed the top level (`additionalProperties: false`) while other pages add top-level fields. This file settles it: `schema_version` is the string `"1.0"` (pattern `^\d+\.\d+$`); a success omits `error`, a failure omits `result`; and the top level is open (`additionalProperties: true`) so extension fields such as `status`, `next_actions`, `dry_run`, `changes`, `partial_result`, `recovery`, `retry` and `warnings` may appear beside the core fields.
+> Note: `schema_version` is the string `"1.0"` (pattern `^\d+\.\d+$`); a success omits `error`, a failure omits `result`; and the top level is open (`additionalProperties: true`) so extension fields such as `status`, `next_actions`, `dry_run`, `changes`, `partial_result`, `recovery`, `retry` and `warnings` may appear beside the core fields.
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Success Response Schema -->
 ## Success response schema

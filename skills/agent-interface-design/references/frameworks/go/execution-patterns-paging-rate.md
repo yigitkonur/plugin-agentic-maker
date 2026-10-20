@@ -7,7 +7,7 @@
 
 Contract: `../../cli/pagination.md`.
 
-> Reconciled: the source returned `Data` and a `PageInfo` with `TotalCount`, `HasNext`, `PageSize`. The names below follow `result.items`, `result.next_cursor`, `result.has_more`, optional `result.total`.
+> Note: field names follow `result.items`, `result.next_cursor`, `result.has_more`, optional `result.total`.
 
 ```go
 type PaginationOptions struct {

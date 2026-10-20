@@ -43,6 +43,4 @@ Concrete examples, happy path and common mistake, measurably improve task comple
 
 Include: one happy-path value with realistic content; one common mistake with a brief reason it fails. Do NOT include exhaustive parameter combinations (that is the schema's job) or lengthy prose beside examples.
 
-> Reconciled: the source put full example calls and an example response inside the description (about 150 tokens), which breaks its own 100-token target. The examples moved to the parameter descriptions and the response shape to one clause.
-
 A single concrete example outperforms a paragraph of rules, and a wrong example inoculates against the most frequent failure mode. Response shapes: `responses-steering-and-examples.md`.

@@ -7,7 +7,7 @@
 
 Every tool in the prompt costs tokens and degrades routing accuracy past a model-specific threshold. Treat the numbers below as diagnostic cues, not verdicts.
 
-> Reconciled: the sources gave tool-count ceilings of 10, 20, 30 and 40 and different per-model caps; this file uses one ladder, and every other page points here: up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute); 100 or more adds semantic search. "Progressive discovery" therefore has two grades: showing only the relevant group past about 20, and meta-tools at 40 or more. Per-model sweet spots and client caps are in `fresh/tool-count-by-model.md`.
+> Note: up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute); 100 or more adds semantic search. "Progressive discovery" therefore has two grades: showing only the relevant group past about 20, and meta-tools at 40 or more. Per-model sweet spots and client caps are in `fresh/tool-count-by-model.md`.
 
 ```
 START: How many tools does your server expose?

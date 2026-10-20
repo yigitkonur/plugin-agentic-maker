@@ -6,7 +6,7 @@ verify_before_citing: true
 
 > Read when: you must decide whether a given client will honor an advanced MCP feature, or you are quoting a client's support level.
 
-Survey date in the source: 2025-12. Treat every cell as stale until re-checked. Core rules: `../mcp/protocol-capability-gating.md`. A second client matrix exists in `client-compatibility.md`; this file's cells were not merged with it.
+Survey date: 2025-12. Treat every cell as stale until re-checked. Core rules: `../mcp/protocol-capability-gating.md`. A second client matrix exists in `client-compatibility.md`; this file's cells were not merged with it.
 
 <!-- src: audit-agentic-mcp/references/patterns/advanced-protocol.md#Client Support Matrix (2025-12) -->
 ## Client Support Matrix (2025-12)
@@ -37,9 +37,7 @@ Legend: `native` = advertises the capability and implements it; `partial` = adve
 | cancellation | native | unknown-2025-12 | unknown-2025-12 |
 | `_meta` passthrough | partial | partial | partial |
 
-The source table was one 10-column table; it is split into two tables here only to stay readable. Cells are unchanged.
-
-Sources named in the source: VS Code full-spec-support blog (2025-06-12); GitHub Copilot elicitation blog (2025-09-04); anthropics/claude-code #7108 (2025-09); GitHub community discussion #160291 (2025-09); zed-industries/zed #53156 (2025-11).
+Sources named for the survey: VS Code full-spec-support blog (2025-06-12); GitHub Copilot elicitation blog (2025-09-04); anthropics/claude-code #7108 (2025-09); GitHub community discussion #160291 (2025-09); zed-industries/zed #53156 (2025-11).
 
 <!-- src: audit-agentic-mcp/references/patterns/advanced-protocol.md#Pattern 1: Capability-Gate Every Advanced Feature Before Using It -->
 ## Dated client statements moved out of the patterns
@@ -56,7 +54,7 @@ Sources named in the source: VS Code full-spec-support blog (2025-06-12); GitHub
 - URL elicitation: only VS Code Insiders advertised `elicitation.url` as of 2025-12.
 
 <!-- src: audit-agentic-mcp/references/patterns/advanced-protocol.md#Pattern 6: Honor `roots/list` Instead Of Hard-Coding Workspace Paths -->
-- Roots: Zed, Cursor, Windsurf, Cline, Continue and Copilot CLI had no roots support at 2025-12; use an explicit `workspace_path` tool argument for them. (The source called this "the Pattern 12 matrix"; the matrix is the section above.)
+- Roots: Zed, Cursor, Windsurf, Cline, Continue and Copilot CLI had no roots support at 2025-12; use an explicit `workspace_path` tool argument for them.
 
 <!-- src: audit-agentic-mcp/references/patterns/advanced-protocol.md#Pattern 7: Implement `completion/complete` With Context-Aware Narrowing -->
 - Completions: most clients except Claude Desktop and VS Code do not advertise `completions`.

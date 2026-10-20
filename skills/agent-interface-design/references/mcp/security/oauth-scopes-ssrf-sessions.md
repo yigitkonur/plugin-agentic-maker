@@ -7,7 +7,7 @@
 
 For external-facing servers, implement OAuth2 with narrowly scoped permissions. Do not accept tokens not explicitly issued for your server. Start with a minimal scope baseline and request higher privileges only when a specific tool requires them.
 
-Token validation: decode and verify the JWT signature (RS256), require `aud` to equal this server's canonical URI (example: `https://mcp.example.com`; reject a token for another audience with 401 and `WWW-Authenticate: Bearer error="invalid_token"`), then check that every scope the endpoint needs is in the token's space-separated `scope` claim (403 with `error="insufficient_scope"` and the needed `scope`, "Missing scope: ..."). The full protocol profile (RFC 9728, RFC 8707, step-up) is in `auth-flows.md` and `auth-obo-and-token-passthrough.md`.
+Token validation: decode and verify the JWT signature (RS256), require `aud` to equal this server's canonical URI (example: `https://mcp.example.com`; reject a token for another audience with 401 and `WWW-Authenticate: Bearer error="invalid_token"`; the spec sends audience failures to OAuth 2.1 section 5.3 error handling, and 403 is for insufficient scope), then check that every scope the endpoint needs is in the token's space-separated `scope` claim (403 with `error="insufficient_scope"` and the needed `scope`, "Missing scope: ..."). The full protocol profile (RFC 9728, RFC 8707, step-up) is in `auth-flows.md` and `auth-obo-and-token-passthrough.md`.
 
 Scope design, least privilege:
 

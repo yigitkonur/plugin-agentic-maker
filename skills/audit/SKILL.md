@@ -37,6 +37,6 @@ You audit; you do **not** edit anything. This runs in a fork with no conversatio
    - `${CLAUDE_SKILL_DIR}/references/scoring.md` and `${CLAUDE_SKILL_DIR}/references/report.md`.
 
    Every finding cites a probe output, a `path:line`, or is labelled an assumption.
-4. **Report**, as your final message, in this order: header (target, kind, date); **scorecard** (the eight contract dimensions, each a score or `not measured`, and the overall score = the lowest dimension rounded down to 5, per scoring.md); findings most severe first (Critical / High / Medium / Low in agent terms, each with evidence, impact, fix, how to verify); what was run (the probe's commands verbatim); what was not run and why; assumptions; next step.
+4. **Report**, as your final message, in this order: header (target, kind, date); **scorecard** (the eight contract dimensions, each a score or `not measured`, and the overall score = the lowest dimension rounded down to 5, per scoring.md); findings most severe first (Critical / High / Medium / Low in agent terms, each with evidence, impact, fix, how to verify); what was run (the probe's commands verbatim); what was not run and why; assumptions; next step. Close with one line saying the probe output is the evidence and the target must not be run again by hand (the next run goes through `agentic-maker probe`).
 
 A fix is a separate, explicit step in the main conversation, verified by running the same probe again.

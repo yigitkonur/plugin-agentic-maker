@@ -16,7 +16,7 @@ Durable lesson: pick the primitive by whether each client needs durable per-sess
 The Cloudflare MCP stack has two primitives. Pick based on whether each client needs durable per-session state.
 
 - **`McpAgent`** (in the `agents` package): binds every MCP client to a dedicated Durable Object instance. State survives across requests, across hibernation, and across region failovers. Use for per-user memory, long-running conversations, or resumable tool calls.
-- **`createMcpHandler`** (in `@modelcontextprotocol/cloudflare`): plain Workers handler. No Durable Object, no session memory, no hibernation. Use for tools that are fully idempotent and stateless.
+- **`createMcpHandler`** (from `agents/mcp`, a subpath of the `agents` package): plain Workers handler. No Durable Object, no session memory, no hibernation. Use for tools that are fully idempotent and stateless.
 
 `MyMCP.serve("/mcp")` serves Streamable HTTP. `MyMCP.serveSSE("/sse")` exists for legacy clients but is deprecated. Do not mount both unless you explicitly need backward compatibility.
 
@@ -79,6 +79,6 @@ Source: developers.cloudflare.com/durable-objects/reference/data-location/ (acce
 
 Cloudflare's `workers-oauth-provider` is a first-party library that gives you a conforming OAuth 2.1 authorization server inside the same Worker: Dynamic Client Registration (RFC 7591), PKCE, token introspection, and `tokenExchangeCallback` for upstream federation. You do not need Auth0, WorkOS, Stytch or Clerk to ship a remote MCP with auth. It integrates natively with GitHub, Google, Slack, Stytch, Auth0, WorkOS, and Cloudflare Access.
 
-> Reconciled: the sources gave a Dynamic Client Registration endpoint here and a "prefer Client ID Metadata Documents" stance in the auth files; this file uses the brief's answer: prefer Client ID Metadata Documents where the client supports them, keep DCR for clients without them, and detect which from the authorization-server metadata.
+> Note: prefer Client ID Metadata Documents where the client supports them, keep DCR for clients without them, and detect which from the authorization-server metadata.
 
 Sources: github.com/cloudflare/workers-oauth-provider v0.4.0 (2026-03-31); blog.cloudflare.com/building-ai-agents-with-mcp-authn-authz-and-durable-objects (accessed 2026-04).

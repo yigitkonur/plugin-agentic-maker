@@ -54,8 +54,6 @@ If several LLM clients (Claude, GPT-4, Gemini) reach the server, each has differ
 6. **Inline enums up to 10 values;** above that describe the values and validate server-side. For large enums, split into a separate "mode" tool that narrows the scope.
 7. **Set `additionalProperties: false`;** it helps every model see the schema is strict.
 
-> Reconciled: the source's rule 1 banned `oneOf`/`anyOf`/`allOf` outright and its rule 6 said "under 10" while its matrix said enums above 20 degrade. This file uses: avoid `oneOf`/`anyOf` at the top of an input schema; inline enums up to 10 values. Per-model matrix and the 20-value report: `../fresh/mcp-model-behavior.md`.
-
-> Reconciled: rule 2 allows 3 levels of nesting (the portability ceiling), while `schemas-flat-and-sized.md` says never nest 2+ levels (the design target), and `hard-rules.md` rule 6 says flatten past one level. Design for no nesting beyond one level; treat 3 as the limit the portability validator rejects. `probe mcp` flags depth above 2.
+> Note: design for no nesting beyond one level; treat 3 levels as the limit the portability validator rejects. `probe mcp` flags depth above 2. Per-model enum matrix and the 20-value report: `../fresh/mcp-model-behavior.md`.
 
 Test your schema with a small portability validator run in CI: flag `oneOf`/`anyOf` ("Remove oneOf/anyOf for Gemini compatibility"), `$ref` ("Inline $ref for cross-client compatibility"), nesting depth above 3 ("Nesting too deep (>3) for GPT-4 reliability"), and enums above 10 values ("Large enum (>10) degrades accuracy"). Code: `../frameworks/mcp-ts/schema-design-portability.md`.

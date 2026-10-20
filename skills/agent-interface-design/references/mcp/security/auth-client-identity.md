@@ -13,7 +13,7 @@ else AS metadata has a registration_endpoint                                 -> 
 else                                                                         -> ask the user for the client details
 ```
 
-> Reconciled: the sources variously recommended CIMD over DCR, treated DCR as a last resort, or described DCR as the baseline for MCP clients; this file follows the spec's order (pre-registered, CIMD where the AS advertises it, DCR as the fallback, then the user) and says to detect support from the AS metadata.
+> Note: the order is pre-registered, CIMD where the AS advertises it, DCR as the fallback, then ask the user. Detect support from the AS metadata.
 
 Why CIMD: it anchors client identity to a public HTTPS URL, so the `redirect_uris` are tied to DNS and an attacker cannot forge them. The AS fetches the manifest (`client_id`, `client_name`, `redirect_uris`, optional `jwks` / `jwks_uri` for `private_key_jwt`) and MUST exact-match every `redirect_uri` against it on each authorize request. DCR is a free-for-all endpoint unless you constrain it (below). Revision history of this stance: [fresh/mcp-spec-revision-auth-diff.md](../../fresh/mcp-spec-revision-auth-diff.md).
 

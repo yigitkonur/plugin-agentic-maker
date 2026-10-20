@@ -6,7 +6,7 @@ verify_before_citing: true
 
 > Read when: you need the documented facts, the benchmark numbers or the community reports behind the surface-choice rules, with their dates. Verify before citing.
 
-The decision rules are in `../decisions/surface-choice.md`; the same benchmark from the MCP side is in `mcp-vs-cli-benchmarks.md`. Everything below is time-sensitive: the source states "refreshed on April 15, 2026", and vendor behaviour, spec versions and benchmark figures move.
+The decision rules are in `../decisions/surface-choice.md`; the same benchmark from the MCP side is in `mcp-vs-cli-benchmarks.md`. Everything below is time-sensitive: the evidence was refreshed on April 15, 2026, and vendor behaviour, spec versions and benchmark figures move.
 
 <!-- src: audit-agentic-cli/references/mcp-vs-cli-decision.md#2. What the Official Docs Establish -->
 ## What the official docs establish
@@ -19,7 +19,7 @@ The decision rules are in `../decisions/surface-choice.md`; the same benchmark f
 | Anthropic and OpenAI both document approvals, allowlists, deferred loading, and strong warnings about untrusted servers. | MCP earns its cost when approval and trust boundaries matter, not just a way to run commands. |
 | Shell and local-shell tools run in the caller's own runtime, with safety coming from sandboxing, allowlists, hooks, and permissions. | CLI-first is usually simpler and cheaper, but the caller owns the blast radius. |
 
-Primary docs named by the source (as of 2026-04-15):
+Primary docs (as of 2026-04-15):
 
 - Model Context Protocol architecture: `https://modelcontextprotocol.io/docs/learn/architecture`
 - MCP transports spec, November 25, 2025: `https://modelcontextprotocol.io/specification/2025-11-25/basic/transports`
@@ -33,7 +33,7 @@ Primary docs named by the source (as of 2026-04-15):
 <!-- src: audit-agentic-cli/references/mcp-vs-cli-decision.md#7. Current Evidence And Caveats | audit-agentic-cli/references/mcp-vs-cli-decision.md#7.1 Documented benchmark signal -->
 ## Benchmark signal
 
-The strongest public benchmark the source found is Scalekit's March 11, 2026 comparison of GitHub tasks using Claude Sonnet 4:
+The strongest public benchmark found is Scalekit's March 11, 2026 comparison of GitHub tasks using Claude Sonnet 4:
 
 - 75 total benchmark runs;
 - same tasks and prompts, with only the tool interface changing;
@@ -63,7 +63,7 @@ The correct takeaway is narrower:
 <!-- src: audit-agentic-cli/references/mcp-vs-cli-decision.md#7.3 Practitioner signal from Reddit -->
 ## Practitioner signal
 
-Across the Reddit threads the source reviewed on April 15, 2026, the pattern was consistent.
+Across the Reddit threads reviewed on April 15, 2026, the pattern was consistent.
 
 | Theme | Reports |
 |---|---|
@@ -72,7 +72,7 @@ Across the Reddit threads the source reviewed on April 15, 2026, the pattern was
 | CLI complaints | permission prompts; quoting and shell expansion friction; broad local access if safeguards are weak |
 | MCP complaints | auth drift; timeouts; schema bloat; low-quality community servers |
 
-Treat this as practitioner evidence, not a controlled study. Threads the source cited:
+Treat this as practitioner evidence, not a controlled study. Threads cited:
 
 - r/ClaudeAI, "Switched from MCPs to CLIs": `https://www.reddit.com/r/ClaudeAI/comments/1sakut1/switched_from_mcps_to_clis_for_claude_code_and/`
 - r/AI_Agents, "The Truth About MCP vs CLI": `https://www.reddit.com/r/AI_Agents/comments/1rjtp3q/the_truth_about_mcp_vs_cli/`

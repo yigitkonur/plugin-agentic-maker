@@ -34,7 +34,7 @@ Use `--verbose` / `-v` to increase stderr detail, never stdout.
 
 For long-running operations, use JSON Lines (newline-delimited JSON). Each line is one typed event; see `jsonl-progress-patterns.md` for sequences and `jsonl-event-schema.md` for the schema.
 
-> Reconciled: the sources put JSONL progress events on stdout in one file and on stderr in another. This file uses one rule. A command that streams results emits typed JSONL on stdout, and its last line is `type: summary` or `type: result`. Progress that is not a result (`progress`, `phase`, `heartbeat`, `log` events) goes to stderr, also one JSON object per line. Never mix the two on one stream. The source name `completed` for the terminal event is the same role as `result`; a CLI that already emits `completed` keeps working but documents it.
+> Note: a command that streams results emits typed JSONL on stdout, and its last line is `type: summary` or `type: result`. Progress that is not a result (`progress`, `phase`, `heartbeat`, `log` events) goes to stderr, also one JSON object per line. Never mix the two on one stream. `completed` as the terminal event has the same role as `result`; a CLI that already emits `completed` keeps working but documents it.
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Event Types -->
 ## Event types

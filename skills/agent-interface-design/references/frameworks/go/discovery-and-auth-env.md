@@ -125,4 +125,4 @@ func runCommand(cmd *cobra.Command, args []string) error {
 }
 ```
 
-> Reconciled: the source returned a generic error here; this file returns a usage error (exit 2) naming the flag.
+> Note: a missing value here returns a usage error (exit 2) that names the flag.

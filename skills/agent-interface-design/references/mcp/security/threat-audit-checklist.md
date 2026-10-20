@@ -7,7 +7,7 @@
 
 Every item is yes/no. Work top to bottom before shipping a new MCP integration. There are 36 items (the source heading said "30+"). Authorization detail lives in the auth files (`auth-audit-checklist.md`, `auth-flows.md`, `auth-client-identity.md`); keep these binary checks here.
 
-> Reconciled: the sources variously recommended CIMD over DCR or treated DCR as the baseline; this file prefers Client ID Metadata Documents where the client supports them, keeps Dynamic Client Registration for clients without them, and never assumes either: detect support from the authorization-server metadata (see auth-client-identity.md).
+> Note: prefer Client ID Metadata Documents (CIMD) where the client supports them; keep Dynamic Client Registration (DCR) for clients without them; never assume either. Detect support from the authorization-server metadata (see auth-client-identity.md).
 
 **Trust and supply chain**
 
@@ -72,5 +72,3 @@ Every item is yes/no. Work top to bottom before shipping a new MCP integration. 
 - Content sanitization, PII tokenization, HMAC schema signing, SSRF blocking and delegated-permission design: `untrusted-content-and-pii.md`, `tool-schema-integrity.md`, `least-privilege-and-confirmation.md`, `oauth-scopes-ssrf-sessions.md`.
 - OAuth confused deputy, token-audience binding (RFC 8707), DCR impersonation vs CIMD, session lifecycle and token-passthrough hardening: `auth-attack-primitives.md`, `auth-client-identity.md`, `auth-obo-and-token-passthrough.md`, `auth-audit-checklist.md`.
 - Injection-surface advice: `threat-delivery-surfaces.md`. Posture guidance: `../../decisions/security-posture.md`; pre-launch gate: `../../decisions/production-readiness.md`.
-
-> Reconciled: the source routed to tool-descriptions.md, tool-responses.md and decision-trees/response-format.md, which are not part of this file set; those routes are dropped here and the injection-surface advice is kept in threat-delivery-surfaces.md.

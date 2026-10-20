@@ -56,7 +56,7 @@ def apply_resources(
 
 Contract: `../../cli/non-interactive.md`.
 
-> Reconciled: the source `confirm` returned `default` (False) when non-interactive, then `delete` exited 1 with "Aborted". Here a confirmation that cannot be asked fails with exit 2 naming `--yes` / `--force`, and prompts go to stderr.
+> Note: a confirmation that cannot be asked (non-interactive) fails with exit 2 naming `--yes` / `--force`, and prompts go to stderr.
 
 ```python
 import sys

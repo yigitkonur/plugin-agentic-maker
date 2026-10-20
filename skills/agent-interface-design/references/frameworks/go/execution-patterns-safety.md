@@ -60,7 +60,7 @@ func (c *Client) Apply(ctx context.Context, opts ApplyOptions) (*ApplyResult, er
 
 Contract: `../../cli/non-interactive.md`.
 
-> Reconciled: the source `Confirm` returned `(false, error)` and left the exit code open. Here the error is a sentinel the caller maps to exit 2 (`ExitUsage`), printing a message that names `--yes` / `--force`.
+> Note: `Confirm` returns a sentinel error that the caller maps to exit 2 (`ExitUsage`), printing a message that names `--yes` / `--force`.
 
 ```go
 import (

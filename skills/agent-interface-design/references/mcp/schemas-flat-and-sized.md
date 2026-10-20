@@ -7,7 +7,7 @@ How to keep tool input schemas simple enough for LLMs to fill correctly. Coercio
 <!-- src: audit-agentic-mcp/references/patterns/schema-design.md#Schema Design Patterns -->
 Schema complexity directly drives tool-call accuracy. The rules below cover complexity limits, flexible formats, enum descriptions and splitting oversized tools.
 
-> Reconciled: the sources disagreed on `oneOf`/`anyOf` (a hard ban in one place, "especially problematic" in another) and on enum size (10 in one rule, 20 in a compatibility table). This file uses: avoid `oneOf`/`anyOf` at the top of an input schema; inline enums up to 10 values; above 10, describe the values and validate on the server. The 20-value report is model-specific: `../fresh/mcp-model-behavior.md`.
+> Note: avoid `oneOf`/`anyOf` at the top of an input schema; inline enums up to 10 values; above 10, describe the values and validate on the server. The 20-value report is model-specific: `../fresh/mcp-model-behavior.md`.
 
 <!-- src: audit-agentic-mcp/references/patterns/schema-design.md#Pattern 3: Keep Schemas Flat, Under 6 Parameters | audit-agentic-mcp/references/patterns/schema-design.md#Rules of Thumb -->
 ## Keep schemas flat, under 6 parameters
@@ -48,7 +48,7 @@ More examples:
 - `level`: "'error': only critical failures, 'warn': errors + potential issues, 'info': general operational events, 'debug': verbose output for troubleshooting".
 - `format` (`json`, `csv`, `markdown`): "'json': structured data for programmatic use, 'csv': tabular data for spreadsheets, 'markdown': human-readable formatted output".
 
-Enum size: up to 10 values inline; above 10, describe values and validate server-side (see the Reconciled note above).
+Enum size: up to 10 values inline; above 10, describe values and validate server-side (see the note above).
 
 <!-- src: audit-agentic-mcp/references/patterns/schema-design.md#Pattern 6: Break Tools Over 40 Parameters | audit-agentic-mcp/references/patterns/schema-design.md#Strategy 1: Split by Workflow Stage | audit-agentic-mcp/references/patterns/schema-design.md#Strategy 2: Action-Routed Facade | audit-agentic-mcp/references/patterns/schema-design.md#Rules -->
 ## Split tools with too many parameters

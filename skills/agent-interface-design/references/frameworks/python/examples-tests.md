@@ -79,4 +79,4 @@ class TestCLIOutput:
         assert data1.get("ok") == data2.get("ok")
 ```
 
-> Reconciled: the source read `stdout or stderr`; the envelope is always on stdout, so the helper reads stdout only.
+> Note: the envelope is always on stdout, so the helper reads stdout only.

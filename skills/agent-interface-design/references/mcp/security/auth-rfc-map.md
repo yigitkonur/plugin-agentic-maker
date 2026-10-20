@@ -32,6 +32,6 @@ Tick off this table before touching anything else. Non-compliance almost always 
 | RFC 8693 Token Exchange | OBO pattern: `subject_token` + `actor_token` gives an upstream-audienced token. Not in the MCP spec, but commonly used by servers | MCP server + internal STS |
 | CIMD I-D (SEP-991) | URL-as-`client_id`; JSON manifest hosted by the client at an HTTPS URL; optional `jwks` for `private_key_jwt` | Clients (SHOULD host) + AS (SHOULD fetch, MUST validate redirects against it) |
 
-> Reconciled: the sources gave CIMD as the recommended default in one place and DCR as the baseline in others; this file prefers CIMD where the client supports it, keeps DCR for clients without it, and never assumes either (decision rule: [auth-client-identity.md](auth-client-identity.md)).
+> Note: prefer CIMD where the client supports it, keep DCR for clients without it, and never assume either (decision rule: [auth-client-identity.md](auth-client-identity.md)).
 
 Sources: IETF RFCs 9728, 8707, 8414, 7591, 8693, 6749; Auth0 MCP spec update write-up.

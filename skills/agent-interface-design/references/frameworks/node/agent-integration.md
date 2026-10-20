@@ -68,7 +68,7 @@ async function invokeCLI(
 const result = await invokeCLI(['mycli', 'task', 'start', 'prompt.md'], { timeout: 60000 });
 ```
 
-> Reconciled: the source joined the arguments into one shell string for `exec`, which lets an argument inject shell syntax; this file uses `execFile` with an argument array. It also adds the `env` option that the tracing example passes. A failed command's envelope is on stdout, so the sample reads `stdout` from the thrown error before falling back to `exit_<n>`; `retryable` follows the exit code (7).
+> Note: use `execFile` with an argument array, never a joined shell string, so an argument cannot inject shell syntax. A failed command's envelope is on stdout, so read `stdout` from the thrown error before falling back to `exit_<n>`; `retryable` follows the exit code (7).
 
 <!-- src: audit-agentic-cli/references/agent-integration.md#Async/Await with Retry -->
 ## Async/await with retry

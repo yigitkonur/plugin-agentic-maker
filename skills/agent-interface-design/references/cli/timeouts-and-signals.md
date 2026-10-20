@@ -19,7 +19,7 @@ mycli deploy \
   --on-timeout cleanup                   # Action: cleanup | abort | preserve
 ```
 
-> Reconciled: a timeout is class `timeout`, exit 7 (retryable). `--timeout-exit-code 124` is an explicit opt-in override; without it the exit is 7.
+> Note: a timeout is class `timeout`, exit 7 (retryable). `--timeout-exit-code 124` is an explicit opt-in override; without it the exit is 7.
 
 <!-- src: audit-agentic-cli/references/execution-patterns.md#Timeout Flag Standards -->
 ## Timeout flag standards
@@ -68,7 +68,7 @@ A timeout reports how far it got and how to resume.
 
 The reference grace periods: 30 s after `SIGINT`, 10 s after `SIGTERM`; a second signal forces exit; when the grace period expires the process force-exits with the same signal code (130 or 143), never with 1.
 
-> Reconciled: the signal table says a cancelled run exits 130 or 143, but the Go reference printed `{"ok": true, "status": "cancelled", ...}` and exited 0. A signal-cancelled run exits 130 (SIGINT) or 143 (SIGTERM) and prints `{"ok": false, "status": "cancelled", "cleanup_status": "completed"}`; these signal codes sit beside the 0-8 table in `exit-codes.md`, not in it. A deadline is a different outcome: class `timeout`, exit 7.
+> Note: a signal-cancelled run exits 130 (SIGINT) or 143 (SIGTERM) and prints `{"ok": false, "status": "cancelled", "cleanup_status": "completed"}`; these signal codes sit beside the 0-8 table in `exit-codes.md`, not in it. A deadline is a different outcome: class `timeout`, exit 7.
 
 <!-- src: audit-agentic-cli/references/execution-patterns.md#Context Cancellation Patterns -->
 ## Hierarchical timeouts

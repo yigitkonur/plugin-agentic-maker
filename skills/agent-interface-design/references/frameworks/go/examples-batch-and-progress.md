@@ -88,7 +88,7 @@ func BatchProcess(ctx context.Context, items []Item, cfg BatchConfig, process fu
 }
 ```
 
-> Reconciled: the source did not say what `ContinueOnError` defaults to. Read-only and idempotent batches default to continue and report partial (exit 8, never 3); destructive batches default to stop at the first error. `--stop-on-error` / `--continue-on-error` override either. When `Succeeded > 0` and `Failed > 0`, exit with `ExitPartial`.
+> Note: read-only and idempotent batches default to continue and report partial (exit 8, never 3); destructive batches default to stop at the first error. `--stop-on-error` / `--continue-on-error` override either. When `Succeeded > 0` and `Failed > 0`, exit with `ExitPartial`.
 
 <!-- src: audit-agentic-cli/references/examples.md#9. Long-Running Task with Progress (Go) -->
 ## Long-running task with progress
@@ -179,4 +179,4 @@ func runWithProgress(ctx context.Context, opID string, work func(progress chan<-
 }
 ```
 
-> Reconciled: the source wrote every event, including `error`, `completed` and `cancelled`, to stderr. This file writes progress to stderr and the terminal events (results) to stdout; never mix them on one stream.
+> Note: read-only and idempotent batches default to continue and report partial (exit 8, never 3); destructive batches default to stop at the first error. `--stop-on-error` / `--continue-on-error` override either. When `Succeeded > 0` and `Failed > 0`, exit with `ExitPartial`.

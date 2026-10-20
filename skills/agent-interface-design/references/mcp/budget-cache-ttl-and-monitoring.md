@@ -9,7 +9,7 @@ Companion to `budget-cache-stable-prefix.md`. Numbers (write premiums, TTLs, bre
 
 The short TTL is cheap to write; the long TTL costs more to write. Some vendors charge no write premium and bill hourly storage instead. Choosing the right TTL per block matters more than choosing one TTL overall.
 
-> Reconciled: the source said the 1h write premium is "8x" the 5m one while giving +25% (5m) and +100% (1h) in the same file. 100 / 25 is 4, so this file uses 4x. Figures: `../fresh/prompt-caching-providers.md`.
+> Note: the 1h cache write premium (+100%) is 4x the 5m premium (+25%). Figures: `../fresh/prompt-caching-providers.md`.
 
 Do:
 - Use the **long TTL (1h)** only for genuinely static content: system prompt, tool block, shared project context. These rarely change within an hour.
@@ -78,5 +78,3 @@ Do:
 
 Don't:
 - Treat caching as a silver bullet. Very-large-context coding sessions stay expensive on the first turn whatever you do; only batch + cache + code execution together keep long tasks affordable.
-
-> Reconciled: the source's TTL pattern pointed to "Pattern 11" for monitoring; monitoring is Pattern 10, so the pointer above names the monitoring section here. Its other cross-references (to a sibling context file section 2) now point to `budget-tool-definitions.md`.

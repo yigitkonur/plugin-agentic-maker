@@ -2,11 +2,11 @@
 as_of: 2025-11-25
 verify_before_citing: true
 ---
-# MCP client and SDK behaviour reported in the sources
+# MCP client and SDK behaviour reported by practitioners
 
 > Read when: a rule depends on how a specific MCP client or SDK behaves (instructions field, tool-name characters, response caps, annotations, SDK method names); verify before citing.
 
-The source does not date these reports. Specification text it cites: the MCP specification dated 2025-11-25. Core files linking here: `../mcp/descriptions-schema-split-and-examples.md`, `../mcp/schemas-coercion-and-portability.md`, `../mcp/responses-curated-and-semantic.md`, `../mcp/responses-formats-and-structured.md`, `../mcp/patterns-dynamic-tool-lists.md`, `../mcp/budget-tool-definitions.md`.
+No date is given for these reports. Specification text cited: the MCP specification dated 2025-11-25. Core files linking here: `../mcp/descriptions-schema-split-and-examples.md`, `../mcp/schemas-coercion-and-portability.md`, `../mcp/responses-curated-and-semantic.md`, `../mcp/responses-formats-and-structured.md`, `../mcp/patterns-dynamic-tool-lists.md`, `../mcp/budget-tool-definitions.md`.
 
 ## Clients
 
@@ -20,6 +20,6 @@ The source does not date these reports. Specification text it cites: the MCP spe
 ## SDKs
 
 - TypeScript SDK, output schemas: if a tool declares an `outputSchema` but returns only text `content`, the SDK throws a validation error at runtime; always return `structuredContent` as well.
-- TypeScript SDK, registered tools: `disable()`, `enable()`, `update()` and `remove()` each send `notifications/tools/list_changed` automatically. A manual `server.notification({method: "notifications/tools/list_changed"})` is also possible. Names such as `setToolNotFoundHandler` and `notifyToolsChanged` in the source's examples are illustrative; verify against the installed SDK.
+- TypeScript SDK, registered tools: `disable()`, `enable()`, `update()` and `remove()` each send `notifications/tools/list_changed` automatically. A manual `server.notification({method: "notifications/tools/list_changed"})` is also possible. Names such as `setToolNotFoundHandler` and `notifyToolsChanged` in the original examples are illustrative; verify against the installed SDK.
 - FastMCP 3.0: layered visibility (global transforms -> session transforms -> tool-level annotations), tag-based `disable`, per-session `enable_components`, auth middleware that gates components by tag.
 - Source-cited guides: FastMCP 3.0 blog and visibility docs; MCP specification (tools, `instructions`, `notifications/tools/list_changed`).

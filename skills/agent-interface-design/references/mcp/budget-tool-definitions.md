@@ -30,7 +30,7 @@ Production caveat: this works cleanly with stdio-based local servers, but most p
 
 Registering more tools does not make a model more capable; past a model-specific threshold it makes it less capable, and degradation looks like a cliff, not a slope. Per-model profiles (sweet spot, hard degradation, observed behaviour) are model-specific reports and live in `../fresh/mcp-model-behavior.md`. One vendor recommends at most 20 tools; community consensus: "There is no standard solution. Disable the ones you don't need."
 
-> Reconciled: the sources quote ceilings of 10, 20, 30 and 40 per model. Use them as diagnostic cues, not verdicts: up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute). Per-model caps live in `../fresh/mcp-model-behavior.md`; decision tree in `../decisions/tool-count.md`.
+> Note: treat tool-count ceilings as diagnostic cues, not verdicts. Up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute). Per-model caps live in `../fresh/mcp-model-behavior.md`; decision tree in `../decisions/tool-count.md`.
 
 Tactics:
 - **Tool groups:** keep a registry mapping a task type to its tools (`code-review`: `read_file`, `search_code`, `get_diff`, `add_comment`; `deployment`: `run_pipeline`, `get_logs`, `rollback`, `set_env`; `data-analysis`: `query_db`, `export_csv`, `run_notebook`, `plot_chart`) and expose only the relevant group; fall back to a safe universal cap of 20.

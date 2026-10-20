@@ -173,4 +173,4 @@ main() {
 main "$@"
 ```
 
-> Reconciled: the source counted with `((TESTS_PASSED++))`, which evaluates to the old value; when that is 0 (the first pass) the arithmetic command returns status 1 and `set -e` aborts the script, so the first pass was lost or fatal. This file uses `TESTS_PASSED=$((TESTS_PASSED + 1))` (and the same for failures). Commands read stdout only (`2>/dev/null`), because the envelope is on stdout; the confirmation test redirects stdin from `/dev/null` to prove the no-TTY exit 2.
+> Note: counters use `TESTS_PASSED=$((TESTS_PASSED + 1))` (and the same for failures), because `((TESTS_PASSED++))` returns status 1 when the old value is 0 and `set -e` then aborts the script. Commands read stdout only (`2>/dev/null`), because the envelope is on stdout; the confirmation test redirects stdin from `/dev/null` to prove the no-TTY exit 2.

@@ -6,7 +6,7 @@ verify_before_citing: true
 
 > Read when: you need to know whether an advanced MCP feature or field exists in the spec revision your client or server targets.
 
-As stated in the source patterns (spec revisions 2025-06-18 and 2025-11-25). Verify against the current spec before citing. Core rules: `../mcp/protocol-capability-gating.md`, `../mcp/protocol-sampling.md`, `../mcp/protocol-elicitation.md`, `../mcp/protocol-roots-and-completion.md`, `../mcp/protocol-progress-and-cancellation.md`, `../mcp/protocol-meta-keys.md`.
+As stated for spec revisions 2025-06-18 and 2025-11-25). Verify against the current spec before citing. Core rules: `../mcp/protocol-capability-gating.md`, `../mcp/protocol-sampling.md`, `../mcp/protocol-elicitation.md`, `../mcp/protocol-roots-and-completion.md`, `../mcp/protocol-progress-and-cancellation.md`, `../mcp/protocol-meta-keys.md`.
 
 <!-- src: audit-agentic-mcp/references/patterns/advanced-protocol.md#Pattern 2: Use Sampling to Keep the API Key on the Client Side -->
 ## Sampling

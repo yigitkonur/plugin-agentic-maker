@@ -22,7 +22,7 @@ A well-designed CLI supports these flags consistently on every command.
 | `--no-input` | | bool | Non-interactive mode; fail if input needed | `mycli setup --no-input` |
 | `--help` | `-h` | bool | Show help for command | `mycli deploy -h` |
 
-> Reconciled: the sources disagreed on three details. `--json` has the short form `-j`. `--timeout` takes a duration string (`30s`, `5m`) and has no short form. The non-interactive switch is `--no-input`; a CLI may accept `--non-interactive` as an alias. Keep the spelling identical across commands and document it in `--help`.
+> Note: `--json` has the short form `-j`. `--timeout` takes a duration string (`30s`, `5m`) and has no short form. The non-interactive switch is `--no-input`; a CLI may accept `--non-interactive` as an alias. Keep the spelling identical across commands and document it in `--help`.
 
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#Flag Behavior Matrix -->
 ## Flag behavior matrix
@@ -34,7 +34,7 @@ A well-designed CLI supports these flags consistently on every command.
 | Piped | Auto-on | Auto-on | Off | Off | Off |
 | `--no-input` | Unchanged | Unchanged | Unchanged | Unchanged | Off |
 
-> Reconciled: the sources gave exit 2, a generic error, and `false`/exit 1 for a confirming command run with no TTY. This file uses: without a TTY and without `--yes`/`--force`, a confirming command fails with exit 2 naming the flag. It never returns false silently and never hangs. Environment detection is in `config-and-env.md`.
+> Note: without a TTY and without `--yes`/`--force`, a confirming command fails with exit 2 naming the flag. It never returns false silently and never hangs. Environment detection is in `config-and-env.md`.
 
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#1. Command Grammar | audit-agentic-cli/references/discovery-and-auth.md#Noun-Verb Hierarchy (Preferred) -->
 ## Command grammar

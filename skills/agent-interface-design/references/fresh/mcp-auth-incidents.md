@@ -6,7 +6,7 @@ verify_before_citing: true
 
 > Read when: you need the named incident, affected versions, scores or dates behind an auth-layer attack primitive, for example to cite it in a finding.
 
-Verify before citing: these are the source's reports as of 2026-03, not independently re-checked. The mechanisms and defences live in [../mcp/security/auth-attack-primitives.md](../mcp/security/auth-attack-primitives.md) and [../mcp/security/auth-client-identity.md](../mcp/security/auth-client-identity.md). The wider CVE table: [mcp-cves.md](mcp-cves.md).
+Verify before citing: these are reports as of 2026-03, not independently re-checked. The mechanisms and defences live in [../mcp/security/auth-attack-primitives.md](../mcp/security/auth-attack-primitives.md) and [../mcp/security/auth-client-identity.md](../mcp/security/auth-client-identity.md). The wider CVE table: [mcp-cves.md](mcp-cves.md).
 
 <!-- src: audit-agentic-mcp/references/patterns/auth-identity.md#9. Attack Primitive — DCR Rug Pull And Tool Squatting -->
 ## DCR abuse at scale

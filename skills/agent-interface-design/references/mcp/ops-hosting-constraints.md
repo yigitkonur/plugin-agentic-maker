@@ -14,8 +14,6 @@ Every hosting platform has its own quirks for session state, Streamable HTTP, re
 - **Price by the dominant axis** of the workload (GPU, always-on state, bursty stateless, long single calls, regulation) rather than by compute alone.
 - **Stateless hosting disables the server-to-client features.** Sampling, elicitation and progress need a session or an open stream, and cancellation only reaches the instance running the request; see `protocol-capability-gating.md`.
 
-> Reconciled: the source pointed to `error-handling.md` for the polling-tool pattern, which has no such section; this file points to ops-long-running-tasks.md.
-
 ## Where the specifics are
 
 Each file is time-sensitive (limits, prices, versions); verify before citing.

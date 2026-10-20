@@ -52,7 +52,7 @@ START: User wants to build a new MCP server
 
 Paths in the questions are relative to ``. Q5(d): detect CIMD or DCR support from the authorization-server metadata instead of assuming either; prefer Client ID Metadata Documents where the client supports them (see `mcp/security/*`).
 
-> Reconciled: the sources treated CIMD and DCR differently in different places; this file keeps the question as written and the stance is: prefer CIMD where the client supports it, keep DCR for clients without it, never assume either.
+> Note: prefer CIMD where the client supports it, keep DCR for clients without it, never assume either.
 
 <!-- src: audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Routing After This Tree -->
 ## Routing after the interview

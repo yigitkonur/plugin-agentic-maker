@@ -23,7 +23,7 @@ For list operations that may return many results, put the page in `result`:
 }
 ```
 
-> Reconciled: the sources gave `result` as a bare array with a sibling `pagination` object (`total`, `has_more`, `next_cursor`), and also `data` with `pagination.total_count`, `has_next`, `page_size`. This file uses `result.items`, `result.next_cursor`, `result.has_more` and optional `result.total`. Optional offset-mode extras keep their source meaning under `result`: `page` (was `current_page`), `per_page` (was `page_size`), `prev_cursor` (was `previous_cursor`), `has_previous`, `total_pages`.
+> Note: use `result.items`, `result.next_cursor`, `result.has_more` and optional `result.total`. Optional offset-mode extras under `result`: `page`, `per_page`, `prev_cursor`, `has_previous`, `total_pages`.
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Pagination Fields -->
 ## Fields

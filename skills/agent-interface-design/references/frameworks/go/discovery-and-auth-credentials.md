@@ -61,7 +61,7 @@ func resolveCredentials(cmd *cobra.Command) (string, string, error) {
 }
 ```
 
-> Reconciled: the source also accepted `--token <value>` on the command line, which exposes the secret in the process list; this file drops that branch and keeps `--token-file` and `--token-stdin`.
+> Note: pass the token only with `--token-file` or `--token-stdin`; a `--token <value>` flag is not offered because it exposes the secret in the process list.
 
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#Token Refresh -->
 ## Token refresh

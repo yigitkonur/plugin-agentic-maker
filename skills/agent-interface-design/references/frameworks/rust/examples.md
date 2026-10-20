@@ -173,4 +173,4 @@ thiserror = "1"
 uuid = { version = "1", features = ["v4"] }
 ```
 
-> Reconciled: the source's enum used `GeneralError` for 1 and `AuthDenied` for 4, mapped the network error to class `transient`, and stopped at 7. This file uses `Crash`, `Auth`, the class `network` with code `NETWORK_ERROR` (`transient` is the exit-7 group, not a class), and adds `Partial = 8`. Versions in `Cargo.toml` are the source's; check them before use.
+> Note: the enum uses `Crash` for 1, `Auth` for 4 and `Partial = 8`. The network error has class `network` with code `NETWORK_ERROR` (`transient` is the exit-7 group, not a class). Check the versions in `Cargo.toml` before use.
