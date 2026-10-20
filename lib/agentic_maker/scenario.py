@@ -103,10 +103,12 @@ def fixture_steps(sc):
     return copies, (sh.group(1) if sh else "")
 
 
-def writability_warnings(sc, allowed):
+def writability_warnings(sc, allowed, tools):
     """A worker that cannot write files cannot satisfy a receipt that expects one: the run ends in permission denials the reader
     would report as drift (O6, a defect of the run). Say so before the spend."""
-    if any(t.split("(")[0] in ("Write", "Edit", "NotebookEdit", "Bash") for t in allowed):
+    can_write = {"Write", "Edit", "NotebookEdit", "Bash"}
+    # a tool must both exist (`tools`, the --tools list) and run without a prompt (`allowed_tools`)
+    if {t.split("(")[0] for t in allowed} & {t.split("(")[0] for t in tools} & can_write:
         return []
     copies, _ = fixture_steps(sc)
     seeded = {(d or os.path.basename(s.rstrip("/"))) for s, d in copies}
@@ -118,8 +120,8 @@ def writability_warnings(sc, allowed):
                 need.append(p)
     if not need:
         return []
-    return ["allowed_tools has no Write, Edit or Bash, so the worker cannot create %s which the receipts expect; add the tools the task needs "
-            "to `allowed_tools`, or the run ends in permission denials that look like drift" % ", ".join(sorted(set(need)))]
+    return ["no tool that writes files is both in `tools` and in `allowed_tools` (Write, Edit or Bash), so the worker cannot create %s which the receipts expect; "
+            "list the tools the task needs in both, or the run ends in permission denials that look like drift" % ", ".join(sorted(set(need)))]
 
 
 def receipt_specs(sc):

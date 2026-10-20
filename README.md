@@ -14,13 +14,13 @@ It works on any project and language: the probes act on the public interface (an
 
 Or from a shell in one step: `claude plugin install agentic-maker --marketplace yigitkonur/plugin-agentic-maker`.
 
-Needs `python3` 3.9+ (standard library only) and, for fresh-agent runs, `claude` on PATH. Built and tested on Claude Code 2.1.302 (`claude plugin eval`, used by `eval-emit`, needs 2.1.269 or later). `herdr` is optional (live interactive rounds). Nothing else.
+Needs `python3` 3.9+ (standard library only) and, for fresh-agent runs, `claude` on PATH. Built and tested on Claude Code 2.1.302 (`claude plugin eval`, used by `eval-emit`, needs 2.1.269 or later). `herdr` is optional (live interactive rounds). `git` is used only by `check diff` when you do not pass `--session`. Nothing else.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `/agentic-maker:audit <target>` | Probes a CLI, script, MCP server or skill and reports against the contract with a scorecard and evidence. Changes nothing. |
+| `/agentic-maker:audit <target>` | Probes a CLI, script, MCP server or skill and reports against the contract with a scorecard and evidence. It is instructed to change nothing; it runs in a forked agent with the usual tools, so that is an instruction, not a sandbox. |
 | `/agentic-maker:derail <target>` | The loop: scenarios, fresh agents in a clean room, a read-only reader, verified findings, a fix of the controlling text, a rerun, and a Stop gate that refuses "fixed" without a fresh run. |
 | `/agentic-maker:design <idea>` | Chooses CLI, MCP or skill, interviews you, and sketches the surface before any code. |
 | `agent-interface-design` (model-invoked) | Write-time guidance when an agent-facing surface is being built or reviewed. |
@@ -45,7 +45,7 @@ Why it is built this way, with the evidence: [docs/what-is-true.md](docs/what-is
 
 ## Status
 
-Each row says what was watched on 2026-10-20 (Claude Code 2.1.302 to 2.1.304, herdr 0.9.5, macOS) and what was not. "Fixture-tested" means exercised on planted-defect fixtures that live in this repo. Model runs are single samples: the numbers are recorded in `docs/evidence/`, the stream records themselves are not kept in the repo (they hold session metadata), and the deterministic parts are guarded by `scripts/check.sh`.
+Each row says what was watched on 2026-10-20 (Claude Code 2.1.302 to 2.1.304, herdr 0.9.5, macOS) and what was not. "Fixture-tested" means exercised on planted-defect fixtures that live in this repo. Model runs are single samples: the numbers are recorded in `docs/evidence/`, the stream records themselves are not kept in the repo (they hold session metadata). `scripts/check.sh` guards the probes, the findings check, the containment rules, links, manifests and footprint; the receipts, `check diff`, predicate, `[NICE]` and Stop-gate behaviour was watched in the runs below, not regression-tested.
 
 | Capability | Status | Evidence |
 |---|---|---|
@@ -73,9 +73,11 @@ Always-on cost is about 309 tokens in total (`claude plugin details agentic-make
 
 ## Safety
 
+- `probe mcp <command>` and `probe mcp .mcp.json` start that command (with the file's `env`) in an empty temp directory to ask it for `tools/list`: that is code from the repository being audited, so point it only at servers you would run anyway.
 - Probes run only `--help`, `--version`, one invalid command, `--help` of subcommands named like read verbs (`list`, `show`, `get`, ...), anything you name with `--sub` or declare read-only with `--safe`; each in an empty temp directory with stdin closed, a timeout and its own process group. A script that does not read its arguments is not run at all. `agy` is never launched.
 - A scenario is data that can come from a repository you did not write. Its `copy:` fixtures read only from inside the project and write only inside a fresh workspace; its `shell:` fixtures and `cmd` receipts are code and run as you, so read them first (`agentic-maker check receipts <take> --list` prints the receipts without running them).
-- Fresh-agent runs use `--restricted` and an allowlist of tools and environment variables; destructive-capable targets need throwaway fixtures. Every run has a turn cap, a budget ceiling and a time limit, and the cost preview comes before the spend.
+- Fresh-agent runs use `--restricted` and an allowlist of tools and environment variables (what `claude` itself needs, plus a cloud provider's credentials only when `claude` is set to use that provider; the dry-run lists the names). The worker runs on a copy of a skill or plugin target, so a scenario that allows `Write` cannot change the real one. Destructive-capable targets need throwaway fixtures. Every run has a turn cap, a budget ceiling and a time limit, the cost preview comes before the spend, and the ledger's round limit and budget are enforced (`ledger fix` and `run --session` refuse past them; only the workers' cost is metered, readers are not).
+- Run records hold full transcripts. The first run in a project writes `.agentic-maker/.gitignore` (`runs/`, `active/`) so they are not committed by accident; `scenarios/` stays committable.
 - A live herdr round (optional; needs `herdr`) follows the rules of the `herdr-conductor` plugin when it is installed: one command per reply, never poll, never touch the session's own pane. Accepting the trust dialog for a scratch folder adds an entry to `~/.claude.json` (use `run --prepare --workspace-dir` to reuse one folder).
 - No telemetry. The plugin's own code opens a network connection only for `probe mcp` against a URL you give it; fresh-agent runs start `claude`, which talks to the model API as it always does.
 

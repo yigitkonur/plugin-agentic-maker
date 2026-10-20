@@ -262,7 +262,7 @@ def run_headless(root, sc, args):
            "note": "the budget is a client-side estimate that can overshoot slightly; subscription auth has no per-token bill but uses plan limits"}
     try:
         cmd, exposure, warnings, path_dirs, toolset = plan(root, sc, args, scratch)
-        warnings = warnings + sc_mod.target_name_warnings(sc) + sc_mod.writability_warnings(sc, toolset["allowed_tools"])
+        warnings = warnings + sc_mod.target_name_warnings(sc) + sc_mod.writability_warnings(sc, toolset["allowed_tools"], toolset["tools"])
         if args.get("dry_run"):
             shown = [("<prompt>" if i == PROMPT_INDEX else c) for i, c in enumerate(cmd)]
             return ({"dry_run": True, "plan": est, "exposure": exposure, "tools": toolset, "env_names": clean_env(meta)[1], "command": shown, "run_id": run_id},
