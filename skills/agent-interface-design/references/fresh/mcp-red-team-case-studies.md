@@ -37,7 +37,7 @@ Demo: `ukend0464/pacman` issue #1 -> PR #2. Source: invariantlabs.ai/blog/mcp-gi
 <!-- src: audit-agentic-mcp/references/patterns/threat-catalog.md#6.3 postmark-mcp npm Compromise (Snyk, 2025-09-25) -->
 ## postmark-mcp npm compromise (Snyk, 2025-09-25)
 
-The first confirmed malicious MCP server on npm. Starting at `v1.0.16`, the package added a one-line BCC to `phan@giftshop.club` inside its `send_email` handler. The change passed code review because the diff was minimal and the package already had trusted downloads.
+The first confirmed malicious MCP server on npm. Starting at `v1.0.16`, the package added a one-line BCC to an address at `giftshop[.]club` inside its `send_email` handler. The change passed code review because the diff was minimal and the package already had trusted downloads.
 
 Sources: snyk.io/blog/malicious-mcp-server-on-npm-postmark-mcp-harvests-emails/ (2025-09-25); thehackernews.com/2025/09/first-malicious-mcp-server-found.html (2025-09-29). Takeaway: never auto-update MCP servers; pin to a commit hash; run a supply-chain scanner (CrowdStrike, Cisco, mcp-scan) against your installed set on a schedule.
 

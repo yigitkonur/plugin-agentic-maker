@@ -16,14 +16,18 @@ return {
 ```
 
 ```python
-# Bad
+from mcp.server.fastmcp.exceptions import ToolError  # fastmcp package: from fastmcp.exceptions import ToolError
+
+try:
+    result = run_tool(args)
 except Exception as e:
+    # Bad
     return {"error": str(e)}  # Leaks internals
 
-# Good
+# Good (same try block)
 except Exception as e:
     logger.error(f"Tool failed: {e}", exc_info=True)  # Log full trace to stderr
-    return {"error": "An internal error occurred. Please try again.", "isError": True}
+    raise ToolError("An internal error occurred. Please try again.")  # error result; trace stays in the log
 ```
 
 <!-- src: audit-agentic-mcp/references/patterns/security.md#2. Use Delegated Permissions, Not a Shared Superuser Token -->
@@ -33,17 +37,19 @@ except Exception as e:
 # Bad: single shared credential for all requests
 api = ExternalAPI(api_key=os.environ["ADMIN_API_KEY"])
 
-@tool
+@mcp.tool()  # mcp = FastMCP(...)
 def get_user_data(user_id: str):
     return api.get(f"/users/{user_id}")  # Can access ANY user
 ```
 
 ```python
 # Good
-@tool
+from mcp.server.fastmcp import Context
+
+@mcp.tool()
 def get_user_data(user_id: str, ctx: Context):
     # Use the requesting user's delegated token
-    user_token = ctx.session.auth_token
+    user_token = bearer_token(ctx)  # your auth layer's verified token for this request
     api = ExternalAPI(token=user_token)
 
     # The API itself enforces access control
@@ -54,7 +60,7 @@ def get_user_data(user_id: str, ctx: Context):
 ## Tool annotations
 
 ```python
-@tool(
+@mcp.tool(
     annotations={
         "readOnlyHint": True,     # This tool doesn't modify anything
         "destructiveHint": False,  # Not destructive
@@ -62,11 +68,11 @@ def get_user_data(user_id: str, ctx: Context):
         "openWorldHint": False     # Only accesses known, scoped resources
     }
 )
-def search_contacts(query: str) -> list:
+def search_contacts(query: str) -> list[dict]:
     """Search for contacts by name or email."""
     return db.search(query)
 
-@tool(
+@mcp.tool(
     annotations={
         "readOnlyHint": False,
         "destructiveHint": True,   # This deletes data
@@ -83,21 +89,15 @@ def delete_project(project_id: str) -> dict:
 ## Server-side confirmation
 
 ```python
-@tool
-def send_bulk_email(recipients: list[str], subject: str, body: str) -> dict:
-    if len(recipients) > 10:
-        return {
-            "content": [{
-                "type": "text",
-                "text": (
-                    f"About to send email to {len(recipients)} recipients.\n"
-                    f"Subject: {subject}\n"
-                    f"Please confirm this action with the user before proceeding.\n"
-                    f"If confirmed, call send_bulk_email_confirmed(batch_id='...')"
-                )
-            }],
-            "isError": False
-        }
+@mcp.tool()
+def send_bulk_email(recipients: list[str], subject: str, body: str, confirmed: bool = False) -> dict:
+    if len(recipients) > 10 and not confirmed:
+        # Nothing was sent, so this is an error result, not a success
+        raise ToolError(
+            f"About to send email to {len(recipients)} recipients.\n"
+            f"Subject: {subject}\n"
+            f"Ask the user to confirm, then call send_bulk_email again with confirmed=true."
+        )
     # ... proceed with sending
 ```
 
@@ -121,6 +121,7 @@ def sanitize_tool_description(desc: str) -> str:
 import hashlib
 import hmac
 import json
+import os
 
 SIGNING_SECRET = os.environ["MCP_SCHEMA_SIGNING_SECRET"]
 

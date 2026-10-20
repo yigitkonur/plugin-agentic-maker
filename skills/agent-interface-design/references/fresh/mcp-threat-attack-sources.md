@@ -54,4 +54,4 @@ The core catalog is `../mcp/security/threat-catalog.md`; this is its removed "So
 - Sampling attacks: Unit 42 (2025-12-05).
 - Smuggling: `embracethered.com/blog/posts/2025/model-context-protocol-security-risks-and-exploits/` (2025-05-02).
 - Defender's rule of thumb (every MCP-sourced text is user-input-equivalent): Trail of Bits 2025-07-28.
-- Supply chain: `postmark-mcp` v1.0.16+ BCC'd every outbound email to `phan@giftshop.club`, "hundreds of weekly" downloads before discovery (Snyk 2025-09-25); UpGuard 2026-04-10 found 10-16% lookalikes; `acitons/artifact` vs `actions/artifact`; scanners to run weekly: `mcp-scan`, CrowdStrike `mcpscanner`.
+- Supply chain: `postmark-mcp` v1.0.16+ BCC'd every outbound email to an address at `giftshop[.]club`, "hundreds of weekly" downloads before discovery (Snyk 2025-09-25); UpGuard 2026-04-10 found 10-16% lookalikes; `acitons/artifact` vs `actions/artifact`; scanners to run weekly: `mcp-scan`, CrowdStrike `mcpscanner`.

@@ -14,6 +14,7 @@ def run_eval(task: dict, tools: list) -> dict:
     client = anthropic.Anthropic()
     messages = [{"role": "user", "content": task["prompt"]}]
 
+    total_tokens = 0
     while True:
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
@@ -23,11 +24,12 @@ def run_eval(task: dict, tools: list) -> dict:
             messages=messages
         )
 
-        if response.stop_reason == "end_turn":
+        total_tokens += response.usage.input_tokens + response.usage.output_tokens
+        if response.stop_reason != "tool_use":  # end_turn, max_tokens, refusal: stop looping
             return {
                 "success": verify_against_ground_truth(response, task["expected"]),
                 "tool_calls": count_tool_calls(messages),
-                "tokens_used": response.usage.input_tokens + response.usage.output_tokens,
+                "tokens_used": total_tokens,  # sum over every call in the run
                 "transcript": messages
             }
 

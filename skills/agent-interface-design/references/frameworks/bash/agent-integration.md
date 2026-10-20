@@ -7,7 +7,7 @@ The rules are in `../../cli/caller-integration.md` and `../../cli/caller-resilie
 <!-- src: audit-agentic-cli/references/agent-integration.md#8. Integration Test Script -->
 ## Integration test script
 
-Four checks: `version --json` carries `ok`; an unknown resource exits 3; a failing command's envelope has `error.code` and a non-null `error.retryable`; a confirming command with `--yes` and empty stdin does not hang (exit code other than 124 from `timeout 5`).
+Four checks: `version --json` carries `ok`; `get` on a nonexistent resource exits 3; a failing command's envelope has `error.code` and a non-null `error.retryable`; a confirming command with `--yes` and empty stdin does not hang (exit code other than 124 from `timeout 5`).
 
 ```bash
 #!/bin/bash
@@ -32,7 +32,7 @@ test_json_output() {
 
 test_exit_codes() {
     echo "Test: Exit codes..."
-    $CLI nonexistent-resource --json >/dev/null 2>&1
+    $CLI get nonexistent --json >/dev/null 2>&1
     if [ $? -eq 3 ]; then
         pass "Not-found returns 3"
     else
@@ -51,6 +51,7 @@ test_error_structure() {
 
 test_non_interactive() {
     echo "Test: Non-interactive mode..."
+    command -v timeout >/dev/null || { fail "timeout not installed"; return; }
     echo "" | timeout 5 $CLI dangerous-cmd --yes --json > /dev/null 2>&1
     if [ $? -ne 124 ]; then
         pass "Non-interactive works"

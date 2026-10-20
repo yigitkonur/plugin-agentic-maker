@@ -34,11 +34,15 @@ export default {
 ## WebSocket hibernation
 
 ```typescript
-export class MyMCP extends McpAgent<Env, State> {
-  async init() {
+import { DurableObject } from "cloudflare:workers";
+
+export class MyMCP extends DurableObject<Env> {
+  async fetch(req: Request) {
+    const [client, server] = Object.values(new WebSocketPair());
     // Opt the WS into hibernation instead of using addEventListener("message")
-    this.ctx.acceptWebSocket(ws, ["session-tag"]);
-    ws.serializeAttachment({ clientId: "abc", scopes: ["read", "write"] });
+    this.ctx.acceptWebSocket(server, ["session-tag"]);
+    server.serializeAttachment({ clientId: "abc", scopes: ["read", "write"] });
+    return new Response(null, { status: 101, webSocket: client });
   }
 
   async webSocketMessage(ws: WebSocket, msg: string) {
@@ -73,9 +77,10 @@ export default new OAuthProvider({
   authorizeEndpoint: "/authorize",
   tokenEndpoint: "/token",
   clientRegistrationEndpoint: "/register",
-  tokenExchangeCallback: async (token, ctx) => {
+  tokenExchangeCallback: async (options) => {
     // Federate to GitHub/Google/Slack/Stytch/Auth0/WorkOS/Cloudflare Access
-    return { accessToken: await exchangeWithUpstream(token), ...token };
+    const upstream = await exchangeWithUpstream(options); // verify option names against the installed version
+    return { newProps: { ...options.props, upstream }, accessTokenTTL: 3600 };
   },
 });
 ```
@@ -99,6 +104,10 @@ export { handler as GET, handler as POST };
 ## Offload a large artifact to blob storage
 
 ```typescript
+import { z } from "zod";
+import { put } from "@vercel/blob";
+import { nanoid } from "nanoid";
+
 server.tool("export_report", { format: z.enum(["pdf", "csv"]) }, async ({ format }) => {
   const blob = await renderReport(format);             // could be 50 MB
   const { url } = await put(`reports/${nanoid()}.${format}`, blob, {
@@ -106,7 +115,7 @@ server.tool("export_report", { format: z.enum(["pdf", "csv"]) }, async ({ format
     token: process.env.BLOB_READ_WRITE_TOKEN,
   });
   return {
-    content: [{ type: "text", text: `Report ready: ${url} (expires in 1 hour)` }],
+    content: [{ type: "text", text: `Report ready: ${url}` }],
   };
 });
 ```
@@ -117,6 +126,11 @@ server.tool("export_report", { format: z.enum(["pdf", "csv"]) }, async ({ format
 Facts: `../../fresh/mcp-platform-aws-lambda.md`.
 
 ```typescript
+import { z } from "zod";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+
+const sqs = new SQSClient({});
+
 server.tool("index_repository", { repo_url: z.string() }, async ({ repo_url }) => {
   const jobId = crypto.randomUUID();
   await sqs.send(new SendMessageCommand({

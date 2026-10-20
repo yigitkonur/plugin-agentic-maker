@@ -16,7 +16,8 @@ const execFileAsync = promisify(execFile);
 interface CLIResult {
   ok: boolean;
   result?: Record<string, unknown>;
-  error?: { code: string; message: string; retryable?: boolean };
+  error?: { class?: string; code: string; message: string; retryable?: boolean; details?: Record<string, unknown> };
+  exit_code?: number; // set on failure: the process exit code from the one table
 }
 
 /**
@@ -41,21 +42,24 @@ async function invokeCLI(
     }
     return { ok: true };
   } catch (error: unknown) {
-    const e = error as { code?: number | string; killed?: boolean; stdout?: string; stderr?: string };
+    const e = error as { code?: number | string | null; signal?: string; killed?: boolean; stdout?: string; stderr?: string };
     if (e.killed === true) { // our own timeout killed the process (every execFile error has a `killed` field, true or false)
-      return { ok: false, error: { code: 'timeout', message: 'Command timed out', retryable: true } };
+      return { ok: false, error: { code: 'timeout', message: 'Command timed out', retryable: true }, exit_code: 7 };
     }
+    // a child killed by a signal has code null: map it to 130 (SIGINT) or 143 (SIGTERM)
+    const exit = typeof e.code === 'number' ? e.code : e.signal === 'SIGINT' ? 130 : e.signal === 'SIGTERM' ? 143 : 1;
     // In --json mode the failure envelope is on stdout (cli/envelope-and-errors.md): prefer it
     try {
-      if (e.stdout?.trim()) return JSON.parse(e.stdout);
+      if (e.stdout?.trim()) return { ...JSON.parse(e.stdout), exit_code: exit };
     } catch { /* not JSON: fall back to the exit code */ }
     return {
       ok: false,
       error: {
-        code: `exit_${e.code ?? 1}`,
+        code: `exit_${exit}`,
         message: e.stderr?.trim() || 'Unknown error',
-        retryable: e.code === 7, // exit 7 is the transient group
+        retryable: exit === 7, // exit 7 is the transient group
       },
+      exit_code: exit,
     };
   }
 }
@@ -114,7 +118,7 @@ async function* streamTaskEvents(
   options: { signal?: AbortSignal } = {}
 ): AsyncGenerator<TaskEvent> {
   const proc = spawn('mycli', ['task', 'follow', taskId, '--json'], {
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: ['ignore', 'pipe', 'inherit'], // stderr is human diagnostics: pass it through, never leave a pipe unread
     signal: options.signal,
   });
 
@@ -142,19 +146,24 @@ async function runTask(promptFile: string): Promise<void> {
 
   const taskId = (start.result as { task_id: string }).task_id;
 
+  let finished = false;
   for await (const event of streamTaskEvents(taskId)) {
     switch (event.type) {
       case 'approval':
         // Handle approval request
-        await invokeCLI(['mycli', 'request', 'answer', event.data?.req_id, '--yes', '--json']);
+        const reqId = (event.data as { req_id: string }).req_id;
+        await invokeCLI(['mycli', 'request', 'answer', reqId, '--yes', '--json']);
         break;
       case 'complete':
         console.log('Task completed:', event.data);
-        return;
+        finished = true;
+        break;
       case 'error':
         throw new Error(`Task failed: ${JSON.stringify(event.data)}`);
     }
+    if (finished) break;
   }
+  if (!finished) throw new Error('Event stream ended before a complete or error event');
 }
 ```
 

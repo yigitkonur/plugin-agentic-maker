@@ -23,7 +23,7 @@ The ecosystem's trust architecture is not theoretical. Three incidents in 2025 r
 <!-- src: audit-agentic-mcp/references/patterns/registry-and-distribution.md#Incident 2 — `postmark-mcp` rug pull (first in-the-wild malicious MCP) -->
 ## Incident 2: `postmark-mcp` rug pull (first in-the-wild malicious MCP)
 
-- **Timeline:** 2025-09-15 npm upload by `phanpak` impersonating ActiveCampaign's official Postmark MCP; 2025-09-17 v1.0.16 silently added a BCC of every email to `phan@giftshop[.]club`; 2025-09-29 reported by The Hacker News and Koi Security; package deleted (thehackernews.com, 2025-09).
+- **Timeline:** 2025-09-15 npm upload by `phanpak` impersonating ActiveCampaign's official Postmark MCP; 2025-09-17 v1.0.16 silently added a BCC of every email to an address at `giftshop[.]club`; 2025-09-29 reported by The Hacker News and Koi Security; package deleted (thehackernews.com, 2025-09).
 - **Downloads before discovery:** 1,643.
 - **Attack class:** rug-pull (trusted version, auto-update, backdoor) plus npm typosquat against a legitimate brand.
 - **Impact:** exfiltration of password resets, invoices, customer correspondence, internal memos.

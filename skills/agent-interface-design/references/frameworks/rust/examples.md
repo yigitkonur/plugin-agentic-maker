@@ -46,6 +46,7 @@ impl From<ExitStatus> for ExitCode {
 #[derive(Debug, Serialize)]
 pub struct Response<T: Serialize> {
     pub ok: bool,
+    pub schema_version: &'static str, // "1.0"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub command: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -101,6 +102,9 @@ pub enum AppError {
 
     #[error("Usage error: {0}")]
     Usage(String),
+
+    #[error("Internal error: {0}")]
+    Internal(String),
 }
 
 impl AppError {
@@ -112,6 +116,7 @@ impl AppError {
             AppError::ValidationFailed(_) => ExitStatus::ValidationError,
             AppError::Transient(_) => ExitStatus::TransientError,
             AppError::Usage(_) => ExitStatus::UsageError,
+            AppError::Internal(_) => ExitStatus::Crash,
         }
     }
 
@@ -123,6 +128,7 @@ impl AppError {
             AppError::ValidationFailed(_) => "validation",
             AppError::Transient(_) => "network",
             AppError::Usage(_) => "usage",
+            AppError::Internal(_) => "internal",
         }
     }
 
@@ -134,6 +140,7 @@ impl AppError {
             AppError::ValidationFailed(_) => "VALIDATION_FAILED",
             AppError::Transient(_) => "NETWORK_ERROR",
             AppError::Usage(_) => "USAGE_ERROR",
+            AppError::Internal(_) => "INTERNAL_ERROR",
         }
     }
 

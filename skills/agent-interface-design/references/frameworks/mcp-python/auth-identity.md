@@ -28,9 +28,9 @@ async def verify_mcp_token(raw_token: str) -> dict:
 ## Token exchange per tool call (FastAPI + internal STS)
 
 ```python
-@tool
+@mcp.tool()  # mcp = FastMCP(...)
 async def list_leads(ctx: Context) -> dict:
-    mcp_token = ctx.session.raw_token            # aud=mcp.saas.com
+    mcp_token = bearer_token(ctx)                # your auth layer's verified token, aud=https://mcp.saas.com
     upstream = await sts.exchange(
         subject_token=mcp_token,
         actor_token=service_actor_token,

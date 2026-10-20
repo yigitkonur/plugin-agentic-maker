@@ -16,7 +16,12 @@ await env.UPSTREAM_TOKENS.put(
 );
 
 // On subsequent tool calls:
-const stored = JSON.parse(await env.UPSTREAM_TOKENS.get(`github:${mcpSub}`));
+const raw = await env.UPSTREAM_TOKENS.get(`github:${mcpSub}`); // string | null
+if (!raw) return reauthRequired(); // no grant yet: send the user through URL-mode elicitation again
+const stored = JSON.parse(raw);
 const access = await refreshUpstream(stored.refresh_token);
+if (access.refresh_token) { // providers that rotate refresh tokens revoke the old one
+  await env.UPSTREAM_TOKENS.put(`github:${mcpSub}`, JSON.stringify({ ...stored, refresh_token: access.refresh_token }));
+}
 return fetchGithub(access.access_token, ...);
 ```

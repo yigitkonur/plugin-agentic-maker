@@ -175,6 +175,10 @@ def finish(root, session, kind, reason, outcome=None):
         led["status"] = "closed"
     led["outcome"] = outcome or kind
     led["reason"] = reason
+    resolved = {"abandon": "abandoned", "unverified": "unverified"}.get(outcome if kind != "abandon" else kind, "fixed")
+    for f in led["findings"].values():
+        if f.get("status") == "fixing":
+            f["status"] = resolved
     event(led, kind, outcome=outcome, reason=reason)
     save(led, p)
     return led

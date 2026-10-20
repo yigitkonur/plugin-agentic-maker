@@ -78,18 +78,17 @@ func filterFields(data map[string]interface{}, fields []string) map[string]inter
 > Reconciled: the source used a `PaginationInfo` sibling with `Total`, `Page`, `PerPage`, `HasMore`, `NextCursor` and a bare-array `Result`. The field names below follow `../../cli/pagination.md`: `result.items`, `result.next_cursor`, `result.has_more`, optional `result.total`.
 
 ```go
-type Page[T any] struct {
+type PageResult[T any] struct {
     Items      []T    `json:"items"`
     Total      int    `json:"total,omitempty"`
-    Page       int    `json:"page,omitempty"`
-    PerPage    int    `json:"per_page,omitempty"`
+    PerPage    int    `json:"per_page"`
     HasMore    bool   `json:"has_more"`
     NextCursor string `json:"next_cursor,omitempty"`
 }
 
-type ListResponse[T any] struct {
+type PaginatedResponse[T any] struct {
     OK     bool    `json:"ok"`
-    Result Page[T] `json:"result"`
+    Result PageResult[T] `json:"result"`
 }
 ```
 
@@ -105,13 +104,13 @@ func init() {
 }
 
 func outputResult(id string, full interface{}) {
-    if quietFlag {
-        fmt.Println(id)
-        return
-    }
-    if jsonFlag {
+    if jsonFlag { // the envelope, once, even with --quiet
         data, _ := json.MarshalIndent(full, "", "  ")
         fmt.Println(string(data))
+        return
+    }
+    if quietFlag {
+        fmt.Println(id)
         return
     }
     // Human-readable output

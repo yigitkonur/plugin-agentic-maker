@@ -10,7 +10,7 @@ Contract: `../../cli/pagination.md` (`result.items`, `result.next_cursor`, `resu
 
 ```python
 import click
-from typing import Iterator, TypeVar, Generic
+from typing import Generic, Optional, Tuple, TypeVar
 from dataclasses import dataclass
 
 T = TypeVar('T')
@@ -18,27 +18,25 @@ T = TypeVar('T')
 @dataclass
 class Page(Generic[T]):
     items: list[T]
-    next_cursor: str | None
-    total: int | None
+    next_cursor: Optional[str]
+    total: Optional[int]
 
 def fetch_all_pages(
     fetch_fn: callable,
     per_page: int = 100,
     max_pages: int = 100
-) -> Iterator[T]:
-    """Generator that yields items from all pages."""
+) -> Tuple[list, Optional[str]]:
+    """Return (items, next_cursor); next_cursor stays set when max_pages stopped the loop."""
+    items = []
     cursor = None
-    pages_fetched = 0
 
-    while pages_fetched < max_pages:
+    for _ in range(max_pages):
         page = fetch_fn(per_page=per_page, cursor=cursor)
-        yield from page.items
-
-        pages_fetched += 1
-
-        if not page.next_cursor:
-            break
+        items.extend(page.items)
         cursor = page.next_cursor
+        if not cursor:
+            break
+    return items, cursor
 
 @click.command()
 @click.option('--per-page', default=50, help='Items per page')
@@ -50,14 +48,16 @@ def fetch_all_pages(
 @click.option('--sort-order', type=click.Choice(['asc', 'desc']), default='desc')
 def list_items(per_page, cursor, page, fetch_all, max_pages, sort_by, sort_order):
     if fetch_all:
-        items = list(fetch_all_pages(
+        items, next_cursor = fetch_all_pages(
             lambda **kw: api.list_items(**kw, sort_by=sort_by, sort_order=sort_order),
             per_page=per_page,
             max_pages=max_pages
-        ))
+        )
         output_json({
             "ok": True,
-            "result": {"items": items, "total": len(items), "has_more": False}
+            "result": {"items": items, "total": len(items),
+                       "has_more": bool(next_cursor), "next_cursor": next_cursor},
+            "meta": {"truncated": bool(next_cursor)}  # the page cap stopped the loop
         })
     else:
         result = api.list_items(
@@ -76,6 +76,7 @@ Contract: `../../cli/rate-limits.md`.
 
 ```python
 import asyncio
+import sys
 import time
 import click
 from dataclasses import dataclass
@@ -88,7 +89,7 @@ T = TypeVar('T')
 class RateLimitOptions:
     rate_limit: str = "100/minute"  # e.g., "100/minute", "10/second"
     retry_on_rate_limit: bool = True
-    max_retries: int = 5
+    max_retries: int = 5  # retries after the first call, so 6 attempts
     backoff_initial: float = 1.0
     backoff_max: float = 60.0
     backoff_multiplier: float = 2.0
@@ -109,9 +110,12 @@ class RateLimiter:
         self._lock = asyncio.Lock()
 
     def _parse_rate_limit(self, rate: str) -> tuple[int, float]:
-        count, period = rate.split('/')
         periods = {'second': 1, 'minute': 60, 'hour': 3600}
-        return int(count), periods.get(period, 60)
+        try:
+            count, period = rate.split('/')
+            return int(count), periods[period]
+        except (ValueError, KeyError):
+            raise click.BadParameter(f"expected <count>/<second|minute|hour>, got {rate!r}")  # exit 2
 
     async def _acquire(self):
         async with self._lock:
@@ -162,7 +166,7 @@ class RateLimiter:
                     raise
 
                 # Determine wait time
-                wait_time = e.retry_after if self.options.respect_retry_after and e.retry_after else backoff
+                wait_time = min(e.retry_after, self.options.backoff_max) if self.options.respect_retry_after and e.retry_after else backoff
 
                 # Add jitter
                 if self.options.backoff_jitter > 0:
@@ -186,12 +190,12 @@ class RateLimiter:
 # CLI usage
 @click.command()
 @click.option('--rate-limit', default='100/minute')
-@click.option('--retry-on-rate-limit', is_flag=True, default=True)
+@click.option('--retry-on-rate-limit/--no-retry-on-rate-limit', default=True)
 @click.option('--max-retries', default=5)
 @click.option('--backoff-initial', type=float, default=1.0, help='seconds')
 @click.option('--backoff-max', type=float, default=60.0, help='seconds')
 @click.option('--backoff-multiplier', default=2.0)
-@click.option('--respect-retry-after', is_flag=True, default=True)
+@click.option('--respect-retry-after/--ignore-retry-after', default=True)
 @click.option('--circuit-breaker-threshold', default=5)
 @click.option('--circuit-breaker-timeout', type=float, default=30.0, help='seconds')
 def sync(rate_limit, **kwargs):

@@ -8,21 +8,18 @@ Core guidance: `../../mcp/protocol-resources.md`, `../../mcp/protocol-prompts.md
 ## Documentation resource cited in the error
 
 ```python
+from pathlib import Path
+from mcp.server.fastmcp.exceptions import ToolError  # fastmcp package: from fastmcp.exceptions import ToolError
+
 @mcp.resource("docs://tools")
 def get_tool_docs() -> str:
     """Complete documentation for all tools, including examples and edge cases."""
     return Path("tool_documentation.md").read_text()
 
 @mcp.tool(description="Search for contacts. See docs://tools for detailed usage.")
-def search_contacts(query: str) -> dict:
+def search_contacts(query: str) -> list[dict]:
     if not query.strip():
-        return {
-            "content": [{
-                "type": "text",
-                "text": "Query cannot be empty. See docs://tools for usage examples and valid query formats."
-            }],
-            "isError": True
-        }
+        raise ToolError("Query cannot be empty. See docs://tools for usage examples and valid query formats.")
     # ...
 ```
 
@@ -60,7 +57,8 @@ def analyze_bug(
                 "type": "resource",
                 "resource": {
                     "uri": f"file://{file_path}",
-                    "mimeType": "text/plain"
+                    "mimeType": "text/plain",
+                    "text": read_project_file(file_path)  # your helper: rejects paths outside the project root
                 }
             }
         }

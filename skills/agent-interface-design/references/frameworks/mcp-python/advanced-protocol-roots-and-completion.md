@@ -9,6 +9,7 @@ Core rules: `../../mcp/protocol-roots-and-completion.md`. Gating and fallbacks: 
 
 ```python
 import os
+from urllib.parse import unquote, urlparse
 
 async def refresh_roots(ctx: Context) -> list[str]:
     caps = ctx.session.client_capabilities
@@ -19,7 +20,7 @@ async def refresh_roots(ctx: Context) -> list[str]:
     for r in resp.roots:
         if not str(r.uri).startswith("file://"):
             continue
-        path = str(r.uri).removeprefix("file://")
+        path = unquote(urlparse(str(r.uri)).path)  # decode %20 etc.
         roots.append(os.path.realpath(path))
     return roots
 
@@ -32,15 +33,17 @@ def is_inside_roots(path: str, roots: list[str]) -> bool:
 ## Context-aware completion
 
 ```python
-@mcp.completion()
-async def complete(ref, argument, context) -> dict:
+from mcp.types import Completion
+
+@server.completion()  # low-level mcp.server.Server; FastMCP has no completion decorator
+async def complete(ref, argument, context) -> Completion:
     if ref.type == "ref/prompt" and ref.name == "code_review":
         if argument.name == "language":
             values = [l for l in LANGUAGES if l.startswith(argument.value)]
-            return {"values": values[:100], "total": len(values), "hasMore": len(values) > 100}
+            return Completion(values=values[:100], total=len(values), hasMore=len(values) > 100)
         if argument.name == "framework":
             lang = (context.arguments or {}).get("language", "")
             values = [f for f in FRAMEWORKS_BY_LANG.get(lang, []) if f.startswith(argument.value)]
-            return {"values": values[:100], "total": len(values), "hasMore": False}
-    return {"values": []}
+            return Completion(values=values[:100], total=len(values), hasMore=False)
+    return Completion(values=[])
 ```

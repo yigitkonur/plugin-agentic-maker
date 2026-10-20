@@ -5,7 +5,7 @@
 <!-- src: audit-agentic-cli/references/execution-patterns.md#Implementation~2 -->
 ## Bulk create with partial failure
 
-Contract: `../../cli/batch-and-partial.md`. The final status is `success`, `partial_failure` or `failed`; the process exit for `partial_failure` is 8 (`ExitPartial`). Read-only and idempotent batches default to continue; destructive batches default to stop (`StopOnError`).
+Contract: `../../cli/batch-and-partial.md`. The final status is `success`, `partial_failure` or `failed` (`cancelled` when the context ends first); the process exit for `partial_failure` is 8 (`ExitPartial`). Read-only and idempotent batches default to continue; destructive batches default to stop (`StopOnError`).
 
 ```go
 type BulkOptions struct {
@@ -24,6 +24,8 @@ type BulkResult struct {
 }
 
 func BulkCreate(ctx context.Context, items []Item, opts BulkOptions) (*BulkResult, error) {
+    ctx, cancel := context.WithCancel(ctx) // StopOnError cancels the rest of the batch
+    defer cancel()
     result := &BulkResult{
         Succeeded: make([]ItemResult, 0),
         Failed:    make([]ItemError, 0),
@@ -62,7 +64,7 @@ func BulkCreate(ctx context.Context, items []Item, opts BulkOptions) (*BulkResul
                     })
 
                     if opts.StopOnError {
-                        // Signal cancellation
+                        cancel() // items not yet started see ctx.Err() and are skipped
                     }
                 } else {
                     result.Succeeded = append(result.Succeeded, res)
@@ -126,6 +128,8 @@ type BatchResult struct {
 }
 
 func ProcessBatch(ctx context.Context, items []Item, opts BatchOptions) (*BatchResult, error) {
+    ctx, cancel := context.WithCancel(ctx) // the fail threshold cancels the rest of the batch
+    defer cancel()
     if opts.MaxItems > 0 && len(items) > opts.MaxItems {
         items = items[:opts.MaxItems]
     }
@@ -146,6 +150,7 @@ func ProcessBatch(ctx context.Context, items []Item, opts BatchOptions) (*BatchR
     for batchIdx, batch := range batches {
         select {
         case <-ctx.Done():
+            wg.Wait() // let running goroutines finish writing to result before it is returned
             result.Status = "cancelled"
             return result, ctx.Err()
         default:
@@ -197,7 +202,7 @@ func ProcessBatch(ctx context.Context, items []Item, opts BatchOptions) (*BatchR
                 mu.Unlock()
 
                 if !opts.ContinueOnError || failRate > opts.FailThreshold {
-                    // Signal to stop (in real impl, use context cancellation)
+                    cancel() // the loop above sees ctx.Done() and stops dispatching
                 }
             }(item, batchIdx, itemIdx)
         }

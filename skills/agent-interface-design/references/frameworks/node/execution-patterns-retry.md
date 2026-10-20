@@ -73,6 +73,7 @@ program
 Contract and defaults: `../../cli/retry.md`.
 
 ```typescript
+// maxAttempts counts total attempts (the rate limiter's maxRetries counts retries after the first)
 interface RetryConfig {
   maxAttempts: number;
   initialBackoffMs: number;
@@ -120,7 +121,8 @@ async function withRetry<T>(
       let backoffMs: number;
       const retryAfter = (error as any).response?.headers?.get?.('retry-after');
       if (retryAfter) {
-        backoffMs = parseInt(retryAfter, 10) * 1000;
+        const secs = Number(retryAfter); // delta-seconds, or an HTTP-date
+        backoffMs = Number.isFinite(secs) ? secs * 1000 : Math.max(0, Date.parse(retryAfter) - Date.now());
       } else {
         backoffMs = Math.min(
           cfg.initialBackoffMs * Math.pow(cfg.backoffFactor, attempt),

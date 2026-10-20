@@ -21,6 +21,8 @@ interface CLIOptions {
   nonInteractive: boolean;
 }
 
+const EXIT_USAGE = 2;
+
 function isInteractive(): boolean {
   return tty.isatty(process.stdin.fd) &&
          !process.env.CI &&
@@ -33,9 +35,15 @@ async function confirm(message: string, opts: CLIOptions): Promise<boolean> {
 
   // Non-interactive: fail if we need confirmation
   if (opts.nonInteractive || !isInteractive()) {
-    console.error(`Error: confirmation required but running non-interactively`);
-    console.error(`Use --yes/-y to auto-confirm or --force/-f to bypass`);
-    process.exit(2);
+    const hint = 'Use --yes/-y to auto-confirm or --force/-f to bypass';
+    if (opts.json) { // --json: the failure envelope goes once to stdout
+      console.log(JSON.stringify({ ok: false, error: { class: 'usage', code: 'CONFIRMATION_REQUIRED',
+        message: 'Confirmation required but running non-interactively', retryable: false, suggestion: hint } }));
+    } else {
+      console.error(`Error: confirmation required but running non-interactively`);
+      console.error(hint);
+    }
+    process.exit(EXIT_USAGE);
   }
 
   // Interactive prompt
@@ -47,7 +55,7 @@ async function confirm(message: string, opts: CLIOptions): Promise<boolean> {
   return new Promise((resolve) => {
     let answered = false;
     rl.on('SIGINT', () => { rl.close(); process.exit(130); }); // Ctrl-C at the prompt is a signal exit
-    rl.on('close', () => { if (!answered) process.exit(2); }); // input ended with no answer: cannot ask
+    rl.on('close', () => { if (!answered) process.exit(EXIT_USAGE); }); // input ended with no answer: cannot ask
     rl.question(`${message} [y/N]: `, (answer) => {
       answered = true;
       rl.close();
@@ -77,7 +85,7 @@ program
   .option('--image <image>', 'Container image override')
   .option('--replicas <n>', 'Number of replicas', parseInt)
   .option('--dry-run', 'Preview changes without applying')
-  .option('--wait', 'Wait for deployment to complete', true)
+  .option('--no-wait', 'Do not wait for deployment to complete') // --wait is on by default
   .option('--timeout <duration>', 'Maximum wait time', '5m')
   .option('--json', 'Output result as JSON')
   .addHelpText('after', `
@@ -111,4 +119,4 @@ program
 program.parse();
 ```
 
-The machine-readable help here is a `help-json` command; the rule text calls it `mycli help --json`. Pick one spelling and document it.
+This sample spells the machine-readable help as a `help-json` command; the rules show it as `mycli help --json`. Ship one spelling and document it in `--help`.

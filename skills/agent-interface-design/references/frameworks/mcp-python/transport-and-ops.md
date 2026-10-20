@@ -52,10 +52,10 @@ if __name__ == "__main__":
 fastmcp dev inspector server.py
 ```
 
-Other commands: `fastmcp dev` is the development server with hot reload. In FastMCP 3.0, tool decorators return the original function for direct testing:
+Other commands: `fastmcp dev` is the development server with hot reload. In FastMCP 3.0 (verify against the installed version, see ../../fresh/mcp-client-and-sdk-quirks.md), tool decorators return the original function for direct testing:
 
 ```python
-@tool
+@mcp.tool()
 def add(a: int, b: int) -> int:
     return a + b
 
@@ -72,11 +72,11 @@ await client.call_tool("add", {"a": 2, "b": 3})
 ```python
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 def log_tool_call(tool_name: str, params: dict, result: dict, duration_ms: float):
     entry = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "level": "INFO",
         "event": "tool_call",
         "tool": tool_name,
@@ -117,16 +117,18 @@ async def validate_config(path: str) -> list[TextContent]:
 Right, structured error and the server stays alive:
 
 ```python
+from mcp.server.fastmcp.exceptions import ToolError  # fastmcp package: from fastmcp.exceptions import ToolError
+
 @mcp.tool(name="validate_config")
-async def validate_config(path: str) -> list[TextContent]:
+async def validate_config(path: str) -> str:
     config = load_config(path)
     if not config:
-        return [TextContent(
-            type="text",
-            text=f"Config at '{path}' is invalid or missing. "
-                 f"Expected YAML with keys: host, port, db_name."
-        )]
-        # isError: true is set via raise or return convention
+        # raising ToolError makes FastMCP send an error result (isError: true)
+        raise ToolError(
+            f"Config at '{path}' is invalid or missing. "
+            f"Expected YAML with keys: host, port, db_name."
+        )
+    return "Config is valid."
 ```
 
 Also catch unhandled exceptions in tool handlers:
@@ -136,7 +138,7 @@ async def safe_handler(func, **kwargs):
     try:
         return await func(**kwargs)
     except Exception as e:
-        return [TextContent(type="text", text=f"Internal error: {type(e).__name__}: {e}")]
+        raise ToolError(f"Internal error: {type(e).__name__}: {e}") from e  # error result, logged as failure
 ```
 
 <!-- src: audit-agentic-mcp/references/patterns/transport-and-ops.md#7. Validate Authentication Tokens at Execution Time, Not Startup -->
@@ -157,13 +159,10 @@ Right, validate at execution time:
 mcp = FastMCP("my-server")
 
 @mcp.tool(name="search_tickets")
-async def search_tickets(query: str) -> list[TextContent]:
+async def search_tickets(query: str) -> str:
     api_token = os.environ.get("API_TOKEN")
     if not api_token:
-        return [TextContent(
-            type="text",
-            text="API_TOKEN not set. Add it to your environment and restart the server."
-        )]
+        raise ToolError("API_TOKEN not set. Add it to your environment and restart the server.")
 
     try:
         async with httpx.AsyncClient() as client:
@@ -173,12 +172,9 @@ async def search_tickets(query: str) -> list[TextContent]:
                 headers={"Authorization": f"Bearer {api_token}"},
             )
             resp.raise_for_status()
-            return [TextContent(type="text", text=resp.text)]
+            return resp.text
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 401:
-            return [TextContent(
-                type="text",
-                text="Token expired or invalid. Re-authenticate at https://example.com/settings/tokens"
-            )]
+            raise ToolError("Token expired or invalid. Re-authenticate at https://example.com/settings/tokens")
         raise
 ```

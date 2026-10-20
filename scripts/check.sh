@@ -161,6 +161,9 @@ step "hygiene: no personal path, email or token anywhere in the tree"
 if git rev-parse --git-dir >/dev/null 2>&1; then files=$(git ls-files -co --exclude-standard); else files=$(find . -path ./.git -prune -o -type f -print); fi
 leaks=$(printf '%s\n' "$files" | grep -vE '(^|/)(check\.sh|lint-refs\.py|what-is-true\.md)$' | tr '\n' '\0' | xargs -0 grep -In -E '/Users/[A-Za-z]|/var/folders/|@gmail\.|ghp_[A-Za-z0-9]{10,}|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{12,}|BEGIN (RSA |OPENSSH )?PRIVATE KEY' 2>/dev/null || true)
 [ -z "$leaks" ] || { printf '%s\n' "$leaks" | head -20; bad "personal data pattern"; }
+# any other email address is a person's address unless it is a documentation domain or a noreply sender
+mails=$(printf '%s\n' "$files" | grep -vE '(^|/)(check\.sh|lint-refs\.py)$' | tr '\n' '\0' | xargs -0 grep -In -E '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}' 2>/dev/null | grep -vE '@(example\.(com|org)|evil\.example)|noreply@|@users\.noreply\.github\.com' || true)
+[ -z "$mails" ] || { printf '%s\n' "$mails" | head -20; bad "email address that is not a documentation or noreply address"; }
 big=$(printf '%s\n' "$files" | while read -r f; do [ -f "$f" ] && [ "$(wc -c < "$f")" -gt 1000000 ] && echo "$f"; done)
 [ -z "$big" ] || { echo "$big"; bad "file over 1 MB"; }
 runs=$(find . -path ./.git -prune -o -type d -path '*/.agentic-maker/runs' -print)

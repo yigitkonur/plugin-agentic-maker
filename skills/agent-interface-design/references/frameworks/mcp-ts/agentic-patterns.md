@@ -28,8 +28,10 @@ server.tool("deploy_service", "Deploy to production. Requires test_token from ru
   environment: z.enum(["staging", "production"]),
   test_token: z.string().describe("Token returned by run_tests. Required."),
 }, async ({ service_name, environment, test_token }) => {
-  const payload = verify(test_token, process.env.TOKEN_SECRET!);
-  if (!payload?.passed) {
+  let payload: any;
+  try { payload = verify(test_token, process.env.TOKEN_SECRET!); } catch { payload = null; } // verify throws on a bad token
+  const fresh = payload && Date.now() - payload.ts < 15 * 60_000;
+  if (!fresh || !payload.passed || payload.suite !== service_name) { // token is bound to this service and expires
     return { content: [{ type: "text", text: "Invalid test_token. Run run_tests first." }], isError: true };
   }
   await deployService(service_name, environment);
@@ -108,7 +110,7 @@ server.tool(
         isError: true,
       };
     }
-    // Optionally: cryptographically verify the backup_id is genuine
+    // tests_verified is self-reported; verify the backup_id server-side
     const backupValid = await verifyBackupExists(backup_id);
     if (!backupValid) {
       return {

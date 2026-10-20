@@ -22,7 +22,7 @@ Mitigate in layers (defense in depth):
 1. Label user content explicitly: return a `system_note` field saying the `user_comments` field is user-generated, untrusted data and not instructions; sanitize each item; keep counts in a separate `metadata` object.
 2. Use RBAC and delegated permissions so the tool only reads what the requesting user may see (see `least-privilege-and-confirmation.md`).
 3. Require human confirmation for side effects. Read-only tools are safe to auto-approve. Tools that write, send, update or delete always get a human in the loop if they process external data.
-4. Never expose raw stack traces. Log the full trace to stderr; return a generic message such as "An internal error occurred. Please try again." with `isError: true`. Returning `str(e)` leaks internals.
+4. Never expose raw stack traces. Log the full trace to stderr; return a message that names the error class and what the caller can do, such as "Internal error: ValueError. Retry with a smaller page_size or report it with this request id.", with `isError: true`. The exception text itself (`str(e)`) can carry paths, queries and secrets; keep it in the log.
 
 Tool output that steers the next call is both the strongest lever and the attack surface: see `../../decisions/steering-contract.md` for the bridge (namespaced guidance plus an `allowed_next_tools` list). Delivery surfaces and named attacks: `threat-delivery-surfaces.md`.
 

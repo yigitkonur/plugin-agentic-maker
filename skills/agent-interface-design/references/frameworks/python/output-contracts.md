@@ -45,7 +45,7 @@ def filter_fields(data: dict, fields: list[str]) -> dict:
 
 ## JSONL emitters
 
-Contract: `../../cli/streams-and-jsonl.md`.
+Contract: `../../cli/streams-and-jsonl.md`. These emitters run in stream mode (`--stream`); plain `--json` mode puts one envelope on stdout and no JSON on stderr.
 
 > Reconciled: the source printed progress to stdout and always exited 1 from `emit_error`. Progress goes to stderr; the terminal result goes to stdout; `emit_error` exits with the code for its class.
 
@@ -95,6 +95,8 @@ def emit_error(error_class: str, code: str, message: str):
 import json
 import sys
 
+from exitcodes import ExitCode
+
 
 def main():
     # Progress to stderr
@@ -110,18 +112,23 @@ def main():
                 "class": "network",
                 "code": "CONNECTION_FAILED",
                 "message": str(e),
+                "retryable": True,
+                "suggestion": "Retry with backoff",
             },
         }
         print(json.dumps(response))
-        sys.exit(7)  # TRANSIENT
+        sys.exit(ExitCode.TRANSIENT)
 
     # Success JSON to stdout
     response = {
         "ok": True,
+        "command": "sync",
+        "schema_version": "1.0",
         "result": result,
+        "meta": {},
     }
     print(json.dumps(response))
-    sys.exit(0)
+    sys.exit(ExitCode.SUCCESS)
 
 
 if __name__ == "__main__":

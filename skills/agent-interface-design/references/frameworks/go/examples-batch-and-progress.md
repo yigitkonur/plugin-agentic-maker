@@ -54,6 +54,8 @@ func (r *BatchResult) addError(id, errClass, errMsg string) {
 
 func BatchProcess(ctx context.Context, items []Item, cfg BatchConfig, process func(Item) error) *BatchResult {
     result := &BatchResult{Total: len(items)}
+    ctx, cancel := context.WithCancel(ctx)
+    defer cancel()
 
     sem := make(chan struct{}, cfg.Concurrency)
     var wg sync.WaitGroup
@@ -73,7 +75,7 @@ func BatchProcess(ctx context.Context, items []Item, cfg BatchConfig, process fu
             if err := process(item); err != nil {
                 result.addError(item.ID, classifyError(err), err.Error())
                 if !cfg.ContinueOnError {
-                    // Signal to stop (via context cancellation in real impl)
+                    cancel() // stop dispatching further items
                 }
             } else {
                 result.addSuccess()
@@ -149,9 +151,13 @@ func runWithProgress(ctx context.Context, opID string, work func(progress chan<-
         case err := <-resultCh:
             if err != nil {
                 resultEnc.Encode(map[string]any{
-                    "type":         "error",
+                    "type":         "completed", // same terminal type as execution-patterns-async.md
                     "operation_id": opID,
-                    "error":        err.Error(),
+                    "status":       "failed",
+                    "error": map[string]any{
+                        "class": classifyError(err), "code": "TASK_FAILED", "message": err.Error(),
+                        "retryable": false,
+                    },
                 })
             } else {
                 resultEnc.Encode(map[string]any{

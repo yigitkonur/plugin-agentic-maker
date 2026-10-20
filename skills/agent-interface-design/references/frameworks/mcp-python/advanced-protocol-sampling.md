@@ -15,7 +15,7 @@ async def draft_reply(thread_id: str, ctx: Context) -> str:
         messages=[{"role": "user", "content": {"type": "text", "text": render(msgs)}}],
         system_prompt="You draft concise professional email replies.",
         model_preferences={
-            "hints": [{"name": "claude-3-5-sonnet"}],
+            "hints": [{"name": "claude"}],  # substring hint, not a pinned model id
             "intelligencePriority": 0.8,
             "speedPriority": 0.4,
         },

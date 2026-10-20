@@ -34,12 +34,16 @@ const server = new McpServer({ name: "acme-crm", version: "1.0.0" }, {
 The 200-token rule: measure description cost before registering.
 
 ```typescript
-function registerWithLengthCheck(name: string, description: string, schema: z.ZodObject<any>, handler: Function) {
+import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
+
+const estimateTokens = (text: string) => Math.ceil(text.length / 4); // rough: ~4 chars per token
+
+function registerWithLengthCheck(name: string, description: string, inputSchema: z.ZodRawShape, handler: ToolCallback<z.ZodRawShape>) {
   const tokens = estimateTokens(description);
   if (tokens > 200) {
     console.warn(`Tool "${name}" description is ${tokens} tokens (limit: 200). Consider trimming.`);
   }
-  server.tool(name, description, schema, handler);
+  server.registerTool(name, { description, inputSchema }, handler);
 }
 ```
 

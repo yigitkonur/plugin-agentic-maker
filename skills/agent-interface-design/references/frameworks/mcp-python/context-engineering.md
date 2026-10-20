@@ -9,7 +9,7 @@ Explanation and rules: ../../mcp/budget-tool-definitions.md and ../../mcp/budget
 ```python
 # Single gateway tool registered in the MCP server
 @mcp.tool()  # mcp = FastMCP(...)
-async def execute_code(code: str, language: str = "python") -> str:
+async def execute_code(code: str) -> str:
     """
     Execute code in sandbox. Use list_servers(), list_tools(server),
     get_tool_schema(server, tool) to discover capabilities on demand.
@@ -26,14 +26,14 @@ async def execute_code(code: str, language: str = "python") -> str:
     exec(compile(code, "<sandbox>", "exec"), sandbox_globals)
     return sandbox_globals.get("__result__", "")
 
-async def _list_tools_brief(server: str) -> list[dict]:
-    # Returns minimal shape -- no full schemas injected into context
-    tools = await registry.get_tools(server)
+def _list_tools_brief(server: str) -> list[dict]:
+    # Sync on purpose: exec()-ed code cannot await. Returns minimal shape, no full schemas
+    tools = registry.get_tools(server)
     return [{"name": t.name, "summary": t.description[:80]} for t in tools]
 
-async def _get_schema_on_demand(server: str, tool: str) -> dict:
+def _get_schema_on_demand(server: str, tool: str) -> dict:
     # Full schema fetched only when the model explicitly requests it
-    return await registry.get_full_schema(server, tool)
+    return registry.get_full_schema(server, tool)
 ```
 
 Model usage pattern (lazy discovery):
@@ -100,6 +100,7 @@ def tiered_response(records: list[dict], budget: ContextBudget) -> dict:
 import os  # the source omitted this import; run_cli_tool needs it
 import re
 import subprocess
+from mcp.server.fastmcp.exceptions import ToolError  # fastmcp package: from fastmcp.exceptions import ToolError
 
 # Patterns to strip from CLI output
 _ANSI_ESCAPE   = re.compile(r'\x1b\[[0-9;]*[mGKHF]')   # colors, cursor movement
@@ -124,8 +125,10 @@ def run_cli_tool(cmd: list[str]) -> str:
         text=True,
         env={**os.environ, "NO_COLOR": "1", "TERM": "dumb"},  # suppress at source too
     )
-    combined = result.stdout + ("\n" + result.stderr if result.stderr else "")
-    return clean_cli_output(combined)
+    if result.returncode != 0:  # exit-code table: cli/exit-codes.md (3 not_found, 4 auth, 7 transient...)
+        # stderr is diagnostics: it goes into the error, never into the data
+        raise ToolError(f"exit {result.returncode}: {clean_cli_output(result.stderr)[:500]}")
+    return clean_cli_output(result.stdout)  # stdout is data only
 
 # Usage in an MCP tool handler
 @mcp.tool()  # mcp = FastMCP(...)

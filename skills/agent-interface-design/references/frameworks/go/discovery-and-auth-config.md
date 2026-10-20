@@ -27,7 +27,7 @@ func loadEffectiveConfig(cmd *cobra.Command) (*EffectiveConfig, error) {
         cfg.APIUrl = ConfigValue{Value: url, Source: "flag"}
     } else if url := os.Getenv("MYCLI_API_URL"); url != "" {
         cfg.APIUrl = ConfigValue{Value: url, Source: "environment_variable"}
-    } else if fileCfg, _ := loadConfigFile(); fileCfg.APIUrl != "" {
+    } else if fileCfg, err := loadConfigFile(); err == nil && fileCfg.APIUrl != "" {
         cfg.APIUrl = ConfigValue{Value: fileCfg.APIUrl, Source: "config_file"}
     } else {
         cfg.APIUrl = ConfigValue{Value: "https://api.example.com", Source: "default"}
@@ -42,7 +42,10 @@ func showEffectiveConfig(cmd *cobra.Command, cfg *EffectiveConfig) error {
     if jsonOutput, _ := cmd.Flags().GetBool("json"); jsonOutput {
         enc := json.NewEncoder(os.Stdout)
         enc.SetIndent("", "  ")
-        return enc.Encode(cfg)
+        return enc.Encode(map[string]interface{}{
+            "ok": true, "command": "config show", "schema_version": "1.0",
+            "result": cfg, "meta": map[string]interface{}{},
+        })
     }
 
     fmt.Printf("api_url: %v (from %s)\n", cfg.APIUrl.Value, cfg.APIUrl.Source)

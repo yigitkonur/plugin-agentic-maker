@@ -42,8 +42,8 @@ START: Is a single MCP server sufficient?
     |   +-- Use session pooling (shared pool of 10 sessions)
     |   +-- Externalize session state to Redis
     |   |   (any pooled connection can serve any request)
-    |   +-- For HTTP: deploy behind load balancer with session affinity
-    |   |   (or externalize state and drop affinity for true horizontal scale)
+    |   +-- For HTTP with a fixed replica count: load balancer with session affinity
+    |   |   (to autoscale, externalize state and drop affinity)
     |   +-- --> mcp/ops-*
     |
     +-- LONG-RUNNING OPERATIONS (>30 second tool calls)

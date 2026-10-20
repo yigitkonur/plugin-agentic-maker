@@ -9,6 +9,7 @@ Explanation and rules: ../../mcp/patterns-dynamic-tool-lists.md. Meta-tool and s
 ```python
 from fastmcp import FastMCP, Context
 from fastmcp.server.auth import require_scopes
+# FileSystemProvider: import path per the FastMCP 3.0 providers docs (not confirmed here)
 
 mcp = FastMCP("Enterprise Server")
 
@@ -25,7 +26,7 @@ async def unlock_admin_mode(ctx: Context):
     """Authenticate and unlock administrative tools for this session.
     Requires super-user OAuth scope."""
     await ctx.enable_components(tags={"admin"})
-    return "Admin mode unlocked. The following tools are now available: [list of admin tools]"
+    return "Admin mode unlocked. Now available: <names of the admin tools just enabled>."
 ```
 
 FastMCP 3.0 pieces used: `Visibility Transforms` control which components are visible per session; `AuthMiddleware` gates groups of components by tag; session state tracks what each user has unlocked. The unlock tool's response should list what was just made available.
@@ -75,7 +76,7 @@ async def enable_advanced_mode(ctx: Context, access_code: str) -> str:
     if not verify_access_code(access_code):
         return "Invalid access code."
 
-    await ctx.enable_components(tags=["advanced"])
+    await ctx.enable_components(tags={"advanced"})
     return "Advanced tools unlocked. Available: analyze_deep, export_bulk, admin_override."
 ```
 

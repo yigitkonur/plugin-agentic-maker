@@ -17,8 +17,9 @@ import (
 )
 
 type Response struct {
-    OK      bool        `json:"ok"`
-    Command string      `json:"command,omitempty"`
+    OK            bool        `json:"ok"`
+    Command       string      `json:"command,omitempty"`
+    SchemaVersion string      `json:"schema_version"`
     Result  interface{} `json:"result,omitempty"`
     Error   *ErrorInfo  `json:"error,omitempty"`
     Meta    *Meta       `json:"meta,omitempty"`
@@ -41,6 +42,7 @@ type Meta struct {
 
 // The envelope, success and failure, goes to stdout.
 func outputJSON(resp Response) {
+    resp.SchemaVersion = "1.0"
     enc := json.NewEncoder(os.Stdout)
     enc.SetIndent("", "  ")
     enc.Encode(resp)
@@ -51,16 +53,20 @@ func success(result interface{}) {
     os.Exit(0)
 }
 
+// jsonOutput is the --json flag (declared in the skeleton below).
 func fail(class, code, message string, retryable bool, exitCode int) {
-    outputJSON(Response{
-        OK: false,
-        Error: &ErrorInfo{
-            Class:     class,
-            Code:      code,
-            Message:   message,
-            Retryable: retryable,
-        },
-    })
+    fmt.Fprintln(os.Stderr, message) // the human diagnostic, always on stderr
+    if jsonOutput {                  // the envelope, once, on stdout
+        outputJSON(Response{
+            OK: false,
+            Error: &ErrorInfo{
+                Class:     class,
+                Code:      code,
+                Message:   message,
+                Retryable: retryable,
+            },
+        })
+    }
     os.Exit(exitCode)
 }
 ```
@@ -191,7 +197,7 @@ func main() {
     rootCmd.AddCommand(resourceCmd)
 
     if err := rootCmd.Execute(); err != nil {
-        os.Exit(ExitUsage) // cobra reports unknown flags and commands here
+        fail("usage", "USAGE_ERROR", err.Error(), false, ExitUsage) // cobra rejected the command line: exit 2, envelope in --json mode
     }
 }
 
@@ -207,14 +213,41 @@ func createResource(cmd *cobra.Command, args []string) {
     resource := create(name)
 
     if jsonOutput {
-        json.NewEncoder(os.Stdout).Encode(map[string]any{
-            "ok":     true,
-            "result": resource,
-        })
+        outputJSON(Response{OK: true, Command: "resource create", Result: resource})
     } else if quiet {
         fmt.Println(resource.ID)
     } else {
         fmt.Printf("Created resource: %s\n", resource.ID)
+    }
+}
+
+// A minimal in-memory store so the skeleton is complete; replace it with the real API.
+type Resource struct {
+    ID   string `json:"id"`
+    Name string `json:"name"`
+}
+
+var store = map[string]Resource{}
+
+func exists(name string) bool { _, ok := store[name]; return ok }
+
+func create(name string) Resource {
+    r := Resource{ID: "res_" + name, Name: name}
+    store[name] = r
+    return r
+}
+
+func listResources(cmd *cobra.Command, args []string) {
+    items := make([]Resource, 0, len(store))
+    for _, r := range store {
+        items = append(items, r)
+    }
+    if jsonOutput {
+        outputJSON(Response{OK: true, Command: "resource list", Result: map[string]any{"items": items}})
+        return
+    }
+    for _, r := range items {
+        fmt.Println(r.ID)
     }
 }
 ```

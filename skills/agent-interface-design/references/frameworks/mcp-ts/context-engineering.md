@@ -8,30 +8,32 @@ Explanation and rules: ../../mcp/budget-tool-definitions.md and ../../mcp/budget
 
 ```typescript
 // Bad -- 140+ tokens for this one tool
-server.tool(
+server.registerTool(
   "search_documents",
   {
     description: "Searches through all documents in the repository using full-text search. " +
       "Supports boolean operators, phrase matching, and field-specific queries. " +
       "Returns paginated results with relevance scores and highlighted snippets.",
     inputSchema: { /* ... */ }
-  }
+  },
+  handler
 );
 
 // Good -- under 100 tokens, same capability
-server.tool(
+server.registerTool(
   "search_documents",
   {
     description: "Full-text search across repo docs. Supports boolean, phrase, field queries. Returns paginated results.",
     inputSchema: { /* ... */ }
-  }
+  },
+  handler
 );
 ```
 
 Audit your tool token budget before registering:
 
 ```typescript
-function estimateToolTokens(tools: Tool[]): void {
+function estimateToolTokens(tools: { name: string }[]): void {
   for (const tool of tools) {
     const raw = JSON.stringify(tool);
     const estimate = Math.ceil(raw.length / 4); // rough chars-to-tokens
@@ -105,6 +107,8 @@ function truncateWithSignal(text: string, maxChars = 8000): string {
 The `perModelLimit` values are illustrative; current per-model figures are in ../../fresh/mcp-model-behavior.md.
 
 ```typescript
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
 // Tool group registry -- expose only tools relevant to the current task
 const TOOL_GROUPS: Record<string, string[]> = {
   "code-review":   ["read_file", "search_code", "get_diff", "add_comment"],
@@ -122,7 +126,7 @@ function getToolsForTask(allTools: Map<string, Tool>, hint: string): Tool[] {
 }
 
 // Progressive disclosure -- start with 3 always-on tools, expand on request
-const ALWAYS_ON = ["help", "search", "read_file"];
+const ALWAYS_ON = ["help", "search_tools", "read_file"];
 const perModelLimit: Record<string, number> = { claude: 30, "gpt-4": 20, gemini: 10 };
 
 function enableTool(active: string[], model: string, name: string): boolean {

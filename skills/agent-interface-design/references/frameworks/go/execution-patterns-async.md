@@ -21,7 +21,7 @@ type Operation struct {
 type Progress struct {
     Phase   string `json:"phase"`
     Percent int    `json:"percent"`
-    Message string `json:"message"`
+    Message string `json:"message,omitempty"`
 }
 
 // emit writes one JSON value to w (stdout for data, stderr for progress events).

@@ -7,7 +7,7 @@ Explanation and rules: ../../mcp/descriptions-structure-and-length.md and ../../
 ## Pattern 2: Description that briefs a new hire
 
 ```python
-@tool(
+@mcp.tool(  # mcp = FastMCP(...)
     name="search_contacts",
     description="""Search the CRM for contacts matching criteria.
 
@@ -18,12 +18,15 @@ Explanation and rules: ../../mcp/descriptions-structure-and-length.md and ../../
     Example: search_contacts(query="Jane at Acme") returns matching contacts.
     Supports partial name matching and company name filtering."""
 )
+def search_contacts(query: str) -> list[dict]: ...
 ```
 
 ## Pattern 5: Strict input schemas with enums and constraints
 
 ```python
 from enum import Enum
+from typing import Annotated
+from pydantic import Field
 
 class SortOrder(str, Enum):
     ASC = "ascending"
@@ -35,12 +38,12 @@ class DateRange(str, Enum):
     LAST_90_DAYS = "last_90_days"
     ALL_TIME = "all_time"
 
-@tool
+@mcp.tool()
 def search_activity(
     space_id: str,
     sort: SortOrder = SortOrder.DESC,
     date_range: DateRange = DateRange.LAST_30_DAYS,
-    limit: int = 25  # constrained via Field(ge=1, le=100)
+    limit: Annotated[int, Field(ge=1, le=100)] = 25
 ) -> dict:
     """Search member activity in a space."""
 ```

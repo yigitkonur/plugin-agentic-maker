@@ -6,32 +6,25 @@
 
 Contract: `../../cli/pagination.md` (`result.items`, `result.next_cursor`, `result.has_more`, optional `result.total`).
 
-> Reconciled: the source used `data`, `pagination.hasNext`, `nextCursor`, `totalCount`. This file uses `items`, `hasMore`, `nextCursor`, `total` in code, which serialize as `items`, `has_more`, `next_cursor`, `total`.
+> Reconciled: the source used `data`, `pagination.hasNext`, `totalCount`; the code uses `items`, `hasMore`, `nextCursor`, `total`, serialized flat as `has_more`, `next_cursor`.
 
 ```typescript
+// Assumed from your app: program (Commander), api, Item.
 interface PaginationOptions {
-  perPage?: number;
-  cursor?: string;
-  page?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
-interface PageInfo {
-  total?: number;
-  perPage: number;
-  hasMore: boolean;
-  nextCursor?: string;
+  perPage?: number; cursor?: string; page?: number;
+  sortBy?: string; sortOrder?: 'asc' | 'desc';
 }
 
 interface Page<T> {
   items: T[];
-  page: PageInfo;
+  total?: number;
+  hasMore: boolean;     // serialized as has_more, flat in result
+  nextCursor?: string;  // serialized as next_cursor
 }
 
 async function* fetchAllPages<T>(
   fetchFn: (opts: PaginationOptions) => Promise<Page<T>>,
-  options: { perPage?: number; maxPages?: number } = {}
+  options: { perPage?: number; maxPages?: number; onCapped?: () => void } = {}
 ): AsyncGenerator<T> {
   const perPage = options.perPage ?? 100;
   const maxPages = options.maxPages ?? 100;
@@ -47,9 +40,10 @@ async function* fetchAllPages<T>(
 
     pagesFetched++;
 
-    if (!page.page.hasMore) break;
-    cursor = page.page.nextCursor;
+    if (!page.hasMore) return;
+    cursor = page.nextCursor;
   }
+  options.onCapped?.(); // the page cap stopped the loop
 }
 
 // CLI command
@@ -65,22 +59,24 @@ program
   .action(async (options) => {
     if (options.all) {
       const items: Item[] = [];
+      let truncated = false;
       for await (const item of fetchAllPages(
         (opts) => api.listItems(opts),
-        { perPage: parseInt(options.perPage), maxPages: parseInt(options.maxPages) }
+        { perPage: parseInt(options.perPage), maxPages: parseInt(options.maxPages), onCapped: () => { truncated = true; } }
       )) {
         items.push(item);
       }
-      console.log(JSON.stringify({ ok: true, result: { items, total: items.length, has_more: false } }));
+      // page cap hit: has_more true, meta.truncated set
+      console.log(JSON.stringify({ ok: true, command: 'list', schema_version: '1.0',
+        result: { items, total: items.length, has_more: truncated }, meta: { truncated } }));
     } else {
       const result = await api.listItems({
-        perPage: parseInt(options.perPage),
-        cursor: options.cursor,
+        perPage: parseInt(options.perPage), cursor: options.cursor,
         page: options.page ? parseInt(options.page) : undefined,
-        sortBy: options.sortBy,
-        sortOrder: options.sortOrder,
+        sortBy: options.sortBy, sortOrder: options.sortOrder,
       });
-      console.log(JSON.stringify(result));
+      console.log(JSON.stringify({ ok: true, command: 'list', schema_version: '1.0',
+        result: { items: result.items, has_more: result.hasMore, next_cursor: result.nextCursor, total: result.total }, meta: {} }));
     }
   });
 ```
@@ -90,51 +86,40 @@ program
 Contract: `../../cli/rate-limits.md`.
 
 ```typescript
+// Assumed: sleep(ms) = new Promise((r) => setTimeout(r, ms)).
+class RateLimitError extends Error { retryAfter?: number; }
+class CircuitOpenError extends Error {}
+class MaxRetriesExceeded extends Error {}
+
 interface RateLimitOptions {
-  rateLimit: string;
-  retryOnRateLimit: boolean;
-  maxRetries: number;
-  backoffInitial: number;
-  backoffMax: number;
-  backoffMultiplier: number;
-  backoffJitter: number;
-  respectRetryAfter: boolean;
-  circuitBreakerThreshold: number;
-  circuitBreakerTimeout: number;
+  rateLimit: string; retryOnRateLimit: boolean; maxRetries: number;
+  backoffInitial: number; backoffMax: number; backoffMultiplier: number; backoffJitter: number;
+  respectRetryAfter: boolean; circuitBreakerThreshold: number; circuitBreakerTimeout: number;
 }
 
 class RateLimiter {
-  private tokens: number;
-  private maxTokens: number;
-  private refillInterval: number;
-  private lastRefill: number;
+  private tokens: number; private maxTokens: number;
+  private refillInterval: number; private lastRefill: number;
   private failures = 0;
   private circuitOpen = false;
   private circuitOpenAt = 0;
 
   constructor(private options: RateLimitOptions) {
     const [count, period] = this.parseRateLimit(options.rateLimit);
-    this.maxTokens = count;
-    this.tokens = count;
+    this.maxTokens = this.tokens = count;
     this.refillInterval = period;
     this.lastRefill = Date.now();
   }
 
   private parseRateLimit(rate: string): [number, number] {
     const [count, period] = rate.split('/');
-    const periods: Record<string, number> = {
-      second: 1000,
-      minute: 60000,
-      hour: 3600000,
-    };
+    const periods: Record<string, number> = { second: 1000, minute: 60000, hour: 3600000 };
     return [parseInt(count), periods[period] ?? 60000];
   }
 
   private refill(): void {
     const now = Date.now();
-    const elapsed = now - this.lastRefill;
-    const refillAmount = (elapsed / this.refillInterval) * this.maxTokens;
-    this.tokens = Math.min(this.maxTokens, this.tokens + refillAmount);
+    this.tokens = Math.min(this.maxTokens, this.tokens + ((now - this.lastRefill) / this.refillInterval) * this.maxTokens);
     this.lastRefill = now;
   }
 
@@ -148,16 +133,19 @@ class RateLimiter {
     this.tokens -= 1;
   }
 
+  private recordFailure(): void {
+    if (++this.failures >= this.options.circuitBreakerThreshold) {
+      this.circuitOpen = true;
+      this.circuitOpenAt = Date.now();
+    }
+  }
+
   async execute<T>(fn: () => Promise<T>): Promise<T> {
-    // Check circuit breaker
     if (this.circuitOpen) {
       if (Date.now() - this.circuitOpenAt > this.options.circuitBreakerTimeout) {
-        this.circuitOpen = false;
-        this.failures = 0;
+        this.circuitOpen = false; this.failures = 0;
       } else {
-        throw new CircuitOpenError(
-          `Circuit open, retry after ${this.options.circuitBreakerTimeout - (Date.now() - this.circuitOpenAt)}ms`
-        );
+        throw new CircuitOpenError('Circuit open');
       }
     }
 
@@ -172,38 +160,18 @@ class RateLimiter {
         this.failures = 0;
         return result;
       } catch (error) {
-        this.failures++;
-
-        if (this.failures >= this.options.circuitBreakerThreshold) {
-          this.circuitOpen = true;
-          this.circuitOpenAt = Date.now();
-          throw new CircuitOpenError('Too many failures');
-        }
-
-        if (error instanceof RateLimitError) {
-          if (!this.options.retryOnRateLimit) throw error;
-
-          let waitTime = backoff;
-          if (this.options.respectRetryAfter && error.retryAfter) {
-            waitTime = error.retryAfter * 1000;
-          }
-
-          // Add jitter
-          if (this.options.backoffJitter > 0) {
-            const jitter = waitTime * this.options.backoffJitter * (Math.random() * 2 - 1);
-            waitTime += jitter;
-          }
-
-          await sleep(waitTime);
-          backoff = Math.min(backoff * this.options.backoffMultiplier, this.options.backoffMax);
-          lastError = error;
-          continue;
-        }
-
-        throw error;
+        // a 429 uses the retry budget and counts toward the breaker only once it is spent
+        if (!(error instanceof RateLimitError)) { this.recordFailure(); throw error; }
+        if (!this.options.retryOnRateLimit) throw error;
+        let waitTime = this.options.respectRetryAfter && error.retryAfter ? error.retryAfter * 1000 : backoff;
+        waitTime += waitTime * this.options.backoffJitter * (Math.random() * 2 - 1);
+        await sleep(waitTime);
+        backoff = Math.min(backoff * this.options.backoffMultiplier, this.options.backoffMax);
+        lastError = error;
       }
     }
 
+    this.recordFailure();
     throw new MaxRetriesExceeded(`Max retries exceeded: ${lastError?.message}`);
   }
 }
@@ -212,23 +180,20 @@ class RateLimiter {
 program
   .command('sync')
   .option('--rate-limit <rate>', 'Rate limit', '100/minute')
-  .option('--retry-on-rate-limit', 'Auto retry on 429', true)
+  .option('--no-retry-on-rate-limit', 'Do not retry on 429')
   .option('--max-retries <n>', 'Max retries', '5')
   .option('--backoff-initial <ms>', 'Initial backoff', '1000')
   .option('--backoff-max <ms>', 'Max backoff', '60000')
   .option('--backoff-multiplier <n>', 'Backoff multiplier', '2')
-  .option('--respect-retry-after', 'Honor Retry-After', true)
+  .option('--no-respect-retry-after', 'Ignore Retry-After')
   .option('--circuit-breaker-threshold <n>', 'Circuit breaker threshold', '5')
   .option('--circuit-breaker-timeout <ms>', 'Circuit reset timeout', '30000')
   .action(async (options) => {
     const limiter = new RateLimiter({
-      rateLimit: options.rateLimit,
-      retryOnRateLimit: options.retryOnRateLimit,
+      rateLimit: options.rateLimit, retryOnRateLimit: options.retryOnRateLimit,
       maxRetries: parseInt(options.maxRetries),
-      backoffInitial: parseInt(options.backoffInitial),
-      backoffMax: parseInt(options.backoffMax),
-      backoffMultiplier: parseFloat(options.backoffMultiplier),
-      backoffJitter: 0.1,
+      backoffInitial: parseInt(options.backoffInitial), backoffMax: parseInt(options.backoffMax),
+      backoffMultiplier: parseFloat(options.backoffMultiplier), backoffJitter: 0.1,
       respectRetryAfter: options.respectRetryAfter,
       circuitBreakerThreshold: parseInt(options.circuitBreakerThreshold),
       circuitBreakerTimeout: parseInt(options.circuitBreakerTimeout),
@@ -236,14 +201,14 @@ program
 
     try {
       const result = await limiter.execute(() => api.sync());
-      console.log(JSON.stringify(result));
+      console.log(JSON.stringify({ ok: true, command: 'sync', schema_version: '1.0', result, meta: {} }));
     } catch (err) {
-      // rate-limit exhaustion is the transient group: envelope on stdout, human line on stderr, exit 7
+      // transient group: envelope on stdout, human line on stderr, exit 7
       const e = err as Error;
       console.error(e.message);
       console.log(JSON.stringify({ ok: false, schema_version: '1.0', error: {
         class: e instanceof CircuitOpenError ? 'dependency_failed' : 'rate_limit',
-        code: e.name, message: e.message, retryable: true } }));
+        code: e instanceof CircuitOpenError ? 'CIRCUIT_OPEN' : 'RATE_LIMITED', message: e.message, retryable: true } }));
       process.exit(7);
     }
   });

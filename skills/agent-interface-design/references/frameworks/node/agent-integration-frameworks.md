@@ -44,8 +44,11 @@ const cliTool = new DynamicStructuredTool({
 // LangChain agent usage
 import { ChatOpenAI } from '@langchain/openai';
 import { AgentExecutor, createOpenAIToolsAgent } from 'langchain/agents';
+import { pull } from 'langchain/hub';
+import type { ChatPromptTemplate } from '@langchain/core/prompts';
 
 const llm = new ChatOpenAI({ model: '<model-id>' });
+const prompt = await pull<ChatPromptTemplate>('hwchase17/openai-tools-agent');
 const agent = await createOpenAIToolsAgent({ llm, tools: [cliTool], prompt });
 const executor = new AgentExecutor({ agent, tools: [cliTool] });
 
@@ -75,9 +78,9 @@ Available commands:
 Flags (always include):
 --json: Structured JSON output
 --quiet: Suppress non-essential output
---yes: Auto-approve confirmations
 --timeout <secs>: Set timeout
---dry-run: Preview without executing`,
+--dry-run: Preview without executing
+Add --yes only after the user approved the action; without it a confirmation fails with exit 2.`,
     input_schema: {
       type: 'object',
       properties: {
@@ -227,7 +230,10 @@ async function runAgentLoop(userMessage: string): Promise<string> {
           content: result,
         });
       }
+      continue;
     }
+
+    throw new Error(`Unexpected finish_reason: ${choice.finish_reason}`); // length, content_filter
   }
 }
 ```

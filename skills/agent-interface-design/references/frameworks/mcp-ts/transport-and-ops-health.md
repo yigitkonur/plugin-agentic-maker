@@ -8,6 +8,8 @@ Rules and KPI table: [ops-observability.md](../../mcp/ops-observability.md).
 ## Health tool
 
 ```typescript
+import { z } from "zod";
+
 interface ComponentHealth {
   status: "healthy" | "degraded" | "unhealthy";
   latency_ms?: number;
@@ -15,9 +17,12 @@ interface ComponentHealth {
   details?: Record<string, unknown>;
 }
 
-server.tool("health_check", "Check server health and KPIs. Returns per-component status.", {
-  include_metrics: z.boolean().default(false)
-    .describe("Set true to include request-rate and latency percentile metrics"),
+server.registerTool("health_check", {
+  description: "Check server health and KPIs. Returns per-component status.",
+  inputSchema: {
+    include_metrics: z.boolean().default(false)
+      .describe("Set true to include request-rate and latency percentile metrics"),
+  },
 }, async ({ include_metrics }) => {
   const [dbHealth, cacheHealth, upstreamHealth] = await Promise.allSettled([
     checkDatabase(),
@@ -49,9 +54,9 @@ server.tool("health_check", "Check server health and KPIs. Returns per-component
       error_rate_percent: metrics.errorRate,
     };
     result.kpi_targets = {
-      target_rps: "> 1000",
-      target_p95_ms: "< 100",
-      target_error_rate: "< 0.1%",
+      min_rps: 1000,
+      max_p95_ms: 100,
+      max_error_rate_percent: 0.1,
     };
   }
 

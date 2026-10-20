@@ -34,7 +34,7 @@ function serfError(category: SERFCategory, message: string, opts: Partial<SERFEr
     INTERNAL_ERROR:     { retryable: true,  suggested_actions: ["retry_with_backoff", "report_issue"] },
   };
   return {
-    content: [{ type: "text", text: JSON.stringify({ ...defaults[category], ...opts, error_category: category, message }) }],
+    content: [{ type: "text" as const, text: JSON.stringify({ ...defaults[category], ...opts, error_category: category, message }) }],
     isError: true,
   };
 }

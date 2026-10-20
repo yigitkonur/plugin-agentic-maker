@@ -27,9 +27,11 @@ type CLIResult struct {
 }
 
 type CLIError struct {
-	Code      string `json:"code"`
-	Message   string `json:"message"`
-	Retryable bool   `json:"retryable"`
+	Class      string `json:"class"`
+	Code       string `json:"code"`
+	Message    string `json:"message"`
+	Retryable  bool   `json:"retryable"`
+	Suggestion string `json:"suggestion,omitempty"`
 }
 
 // InvokeCLI executes a CLI command with JSON output and timeout
@@ -50,8 +52,11 @@ func InvokeCLI(ctx context.Context, args []string, timeout time.Duration) (*CLIR
 	if ctx.Err() == context.DeadlineExceeded {
 		return &CLIResult{
 			OK:    false,
-			Error: &CLIError{Code: "timeout", Message: "Command timed out", Retryable: true},
+			Error: &CLIError{Class: "timeout", Code: "timeout", Message: "Command timed out", Retryable: true},
 		}, nil
+	}
+	if ctx.Err() != nil { // cancelled by the caller: not a CLI failure, not retryable
+		return nil, ctx.Err()
 	}
 
 	if stdout.Len() > 0 {
@@ -69,7 +74,7 @@ func InvokeCLI(ctx context.Context, args []string, timeout time.Duration) (*CLIR
 		}
 		return &CLIResult{
 			OK:    false,
-			Error: &CLIError{Code: fmt.Sprintf("exit_%d", exitCode), Message: stderr.String()},
+			Error: &CLIError{Code: fmt.Sprintf("exit_%d", exitCode), Message: stderr.String(), Retryable: exitCode == 7}, // exit 7 = transient
 		}, nil
 	}
 
@@ -97,6 +102,10 @@ func InvokeWithRetry(ctx context.Context, args []string, opts RetryOptions) (*CL
 	}
 	if opts.BaseDelay == 0 {
 		opts.BaseDelay = time.Second
+	}
+
+	if opts.Timeout == 0 {
+		opts.Timeout = 30 * time.Second
 	}
 
 	var lastResult *CLIResult
@@ -214,7 +223,10 @@ func RunTaskWithStreaming(ctx context.Context, promptFile string) error {
 	// Start task
 	result, err := InvokeCLI(ctx, []string{"mycli", "task", "start", promptFile}, 30*time.Second)
 	if err != nil || !result.OK {
-		return fmt.Errorf("failed to start task: %v", err)
+		if err == nil {
+			err = fmt.Errorf("%s: %s", result.Error.Code, result.Error.Message)
+		}
+		return fmt.Errorf("failed to start task: %w", err)
 	}
 
 	var startResp struct {
@@ -222,7 +234,9 @@ func RunTaskWithStreaming(ctx context.Context, promptFile string) error {
 	}
 	json.Unmarshal(result.Result, &startResp)
 
-	// Stream events
+	// Stream events; cancel on return so the follower process stops
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	events, errs := StreamTaskEvents(ctx, startResp.TaskID)
 	for {
 		select {
@@ -238,8 +252,8 @@ func RunTaskWithStreaming(ctx context.Context, promptFile string) error {
 			}
 			switch event.Type {
 			case "approval":
-				// Auto-approve (use --yes in production)
-				InvokeCLI(ctx, []string{"mycli", "request", "answer", "req_id", "--yes"}, 10*time.Second)
+				// Never auto-approve: ask the operator, then run `mycli request answer <id> --yes`
+				return fmt.Errorf("approval needed: %s", event.Data)
 			case "complete":
 				return nil
 			case "error":

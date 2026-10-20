@@ -11,17 +11,20 @@ Rules and tables: [ops-session-state.md](../../mcp/ops-session-state.md), [ops-s
 import json
 from datetime import datetime
 from pathlib import Path
+from fastmcp import Context, FastMCP
+from fastmcp.exceptions import ToolError
 
+mcp = FastMCP("State Server")
 SUCCESS_LOG = Path("./successful_calls.jsonl")
 
-@tool
+@mcp.tool()
 def query_api(endpoint: str, params: dict) -> dict:
     try:
         result = api.call(endpoint, params)
         # Log the successful call
         SUCCESS_LOG.open("a").write(json.dumps({
             "endpoint": endpoint,
-            "params": params,
+            "param_names": sorted(params),  # names only: raw values may hold PII
             "timestamp": datetime.now().isoformat()
         }) + "\n")
         return result
@@ -31,11 +34,11 @@ def query_api(endpoint: str, params: dict) -> dict:
         error_msg = f"API call failed: {e}"
         if similar:
             error_msg += (
-                f"\n\nA similar successful call used these parameters:\n"
-                f"{json.dumps(similar['params'], indent=2)}\n"
+                f"\n\nA similar successful call used these parameter names: "
+                f"{similar['param_names']}\n"
                 f"Try adjusting your parameters to match this pattern."
             )
-        return {"content": [{"type": "text", "text": error_msg}], "isError": True}
+        raise ToolError(error_msg)  # error result, not a returned dict
 ```
 
 <!-- src: audit-agentic-mcp/references/patterns/session-and-state.md#2. Return Task IDs for Long-Running Operations -->
@@ -50,8 +53,8 @@ mcp = FastMCP("Report Server")
 @mcp.tool(task=True)  # Decorator-based API -- runs as a background task
 async def generate_report(data_id: str) -> dict:
     """Generate a comprehensive data report.
-    Runs as a background task -- returns a task ID immediately.
-    Use the task status endpoint to poll for completion."""
+    Runs as a background task: the client gets a task handle immediately
+    and polls the task status endpoint; this function returns the finished result."""
     # Long-running work happens here; FastMCP handles the task lifecycle
     report = await build_report(data_id)
     return {
@@ -75,7 +78,7 @@ Bad, global state shared across all sessions:
 current_page = 0
 auth_token = None
 
-@tool
+@mcp.tool()
 def next_page():
     global current_page
     current_page += 1  # Race condition when multiple sessions are active
@@ -89,14 +92,14 @@ from collections import defaultdict
 
 session_state = defaultdict(dict)
 
-@tool
+@mcp.tool()
 def next_page(ctx: Context):
     sid = ctx.session_id
     page = session_state[sid].get("page", 0) + 1
     session_state[sid]["page"] = page
     return fetch_page(page)
 
-@tool
+@mcp.tool()
 def set_preferences(ctx: Context, timezone: str, language: str):
     session_state[ctx.session_id]["prefs"] = {
         "timezone": timezone,

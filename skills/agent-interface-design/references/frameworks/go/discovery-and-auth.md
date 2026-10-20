@@ -61,6 +61,8 @@ func exitWithError(err error, jsonMode bool) {
         code, class = ExitPartial, "partial_success"
     case errors.Is(err, ErrUsage):
         code, class = ExitUsage, "usage"
+    case errors.Is(err, context.Canceled):
+        code = 130 // SIGINT stop; a SIGTERM stop exits 143 (../../cli/timeouts-and-signals.md)
     }
     fmt.Fprintln(os.Stderr, err)
     if jsonMode {
@@ -108,7 +110,7 @@ func init() {
     deployCmd.Flags().Bool("dry-run", false, "Preview changes without applying")
     deployCmd.Flags().Bool("wait", true, "Wait for deployment to complete")
     deployCmd.Flags().Duration("timeout", 5*time.Minute, "Maximum wait time")
-    deployCmd.Flags().Bool("json", false, "Output result as JSON")
+    // --json is the root persistent flag; do not redeclare it here (a local copy shadows -j)
 
     deployCmd.MarkFlagRequired("env")
 }
@@ -141,7 +143,10 @@ var versionCmd = &cobra.Command{
         }
 
         if jsonOutput, _ := cmd.Flags().GetBool("json"); jsonOutput {
-            return json.NewEncoder(os.Stdout).Encode(info)
+            return json.NewEncoder(os.Stdout).Encode(map[string]interface{}{
+                "ok": true, "command": "version", "schema_version": "1.0",
+                "result": info, "meta": map[string]interface{}{},
+            })
         }
 
         fmt.Printf("mycli %s (commit: %s, built: %s)\n",

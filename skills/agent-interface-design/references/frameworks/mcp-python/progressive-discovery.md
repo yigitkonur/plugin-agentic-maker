@@ -7,19 +7,20 @@ Explanation and rules: ../../mcp/patterns-progressive-discovery.md and ../../mcp
 ## Pattern 1: list / describe / execute meta-tools
 
 ```python
-@tool
+# mcp = FastMCP(...); tool_registry is your catalog
+@mcp.tool()
 def list_tools(prefix: str = "/") -> list[str]:
     """List available tool categories or tools matching a prefix.
     Example: list_tools('/hubspot/deals/') returns deal-related tools."""
     return tool_registry.list(prefix)
 
-@tool
+@mcp.tool()
 def describe_tools(tool_id: str) -> dict:
     """Get the full input schema for a specific tool.
     Call this before execute_tool to understand required parameters."""
     return tool_registry.get_schema(tool_id)
 
-@tool
+@mcp.tool()
 def execute_tool(tool_id: str, arguments: dict) -> dict:
     """Execute a tool by ID with the given arguments.
     Call describe_tools first to get the correct schema."""
@@ -44,9 +45,10 @@ class SemanticToolRouter:
     def search(self, query: str, top_k: int = 3) -> list:
         emb = self.model.encode([query])
         scores, idx = self.index.search(emb, top_k)
-        return [self.tools[i] for i in idx[0]]
+        return [self.tools[i] for i in idx[0] if i != -1]  # faiss pads with -1 when top_k > index size
 
-@tool
+# router = SemanticToolRouter(all_tools), built once at startup
+@mcp.tool()
 def find_tools(query: str) -> list[dict]:
     """Find tools matching a natural language intent.
     Example: find_tools('list recent HubSpot deals')"""
@@ -58,6 +60,8 @@ def find_tools(query: str) -> list[dict]:
 
 ```python
 def handle_discovery(stage, **kwargs):
+    if stage not in ("categories", "actions", "schema"):
+        return {"options": ["categories", "actions", "schema"]}  # list valid stages, no "not found"
     if stage == "categories":
         return {"stage": "categories", "options": list_available_services()}
 

@@ -41,14 +41,18 @@ import ipaddress
 import socket
 import urllib.parse
 
-BLOCKED = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
-           "127.0.0.0/8", "169.254.0.0/16"]
+BLOCKED = ["0.0.0.0/8", "10.0.0.0/8", "100.64.0.0/10", "127.0.0.0/8", "169.254.0.0/16",
+           "172.16.0.0/12", "192.168.0.0/16", "::1/128", "fc00::/7", "fe80::/10"]
 BLOCKED_NETS = [ipaddress.ip_network(n) for n in BLOCKED]
 
 def is_safe_url(url: str) -> bool:
-    ip = ipaddress.ip_address(socket.gethostbyname(
-        urllib.parse.urlparse(url).hostname))
-    return not any(ip in net for net in BLOCKED_NETS)
+    host = urllib.parse.urlparse(url).hostname
+    try:
+        infos = socket.getaddrinfo(host, None)  # every A and AAAA record
+    except (socket.gaierror, TypeError):
+        return False
+    return not any(ipaddress.ip_address(i[4][0]) in net for i in infos for net in BLOCKED_NETS)
+# DNS rebinding: connect to the address you just checked (pin it), do not resolve again.
 ```
 
 Session IDs: generate with a CSPRNG (`uuid4()`), bind to user identity, rotate on privilege escalation (TTL 15 min elevated, 1 hour read-only).

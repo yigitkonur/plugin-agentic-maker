@@ -5,6 +5,8 @@
 <!-- src: audit-agentic-cli/references/examples.md#16.1 Unit Testing JSON Output (Go) -->
 ## Unit testing JSON output
 
+The cases follow the skeleton in `examples.md` (`resource create`, `resource list`); the `get` and `delete` cases assume the same group has those subcommands, so adapt the argument lists to your CLI.
+
 ```go
 package main
 
@@ -26,16 +28,16 @@ func TestJSONOutput(t *testing.T) {
     }{
         {
             name:     "create success",
-            args:     []string{"create", "test-resource", "--json"},
+            args:     []string{"resource", "create", "test-resource", "--json"},
             wantOK:   true,
             wantExit: 0,
             wantFields: map[string]any{
-                "result.created": true,
+                "result.name": "test-resource",
             },
         },
         {
             name:     "get not found",
-            args:     []string{"get", "nonexistent", "--json"},
+            args:     []string{"resource", "get", "nonexistent", "--json"},
             wantOK:   false,
             wantExit: 3,
             wantFields: map[string]any{
@@ -45,7 +47,7 @@ func TestJSONOutput(t *testing.T) {
         },
         {
             name:     "delete without confirmation",
-            args:     []string{"delete", "res_123", "--json"},
+            args:     []string{"resource", "delete", "res_123", "--json"},
             wantOK:   false,
             wantExit: 2,
             wantFields: map[string]any{

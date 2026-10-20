@@ -47,9 +47,7 @@ tool.remove();   // permanently removes
 Manual notification:
 
 ```typescript
-await server.notification({
-  method: "notifications/tools/list_changed",
-});
+await server.sendToolListChanged(); // McpServer; low-level: server.server.notification({ method: "notifications/tools/list_changed" })
 ```
 
 ## Pattern 8: Graceful Fallback for Hidden Tools

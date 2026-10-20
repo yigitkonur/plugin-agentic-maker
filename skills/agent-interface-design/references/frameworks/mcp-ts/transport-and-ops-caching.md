@@ -61,7 +61,7 @@ async function cachedToolHandler(cacheKey: string, ttlMs: number, fn: () => Prom
   const cached = await cache.get(cacheKey);
   if (cached) return cached;
   const result = await fn();
-  await cache.set(cacheKey, result, ttlMs);
+  if (!(result as { isError?: boolean } | null)?.isError) await cache.set(cacheKey, result, ttlMs); // never cache failures
   return result;
 }
 ```

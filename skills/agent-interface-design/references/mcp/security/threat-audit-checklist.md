@@ -49,7 +49,7 @@ Every item is yes/no. Work top to bottom before shipping a new MCP integration. 
 
 **Capability and consent**
 
-27. Is explicit user consent required before every tool invocation?
+27. Is explicit user consent required before every tool invocation, with the only exception being a standing approval the user or host policy gave (for example a read tier from a server the user trusts; see `least-privilege-and-confirmation.md`)?
 28. Is explicit user consent required before each sampling request?
 29. Are sampling requests rate-limited and monitored for token-consumption anomalies (#10)?
 30. Does the server abstain from eliciting secrets in form mode (no passwords, API keys, tokens or payment data via `elicitation/create` form mode; URL mode for those)?

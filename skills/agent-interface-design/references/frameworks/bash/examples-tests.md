@@ -45,7 +45,7 @@ assert_json_field() {
     local test_name="$4"
 
     local actual
-    actual=$(echo "$json" | jq -r "$field")
+    actual=$(echo "$json" | jq -r "$field" 2>/dev/null) || actual="<not json>"
 
     if [[ "$actual" == "$expected" ]]; then
         echo -e "${GREEN}✓${NC} $test_name ($field=$actual)"
@@ -129,15 +129,16 @@ test_short_flags() {
         local short="${pair%%:*}"
         local long="${pair##*:}"
 
-        local out1 out2
-        out1=$($CLI_BIN list "$long" --json 2>/dev/null) || true
-        out2=$($CLI_BIN list "$short" --json 2>/dev/null) || true
+        local out1 out2 rc1=0 rc2=0
+        out1=$($CLI_BIN list "$long" --json 2>/dev/null) || rc1=$?
+        out2=$($CLI_BIN list "$short" --json 2>/dev/null) || rc2=$?
 
         local ok1 ok2
-        ok1=$(echo "$out1" | jq -r '.ok')
-        ok2=$(echo "$out2" | jq -r '.ok')
+        ok1=$(echo "$out1" | jq -r '.ok' 2>/dev/null) || ok1="<not json>"
+        ok2=$(echo "$out2" | jq -r '.ok' 2>/dev/null) || ok2="<not json>"
 
-        if [[ "$ok1" == "$ok2" ]]; then
+        # Same exit code and ok value, and the alias must be accepted (not usage exit 2)
+        if [[ "$rc1:$ok1" == "$rc2:$ok2" && "$rc1" != 2 && "$ok1" == "true" ]]; then
             echo -e "${GREEN}✓${NC} flag alias: $short == $long"
             TESTS_PASSED=$((TESTS_PASSED + 1))
         else

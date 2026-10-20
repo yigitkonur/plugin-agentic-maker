@@ -99,12 +99,13 @@ main() {
         resource_id=$(get_resource_id "$response")
         echo "Created resource: $resource_id"
     else
+        local rc=$?  # the CLI's own exit status
         if is_retryable_error "$response"; then
             echo "Transient error - retrying..."
             retry_with_backoff 3 2 30 mycli create "my-resource" --json
         else
             echo "Non-retryable error" >&2
-            exit 1
+            exit "$rc"
         fi
     fi
 }

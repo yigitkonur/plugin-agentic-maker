@@ -9,6 +9,7 @@ Core rules: `../../mcp/protocol-capability-gating.md`, `../../mcp/protocol-progr
 
 ```python
 from mcp.server.fastmcp import FastMCP, Context
+from mcp.server.fastmcp.exceptions import ToolError
 
 mcp = FastMCP("server")
 
@@ -33,13 +34,14 @@ async def summarize(doc: str, ctx: Context) -> str:
 ## Stateless HTTP detection
 
 ```python
-mcp = FastMCP("server", stateless_http=False)  # default
+STATELESS_HTTP = False  # the constructor flag is the source of truth
+mcp = FastMCP("server", stateless_http=STATELESS_HTTP)
 
 @mcp.tool()
 async def summarize(doc: str, ctx: Context) -> str:
-    if ctx.session is None or getattr(ctx.session, "stateless", False):
-        return (
-            "ERROR: This server is running in stateless HTTP mode and cannot use sampling. "
+    if STATELESS_HTTP:
+        raise ToolError(
+            "This server is running in stateless HTTP mode and cannot use sampling. "
             "Deploy with stateless_http=False (Streamable HTTP with sessions) to enable."
         )
     ...
@@ -74,9 +76,8 @@ import asyncio
 async def long_search(query: str, ctx: Context) -> list[dict]:
     results = []
     for chunk in paginate(query):
-        # Cooperative checkpoint — raises if cancelled
-        if ctx.is_cancelled():
-            raise asyncio.CancelledError("client cancelled")
+        # Cooperative checkpoint: cancellation arrives as asyncio.CancelledError at an await.
+        # Never swallow it; clean up in try/finally and let it propagate.
         results.extend(await fetch_chunk(chunk))
     return results
 ```
@@ -85,7 +86,8 @@ async def long_search(query: str, ctx: Context) -> list[dict]:
 ## Trace ID propagation through _meta
 
 ```python
-# Propagating a trace ID end-to-end
+# Propagating a trace ID end-to-end. request_meta / response_meta / log are illustrative:
+# the _meta accessors differ by SDK version, and log must be a structured logger (e.g. structlog)
 @mcp.tool()
 async def process(order_id: str, ctx: Context) -> dict:
     trace_id = ctx.request_meta.get("com.acme/trace-id") or new_trace_id()
@@ -114,8 +116,6 @@ async def research(topic: str, ctx: Context) -> str:
     # 2. Long-running work with progress + cancellation
     sources = []
     for i, src in enumerate(iter_sources(prefs.data)):
-        if ctx.is_cancelled():
-            raise asyncio.CancelledError()
         await ctx.report_progress(i + 1, len(prefs.data.sources), f"Fetched {src.name}")
         sources.append(await fetch(src))
 

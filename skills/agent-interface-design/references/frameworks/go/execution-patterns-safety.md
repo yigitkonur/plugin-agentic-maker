@@ -64,8 +64,12 @@ Contract: `../../cli/non-interactive.md`.
 
 ```go
 import (
+    "bufio"
     "errors"
+    "fmt"
     "os"
+    "strings"
+
     "golang.org/x/term"
 )
 
@@ -94,7 +98,7 @@ func IsInteractive(mode InteractiveMode) bool {
 
 func Prompt(message string, mode InteractiveMode) (string, error) {
     if !IsInteractive(mode) {
-        return "", fmt.Errorf("prompt required in non-interactive mode: %s", message)
+        return "", fmt.Errorf("prompt required in non-interactive mode (%s): %w", message, ErrConfirmationRequired)
     }
 
     fmt.Fprint(os.Stderr, message) // prompts go to stderr

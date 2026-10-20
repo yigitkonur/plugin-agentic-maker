@@ -73,9 +73,10 @@ def is_interactive() -> bool:
     return sys.stdin.isatty() and sys.stdout.isatty()
 
 def prompt(message: str, *, non_interactive: bool = False) -> str:
-    """Prompt for input, fail in non-interactive mode."""
+    """Prompt for input; exit 2 in non-interactive mode, like confirm()."""
     if non_interactive or not is_interactive():
-        raise RuntimeError(f"Prompt required in non-interactive mode: {message}")
+        print(f"Input required: {message}. Pass it as a flag.", file=sys.stderr)
+        sys.exit(2)
 
     print(message, end="", file=sys.stderr)
     return input()

@@ -16,6 +16,9 @@ const ajv = new Ajv({ allErrors: true });
 const validateSuccess = ajv.compile(successSchema);
 const validateError = ajv.compile(errorSchema);
 
+type SuccessResponse = { ok: true; command: string; schema_version: string; result: unknown; meta: object };
+type ErrorResponse = { ok: false; error: { class: string; code: string; message: string; retryable: boolean; suggestion?: string } };
+
 function parseCliOutput(stdout: string): SuccessResponse | ErrorResponse {
   const data = JSON.parse(stdout);
 
@@ -56,7 +59,7 @@ export type ExitCodeValue = typeof ExitCode[keyof typeof ExitCode];
 
 ## JSONL emitters
 
-> Reconciled: the source wrote progress with `console.log` (stdout). Progress goes to stderr (`console.error`); the terminal result goes to stdout (`../../cli/streams-and-jsonl.md`).
+> Reconciled: the source wrote progress with `console.log` (stdout). Progress events go to stderr (`console.error`); the terminal result goes to stdout (`../../cli/streams-and-jsonl.md`).
 
 ```typescript
 interface ProgressEvent {
@@ -98,6 +101,7 @@ function emitCompleted(result: unknown): void {
 
 ```typescript
 import { exit } from 'process';
+import { ExitCode } from './exitcodes';
 
 async function main() {
   // Progress to stderr
@@ -109,9 +113,12 @@ async function main() {
     // Success JSON to stdout
     console.log(JSON.stringify({
       ok: true,
+      command: 'mycli op',
+      schema_version: '1.0',
       result,
+      meta: {},
     }));
-    exit(0);
+    exit(ExitCode.SUCCESS);
 
   } catch (error) {
     // Error JSON to stdout
@@ -120,10 +127,12 @@ async function main() {
       error: {
         class: 'network',
         code: 'CONNECTION_FAILED',
-        message: error.message,
+        message: (error as Error).message,
+        retryable: true,
+        suggestion: 'Retry with backoff',
       },
     }));
-    exit(7); // TRANSIENT
+    exit(ExitCode.TRANSIENT);
   }
 }
 
