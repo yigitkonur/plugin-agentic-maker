@@ -96,7 +96,7 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
     if not os.access(path, os.X_OK):
         raise CliError("validation", "not_executable", "%s is not executable" % path, suggestion="chmod +x, or build it first")
     kind = _classify(path)
-    executed, not_executed, findings, outputs = [], [], [], {}
+    executed, not_executed, findings, outputs, runs = [], [], [], {}, []
     gate_open = True
     if kind in ("script", "unknown"):
         text = open(path, encoding="utf-8", errors="replace").read(200000)
@@ -110,6 +110,7 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
                 return None
             r = _run([path] + args, tmp, timeout)
             executed.append(_fmt(r))
+            runs.append(r)
             return r
 
         help_r = go(["--help"], "help")
@@ -212,24 +213,14 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
             elif want is None and r["exit"] not in (0, 2, 3, 4, 5, 6, 7, 8):
                 findings.append(_finding("exit.%d" % ran_safe, "exit_codes", "Medium", "fail", "Exit %s is outside the documented 0-8 classes." % r["exit"],
                                          "map failures to the documented classes", {"run": _fmt(r)}, "cli/exit-codes.md"))
-            elif want is None and r["exit"] == 1 and r["stdout"].strip() and not wants_json:
-                pass
-        # a not-found style failure that exits 1 is the commonest defect
-        for line in safe_cmds or []:
-            pass
 
         # ---- cross-cutting signals from everything that ran
-        all_runs_out = help_text
-        ansi_hit = None
-        for e in (help_r, bogus_r):
-            if e and ANSI.search(e["stdout"] + e["stderr"]):
-                ansi_hit = _fmt(e)
-        # re-scan declared outputs for ANSI via a second pass over captured text
-        if ansi_hit is None:
-            for line in safe_cmds or []:
-                pass
-        if not_executed == [] and safe_cmds is not None and ran_safe == 0 and (safe_cmds or []):
-            pass
+        ansi_runs = [_fmt(r) for r in runs if ANSI.search(r["stdout"])]
+        if ansi_runs:
+            findings.append(_finding("ansi.stdout", "output", "Medium", "fail",
+                                     "Colour escape codes in piped output end up inside the values the agent parses.",
+                                     "colour only when stdout is a terminal; honour NO_COLOR; never in --json output",
+                                     {"runs": ansi_runs[:3]}, "cli/quiet-mode.md"))
         if SECRET_FLAG.search(help_text) and not FILE_FLAG.search(help_text):
             findings.append(_finding("secret.argv", "security", "High", "fail",
                                      "A secret passed as an argument lands in shell history, process listings and the agent's transcript.",
@@ -246,16 +237,13 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
                                          "add --dry-run that prints the plan and changes nothing", {"help_mentions": DESTRUCTIVE_WORD.search(help_text).group(0)}, "cli/dry-run.md"))
         return {"binary": path, "kind": kind, "executed": executed, "not_executed": not_executed + (
                     ["destructive-looking commands in the help are never run: only declared safe commands are"] if DESTRUCTIVE_WORD.search(help_text) else []),
-                "findings": findings, "subcommands": sub_rows, "documentation": outputs,
-                "_runs": {"help": help_r, "bogus": bogus_r}, "tmp_used": True}
+                "findings": findings, "subcommands": sub_rows, "documentation": outputs}
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
 def finalize(result):
     """Add the summary and strip the raw runs. A finding is the product, not an error."""
-    result.pop("_runs", None)
-    result.pop("tmp_used", None)
     sev = {}
     for f in result["findings"]:
         sev[f["severity"]] = sev.get(f["severity"], 0) + 1
@@ -279,11 +267,14 @@ def diff_help(old_text, new_text):
             if re.match(r"^\s*(Commands|Subcommands|Available Commands):\s*$", ln):
                 inside = True
                 continue
-            if inside and not ln.strip():
+            if not inside or not ln.strip():
                 continue
-            if inside and ln.lstrip().startswith("-"):
+            if not ln[0].isspace():          # a new, unindented section heading ends the command list
+                inside = False
                 continue
-            m = inside and re.match(r"^\s*([A-Za-z0-9][A-Za-z0-9:_-]+)([\s,]|$)", ln)
+            if ln.lstrip().startswith("-"):
+                continue
+            m = re.match(r"^\s+([A-Za-z0-9][A-Za-z0-9:_-]+)([\s,]|$)", ln)
             if m:
                 out.add(m.group(1))
         return sorted(out)

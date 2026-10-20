@@ -201,14 +201,18 @@ def gate(stdin_text, env=None):
                             changed.append(os.path.relpath(fp, root))
                     except OSError:
                         pass
-        who = "agentic-maker ledger --session %s" % session
+        close_cmd = 'agentic-maker ledger close --session %s --outcome unverified --reason "<why>"' % session
+        abandon_cmd = 'agentic-maker ledger abandon --session %s --reason "<why>"' % session
+        if last <= 0:
+            what = "no run has completed for this ledger yet, so nothing has tested the change to %s" % ", ".join(sorted(changed)[:4])
+        else:
+            what = "%d target file(s) changed after the newest completed trace (%s%s)" % (
+                len(changed), ", ".join(sorted(changed)[:4]), ", ..." if len(changed) > 4 else "")
         reason = (
-            "A derail fix is in flight and %d target file(s) changed after the newest completed trace (%s%s). "
-            "Do not report this as fixed: no fresh run has seen the change. Pick one: "
-            "(1) rerun the scenario in a fresh session (agentic-maker run <scenario> --session %s), "
-            "(2) record that it could not be verified: %s close --outcome unverified --reason \"<why>\", "
-            "(3) stop the loop: %s abandon --reason \"<why>\"." % (
-                len(changed), ", ".join(sorted(changed)[:4]), ", ..." if len(changed) > 4 else "", session, who, who))
+            "A derail fix is in flight and %s. Do not report this as fixed: no fresh run has seen the change. Pick one: "
+            "(1) rerun the scenario in a fresh session: agentic-maker run <scenario> --session %s; "
+            "(2) record that it could not be verified: %s; "
+            "(3) stop the loop: %s." % (what, session, close_cmd, abandon_cmd))
         return 0, json.dumps({"decision": "block", "reason": reason})
     except Exception as e:  # never trap the agent
         sys.stderr.write("agentic-maker gate: ignored internal error: %s\n" % e)

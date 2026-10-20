@@ -2,4 +2,4 @@
 list
 list --json
 get 1 --json
-get missing --json
+get missing --json  # expect-exit 3

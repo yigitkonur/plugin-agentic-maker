@@ -1,0 +1,17 @@
+# kind	ecosystem	how	pattern	scope	note
+# how: file (a file with this name exists) | regex (a line matches) ; scope: glob for regex rules
+skill	any	file	SKILL.md		a skill directory (frontmatter name + description)
+plugin	claude-code	file	.claude-plugin/plugin.json		a Claude Code plugin
+plugin	claude-code	file	.claude-plugin/marketplace.json		a plugin marketplace
+mcp	any	file	.mcp.json		MCP server configuration
+mcp	typescript	regex	\bregisterTool\(|\bserver\.tool\(|\bserver\.registerTool\(|new McpServer\(	*.ts,*.tsx,*.js,*.mjs,*.cjs	official TS SDK
+mcp	typescript	regex	\bFastMCP\b	*.ts,*.js	fastmcp / mcp-use style
+mcp	python	regex	@mcp\.tool|@server\.tool|FastMCP\(|from mcp\.server	*.py	FastMCP or the official Python SDK
+mcp	rust	regex	#\[tool\]|rmcp::|#\[tool_router\]	*.rs	rmcp
+mcp	go	regex	\.AddTool\(|mcp\.NewServer\(|server\.NewMCPServer\(	*.go	mcp-go / go-sdk
+cli	node	regex	"bin"\s*:	package.json	package.json bin
+cli	python	regex	\[project\.scripts\]|console_scripts	pyproject.toml,setup.py,setup.cfg	entry points
+cli	rust	regex	^\[\[bin\]\]|clap::|#\[derive\(.*Parser	Cargo.toml,*.rs	clap binary
+cli	go	regex	cobra\.Command|flag\.Parse\(|urfave/cli	*.go	cobra / flag / urfave
+cli	shell	shebang	^#!.*\b(ba|z|da)?sh\b		an executable shell script (bin/ or scripts/)
+cli	any	shebang	^#!.*\b(python3?|node|ruby|deno|bun)\b		an executable script

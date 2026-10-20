@@ -7,7 +7,9 @@ import traceback
 
 from agentic_maker import __version__
 from agentic_maker import check as check_mod
+from agentic_maker import detect as detect_mod
 from agentic_maker import doctor as doctor_mod
+from agentic_maker import probe_cli as probe_cli_mod
 from agentic_maker import ledger as ledger_mod
 from agentic_maker import runner as runner_mod
 from agentic_maker import scenario as sc_mod
@@ -60,6 +62,30 @@ def build():
            "example:\n  agentic-maker normalize .agentic-maker/runs/<run>/<scenario>/01")
     n.add_argument("source", help="a take directory, or a stream-json / session JSONL file")
     n.add_argument("--out", help="output directory (default: the take directory, or next to the file)")
+
+    pr = _p(sub, "probe", "Black-box audit of a surface: run it the way an agent would and report what comes back.")
+    psub = pr.add_subparsers(dest="what", metavar="<surface>", parser_class=_Parser)
+    pc = _p(psub, "cli", "Audit a CLI: help, version, an invalid command, JSON purity, exit codes, hangs, secrets, destructive commands. "
+            "Runs only --help, --version, one invalid command and the commands you declare safe; each in an empty temp dir, stdin closed, with a timeout.",
+            "examples:\n  agentic-maker probe cli ./target/debug/mycli --safe-cmds safe.txt\n  agentic-maker probe cli gh --subcommands subs.txt --human\n"
+            "safe.txt: one set of arguments per line, e.g. `get missing --json  # expect-exit 3`")
+    pc.add_argument("binary", help="path or name of the executable (a crate or package name is not a path)")
+    pc.add_argument("--safe-cmds", help="file of read-only argument lists the audit may run (one per line, `# expect-exit N` optional)")
+    pc.add_argument("--subcommands", help="file of subcommands whose --help to check (one per line)")
+    pc.add_argument("--timeout", type=int, default=10, help="seconds per invocation (default 10)")
+    pd = _p(psub, "cli-diff", "Compare two saved help snapshots (runs nothing): added/removed commands and flags, likely breaking changes.",
+            "example:\n  agentic-maker probe cli-diff help-v1.txt help-v2.txt")
+    pd.add_argument("old")
+    pd.add_argument("new")
+
+    dt = _p(sub, "detect", "Find the agent-facing surfaces in a project (skills, plugins, MCP servers, CLIs, scripts). Locates only.",
+            "example:\n  agentic-maker detect . --kind cli mcp")
+    dt.add_argument("path", nargs="?", default=".")
+    dt.add_argument("--kind", nargs="*", choices=["skill", "plugin", "mcp", "cli"], help="limit to these kinds")
+    sc = _p(sub, "scan", "Locate one kind with evidence lines (alias of detect --kind K); e.g. scan mcp finds the tool registrations.",
+            "example:\n  agentic-maker scan mcp src")
+    sc.add_argument("kind", choices=["skill", "plugin", "mcp", "cli"])
+    sc.add_argument("path", nargs="?", default=".")
 
     c = _p(sub, "check", "Deterministic gates: receipts, findings, diff, nice.")
     csub = c.add_subparsers(dest="what", metavar="<gate>", parser_class=_Parser)
@@ -209,11 +235,69 @@ def dispatch(args, root, out):
         return out.ok(res, [{"command": "trace-reader on %s" % md, "why": "the reader cites events as [n]"}],
                       "%d events -> %s" % (stats["events"], md), warnings=warns)
 
+    if cmd == "probe":
+        return dispatch_probe(args, root, out)
+    if cmd in ("detect", "scan"):
+        base = args.path if os.path.isabs(args.path) else os.path.join(root, args.path)
+        if not os.path.isdir(base):
+            raise CliError("not_found", "path_not_found", "no such directory: %s" % base)
+        rules = detect_mod.load_rules(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "surfaces.tsv"))
+        kinds = [args.kind] if cmd == "scan" else (args.kind or None)
+        res = detect_mod.detect(os.path.abspath(base), rules, kinds, evidence=(5 if cmd == "scan" else 2))
+        nxt = []
+        kinds_found = set(res["by_kind"])
+        if "cli" in kinds_found:
+            nxt.append({"command": "agentic-maker probe cli <binary> --safe-cmds <file>", "why": "audit a CLI candidate by running it"})
+        if "mcp" in kinds_found:
+            nxt.append({"command": "agentic-maker probe mcp <command or url> --budget", "why": "measure a real MCP server's tools"})
+        if "skill" in kinds_found or "plugin" in kinds_found:
+            nxt.append({"command": "/agentic-maker:derail <path>", "why": "test a skill or plugin with a fresh agent"})
+        human = "%d candidate(s) in %d files: %s" % (len(res["candidates"]), res["files_scanned"], json.dumps(res["by_kind"])) + "".join(
+            "\n  %s/%s  %s" % (c["kind"], c["ecosystem"], c["path"]) for c in res["candidates"][:40])
+        return out.ok(res, nxt, human, warnings=(["file limit reached: the scan is partial"] if res["truncated"] else None))
     if cmd == "check":
         return dispatch_check(args, root, out)
     if cmd == "ledger":
         return dispatch_ledger(args, root, out)
     raise CliError("usage", "no_command", "choose a command", suggestion="agentic-maker --help")
+
+
+def _read_lines(path, root, what):
+    p = path if os.path.isabs(path) else os.path.join(root, path)
+    if not os.path.isfile(p):
+        raise CliError("not_found", "file_not_found", "%s file not found: %s" % (what, p))
+    return [ln.strip() for ln in open(p, encoding="utf-8") if ln.strip() and not ln.lstrip().startswith("#")]
+
+
+def dispatch_probe(args, root, out):
+    w = args.what
+    if w == "cli":
+        subs = _read_lines(args.subcommands, root, "subcommands") if args.subcommands else None
+        safe = _read_lines(args.safe_cmds, root, "safe-cmds") if args.safe_cmds else None
+        res = probe_cli_mod.finalize(probe_cli_mod.probe(args.binary, subs, safe, args.timeout))
+        if safe is None:
+            res["limits"].insert(0, "no --safe-cmds were declared: only help, version and one invalid command were run, so stdout purity and exit codes of real commands are unchecked")
+        lines = ["# CLI audit: %s" % res["binary"], "", "kind: %s | executed %d command(s) | findings: %s" % (res["kind"], len(res["executed"]), json.dumps(res["summary"]["by_severity"]))]
+        for f in res["findings"]:
+            lines.append("- [%s] %s: %s (fix: %s)" % (f["severity"], f["check"], f["why_it_matters"], f["fix"]))
+        lines += ["", "executed:"] + ["  " + e for e in res["executed"]] + (["not executed:"] + ["  " + e for e in res["not_executed"]] if res["not_executed"] else [])
+        nxt = [{"command": "agentic-maker probe cli %s --safe-cmds <file>" % args.binary, "why": "declare read-only commands to check JSON purity and exit codes"}] if safe is None else []
+        if res["findings"]:
+            return out.partial(res, "%d finding(s) in the CLI contract" % len(res["findings"]), nxt, "\n".join(lines))
+        return out.ok(res, nxt, "\n".join(lines))
+    if w == "cli-diff":
+        a = args.old if os.path.isabs(args.old) else os.path.join(root, args.old)
+        b = args.new if os.path.isabs(args.new) else os.path.join(root, args.new)
+        for f in (a, b):
+            if not os.path.isfile(f):
+                raise CliError("not_found", "snapshot_not_found", "snapshot not found: %s" % f)
+        res = probe_cli_mod.diff_help(open(a, encoding="utf-8", errors="replace").read(), open(b, encoding="utf-8", errors="replace").read())
+        human = "\n".join(["added commands: %s" % res["commands_added"], "removed commands: %s" % res["commands_removed"],
+                            "added flags: %s" % res["flags_added"], "removed flags: %s" % res["flags_removed"]] + ["BREAKING: " + x for x in res["likely_breaking"]])
+        if res["likely_breaking"]:
+            return out.partial(res, "%d likely breaking change(s)" % len(res["likely_breaking"]), [], human)
+        return out.ok(res, [], human)
+    raise CliError("usage", "no_surface", "choose a surface: cli|cli-diff", suggestion="agentic-maker probe --help")
 
 
 def dispatch_check(args, root, out):
