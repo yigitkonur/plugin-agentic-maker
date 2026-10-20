@@ -1,0 +1,2 @@
+# path	line	level	heading text	reason
+audit-agentic-cli/references/agent-integration.md	215	2	7. Provider Tool Schema Example	stray ``` fence at line 213 of the source swallows this heading in a strict parse

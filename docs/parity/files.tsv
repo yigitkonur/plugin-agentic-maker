@@ -1,0 +1,12 @@
+# source path	disposition	destination	reason
+audit-agentic-cli/agents/openai.yaml	R	disable-model-invocation: true in skills/audit, skills/design, skills/derail	the no-implicit-invocation flag is native frontmatter now
+audit-agentic-cli/scripts/audit-cli-help.sh	R	bin/agentic-maker probe cli (help scan retained, plus executed checks on declared commands)	text-only help scan could not prove agent-readiness (the script's own admission)
+audit-agentic-cli/scripts/diff-cli-help.sh	R	bin/agentic-maker probe cli-diff	same checks, one output contract
+audit-agentic-mcp/agents/openai.yaml	R	disable-model-invocation: true in skills/audit, skills/design, skills/derail	native frontmatter
+audit-agentic-mcp/scripts/audit-mcp-server.sh	R	bin/agentic-maker scan mcp (locate only) and probe mcp (runtime tools/list)	regex over source finds files; the runtime probe measures the real server
+audit-agentic-mcp/scripts/measure-context-budget.sh	R	bin/agentic-maker probe mcp --budget	measures a real tools/list response instead of estimating from source
+audit-skill-by-derailment/agents/openai.yaml	R	disable-model-invocation: true in skills/derail	native frontmatter
+audit-skill-by-derailment/scripts/audit-worker-pane.sh	R	bin/agentic-maker check receipts and normalize; media-file specifics dropped	media types and a result-JSON delimiter were leaked from a video skill
+audit-skill-by-derailment/scripts/launch-derailment.sh	R	bin/agentic-maker run	renders the scenario prompt without marker instructions; launches through the restricted headless recipe or the herdr runner
+audit-skill-by-derailment/scripts/parse-derailment-trace.sh	R	bin/agentic-maker normalize	trace parsing for every source, with an unparsed counter
+audit-skill-by-derailment/scripts/read-herdr-panes.sh	R	skills/derail/references/runners/herdr.md and bin/agentic-maker normalize	reading rules follow herdr-conductor; no polling
