@@ -1,0 +1,14 @@
+{"findings":[
+ {"id":"F1","marker":"STUCK","severity":"P1","root_code":"T1","layer":"trigger","trace_refs":[9],
+  "quote":"I didn't open the `notes:manifest-synth` skill, because plain release notes didn't need it.",
+  "belief":"The skill is about artefact manifests, not release notes, so it was irrelevant to the request.",
+  "belief_source":"inferred",
+  "controlling_text":{"file":"skills/manifest-synth/SKILL.md","lines":"3","quote":"Synthesizes semver-delimited artefact manifests from VCS delta enumerations for downstream distribution channels."},
+  "fix":{"kind":"rewrite","patch":"Rewrite the description in the words a user says: turning a list of commits into release notes."},
+  "rerun_predicate":{"type":"tool_used","tool":"Skill"},"confidence":"high"},
+ {"id":"F2","marker":"GUESSED","severity":"P2","root_code":"M2","layer":"execution","trace_refs":[7],
+  "quote":"the agent decided the format on its own after reading a styleguide",
+  "belief":"x","belief_source":"observed",
+  "controlling_text":{"file":"skills/manifest-synth/SKILL.md","quote":"ABSENT"},
+  "fix":{"kind":"add","patch":"x"},"rerun_predicate":{"type":"regex","pattern":"x"},"confidence":"low"}
+],"nice":[]}
