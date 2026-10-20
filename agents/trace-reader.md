@@ -27,12 +27,12 @@ The brief that spawned you lists absolute paths:
 3. For each drift, find the **controlling text** in the target's files: the exact sentence, example, row, help line or message that led the worker there, or `ABSENT` if nothing said what was needed. Quote it exactly.
 4. State what the worker believed. Thinking text is normally not exposed in the trace, so the belief is `inferred` unless a cited event contains the reasoning itself.
 5. Propose the fix as a **rewrite or deletion of the controlling text**. Do not propose adding a "do / don't" rule next to text that stays. Use `add` only when the controlling text is `ABSENT`.
-6. State a `rerun_predicate` a script can check on the next run's trace, about behaviour and not wording: `{"type":"tool_used","tool":"Skill"}`, `{"type":"reads_file","path":"references/format.md"}`, `{"type":"order","before":"Read","after":"Write"}`. Never a regex over an exact command line.
+6. State a `rerun_predicate` a script can check on the next run's trace, about behaviour and not wording: `{"type":"tool_used","tool":"Skill"}`, `{"type":"reads_file","path":"references/format.md"}`, `{"type":"order","before":"Read","after":"Write"}`. Never a regex over an exact command line; a `regex` predicate is matched against the event's JSON line, so do not anchor it with `^` or `$`.
 7. Record what the text got right as `nice` items with the sentence that prevented an error.
 
 ## Evidence rules
 
-- Every `quote` must be copied exactly from an event you cite in `trace_refs`; a script rejects findings whose quotes are not verbatim. Start the quote after the label `trace.md` puts in front of an event (`(tool, ERROR) `, `assistant text: `): the label is not part of the text.
+- Every `quote` must be copied exactly from an event you cite in `trace_refs`; a script rejects findings whose quotes are not verbatim. Start the quote after the label `trace.md` puts in front of an event (`(tool, ERROR) `, `assistant text: `): the label is not part of the text. A drift that is an absence (the skill was never loaded, a step never taken) still cites events: the init event that lists the skills and the event where the worker went another way; `trace_refs` is never empty.
 - The worker's closing message is a claim. If it disagrees with `receipts.json`, the receipts win; say so as a finding (C1).
 - If the run ended by `max_turns`, a budget or a timeout, say where it was when it stopped.
 - Do not invent a finding because a dimension "should" have one.

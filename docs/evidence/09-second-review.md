@@ -103,6 +103,19 @@ Rewriting the description itself, in the same file, printed `"verdict": "ok", "r
 - After the fork returned, the main session spot-checked three claims by running the target itself. The audit's report spec now ends with one line saying the probe output is the evidence and the target is not to be run again by hand. The skill's `allowed-tools` pre-approves; it does not restrict, and the README says "instructed", not "sandboxed".
 - Clean twin (`cli/clean-cli`): see the last line of this section.
 
+### 3.6b The whole ledger once more, on the final text
+
+After the last edits to the skills and the CLI, a fresh orchestrator ran `/agentic-maker:derail skills/manifest-synth --rounds 1` on a copy with the original broken skill (budget $4):
+
+- `ledger init ... --budget-usd 4 --rounds 1` was issued with `--rounds` on the first try (before the skill passed it, the orchestrator had to rerun `ledger init --force`).
+- Baseline takes 1 and 2: 3 and 4 of 11 receipts failed; neither worker called `Skill`. The reader returned 7 findings for take 1; `check findings` verified 3 and rejected 4 (the 4 had empty `trace_refs`); the orchestrator sent them back, the second file verified.
+- One fix round; `check diff --session` ran for every finding; the description was rewritten and the format rules moved into `SKILL.md`.
+- Reruns, takes 3 and 4: `Skill` called, 11 of 11 receipts each. One regex predicate (anchored with `^` and `$`) could not match a JSON line and the orchestrator judged it by hand; the reader now has a line against anchoring.
+- Ledger at close: `rounds_used 1`, `rounds_max 1`, `spent_usd 0.144436` of `4.0`, `closed`, outcome `clean`, findings `fixed` (this is the `ledger close` change at work).
+- `/agentic-maker:audit cli/seeded-cli` again: 12 findings (the first run had 11; the audit chooses its own extra probe commands), sentinel `/tmp/seeded-cli-delete-ran` absent, the summary says it cites probe output and ran nothing itself.
+
+A Codex review of the branch against `main` (258 files) returned one finding: `ledger close --outcome open` marked unresolved findings `fixed`. Fixed (`open` stays `open`; the four outcomes were rerun: `fixed`, `unverified`, `open`, `abandoned`). Codex was not run again on the fix.
+
 ### 3.7 `claude plugin eval` over `evals/` (first recorded run)
 
 | Case | With plugin | Without | Δ | Runs | Cost |
@@ -123,6 +136,6 @@ After the edits, every Python block parses (`ast.parse`, 123 blocks), every bash
 ## 5. Not done, or not proven
 
 - The `audit` skill's tool restriction is an instruction; see the README.
-- Four times an `agentic-maker` command that the skill pre-approves (`check nice`, `check findings`, `check predicate`, `check receipts`) still asked for approval in a manual-permission session. A single "yes" let it through each time and nothing wrong ran. Three of the four were issued in the same assistant message as another tool call (the transcripts show it); the fourth was alone, so the cause is not established. The same commands ran without a prompt under `claude -p --permission-mode dontAsk` with the same allow rule. `derail` now asks for one Bash call per message; whether that removes the prompts was not measured. It costs a keystroke, not correctness.
+- Four times an `agentic-maker` command that the skill pre-approves (`check nice`, `check findings`, `check predicate`, `check receipts`) still asked for approval in a manual-permission session. A single "yes" let it through each time and nothing wrong ran. Three of the four were issued in the same assistant message as another tool call (the transcripts show it); the fourth was alone. In the last run a message with four `agentic-maker check` calls side by side asked for each of them in turn (two asked before the pattern was allowed for that scratch session), which supports the parallel-call explanation without proving it. The same commands ran without a prompt under `claude -p --permission-mode dontAsk` with the same allow rule. `derail` now asks for one Bash call per message; whether that removes the prompts was not measured. It costs a keystroke, not correctness.
 - The `design` interview was not run end to end (it needs a person).
 - Codex and agy workers, authenticated MCP servers, Windows: as before.
