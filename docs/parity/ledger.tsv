@@ -4,9 +4,9 @@ audit-agentic-cli/SKILL.md#When To Use	2	11	mapped	skills/audit/references/cli-a
 audit-agentic-cli/SKILL.md#Five Core Audit Checks	2	31	mapped	skills/agent-interface-design/references/cli/checks.md:12	
 audit-agentic-cli/SKILL.md#Severity Rubric	2	43	mapped	skills/agent-interface-design/references/cli/checks.md:25	
 audit-agentic-cli/SKILL.md#Minimum Output Envelope	2	54	mapped	skills/agent-interface-design/references/cli/repair-build-order.md:5	
-audit-agentic-cli/SKILL.md#Build Order (Repair Existing CLI)	2	83	mapped	skills/agent-interface-design/references/cli/repair-build-order.md:37	
+audit-agentic-cli/SKILL.md#Build Order (Repair Existing CLI)	2	83	mapped	skills/agent-interface-design/references/cli/repair-build-order.md:36	
 audit-agentic-cli/SKILL.md#Audit Workflow	2	94	mapped	skills/audit/references/cli-audit-workflow.md:26	
-audit-agentic-cli/SKILL.md#Iterative Repair Loop	2	107	mapped	skills/agent-interface-design/references/cli/repair-build-order.md:49	
+audit-agentic-cli/SKILL.md#Iterative Repair Loop	2	107	mapped	skills/agent-interface-design/references/cli/repair-build-order.md:48	
 audit-agentic-cli/SKILL.md#Design Rules	2	130	mapped	skills/design/references/cli-deliverables.md:5	
 audit-agentic-cli/SKILL.md#Output Contract (Deliverable Shape)	2	139	mapped	skills/design/references/cli-deliverables.md:17	
 audit-agentic-cli/SKILL.md#Local Exemplars	2	149	mapped	skills/agent-interface-design/references/cli/checks.md:39	
@@ -26,9 +26,9 @@ audit-agentic-cli/references/agent-integration.md#8. Integration Test Script	2	2
 audit-agentic-cli/references/agent-integration.md#9. Debugging Agent CLI Failures	2	290	mapped	skills/agent-interface-design/references/cli/caller-integration.md:86	
 audit-agentic-cli/references/agent-integration.md#10. TypeScript/JavaScript Integration	2	302	mapped	skills/agent-interface-design/references/frameworks/node/agent-integration.md:7	
 audit-agentic-cli/references/agent-integration.md#Basic child_process Invocation	3	304	mapped	skills/agent-interface-design/references/frameworks/node/agent-integration.md:7	
-audit-agentic-cli/references/agent-integration.md#Async/Await with Retry	3	358	mapped	skills/agent-interface-design/references/frameworks/node/agent-integration.md:64	
-audit-agentic-cli/references/agent-integration.md#JSONL Streaming with spawn	3	384	mapped	skills/agent-interface-design/references/frameworks/node/agent-integration.md:91	
-audit-agentic-cli/references/agent-integration.md#Class-based CLI Wrapper	3	448	mapped	skills/agent-interface-design/references/frameworks/node/agent-integration.md:156	
+audit-agentic-cli/references/agent-integration.md#Async/Await with Retry	3	358	mapped	skills/agent-interface-design/references/frameworks/node/agent-integration.md:69	
+audit-agentic-cli/references/agent-integration.md#JSONL Streaming with spawn	3	384	mapped	skills/agent-interface-design/references/frameworks/node/agent-integration.md:96	
+audit-agentic-cli/references/agent-integration.md#Class-based CLI Wrapper	3	448	mapped	skills/agent-interface-design/references/frameworks/node/agent-integration.md:161	
 audit-agentic-cli/references/agent-integration.md#11. Go Integration	2	485	mapped	skills/agent-interface-design/references/frameworks/go/agent-integration.md:7	
 audit-agentic-cli/references/agent-integration.md#Basic os/exec Invocation	3	487	mapped	skills/agent-interface-design/references/frameworks/go/agent-integration.md:7	
 audit-agentic-cli/references/agent-integration.md#Context Cancellation and Retry	3	559	mapped	skills/agent-interface-design/references/frameworks/go/agent-integration.md:80	
@@ -52,7 +52,7 @@ audit-agentic-cli/references/agent-integration.md#Alerting Integration	3	1435	ma
 audit-agentic-cli/references/agent-integration.md#15. Standard CLI Flags Reference	2	1502	mapped	skills/agent-interface-design/references/cli/caller-agent-wiring.md:69	
 audit-agentic-cli/references/agent-integration.md#Flag Usage Patterns	3	1514	mapped	skills/agent-interface-design/references/cli/caller-agent-wiring.md:84	
 audit-agentic-cli/references/agent-integration.md#16. Steering Contract: Put Next-Step Guidance in CLI stdout	2	1532	mapped	skills/agent-interface-design/references/cli/steering-fields.md:7	
-audit-agentic-cli/references/agent-integration.md#17. Planner-in-the-CLI Is Valid if It Is Bounded and Disclosed	2	1591	mapped	skills/agent-interface-design/references/cli/steering-fields.md:65	
+audit-agentic-cli/references/agent-integration.md#17. Planner-in-the-CLI Is Valid if It Is Bounded and Disclosed	2	1591	mapped	skills/agent-interface-design/references/cli/steering-fields.md:66	
 audit-agentic-cli/references/discovery-and-auth.md#Discovery and Authentication	1	1	dropped		Document title; content is split across cli/discovery-and-help, auth-and-secrets and config-and-env
 audit-agentic-cli/references/discovery-and-auth.md#Table of Contents	2	7	dropped		Navigation list only; the new files are small enough to open directly
 audit-agentic-cli/references/discovery-and-auth.md#Standard Flag Reference	2	25	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:7	
@@ -71,13 +71,13 @@ audit-agentic-cli/references/discovery-and-auth.md#Credential Resolution Flow	3	
 audit-agentic-cli/references/discovery-and-auth.md#1. Command Grammar	2	307	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:39	
 audit-agentic-cli/references/discovery-and-auth.md#Noun-Verb Hierarchy (Preferred)	3	309	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:39	
 audit-agentic-cli/references/discovery-and-auth.md#Consistent Flag Naming	3	327	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:57	
-audit-agentic-cli/references/discovery-and-auth.md#2. Self-Documenting Help	2	338	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:65	
-audit-agentic-cli/references/discovery-and-auth.md#Help Should Answer 5 Questions	3	340	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:65	
-audit-agentic-cli/references/discovery-and-auth.md#Good Help Example	3	348	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:74	
-audit-agentic-cli/references/discovery-and-auth.md#Machine-Readable Help (Emerging Pattern)	3	379	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:106	
-audit-agentic-cli/references/discovery-and-auth.md#Implementation Example (Go/Cobra)	3	387	mapped	skills/agent-interface-design/references/frameworks/go/discovery-and-auth.md:68	
-audit-agentic-cli/references/discovery-and-auth.md#3. Version and Capabilities	2	424	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:111	
-audit-agentic-cli/references/discovery-and-auth.md#Implementation Example	3	441	mapped	skills/agent-interface-design/references/frameworks/go/discovery-and-auth.md:104	
+audit-agentic-cli/references/discovery-and-auth.md#2. Self-Documenting Help	2	338	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:64	
+audit-agentic-cli/references/discovery-and-auth.md#Help Should Answer 5 Questions	3	340	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:64	
+audit-agentic-cli/references/discovery-and-auth.md#Good Help Example	3	348	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:73	
+audit-agentic-cli/references/discovery-and-auth.md#Machine-Readable Help (Emerging Pattern)	3	379	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:105	
+audit-agentic-cli/references/discovery-and-auth.md#Implementation Example (Go/Cobra)	3	387	mapped	skills/agent-interface-design/references/frameworks/go/discovery-and-auth.md:81	
+audit-agentic-cli/references/discovery-and-auth.md#3. Version and Capabilities	2	424	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:110	
+audit-agentic-cli/references/discovery-and-auth.md#Implementation Example	3	441	mapped	skills/agent-interface-design/references/frameworks/go/discovery-and-auth.md:117	
 audit-agentic-cli/references/discovery-and-auth.md#4. Authentication Patterns	2	479	mapped	skills/agent-interface-design/references/cli/auth-and-secrets.md:7	
 audit-agentic-cli/references/discovery-and-auth.md#Credential Resolution Order	3	481	mapped	skills/agent-interface-design/references/cli/auth-and-secrets.md:7	
 audit-agentic-cli/references/discovery-and-auth.md#Secure Credential Handling	3	490	mapped	skills/agent-interface-design/references/cli/auth-and-secrets.md:64	
@@ -102,7 +102,7 @@ audit-agentic-cli/references/discovery-and-auth.md#Auto-Adjust Behavior	3	902	ma
 audit-agentic-cli/references/discovery-and-auth.md#Implementation Example~6	3	908	mapped	skills/agent-interface-design/references/frameworks/go/discovery-and-auth-env.md:7	
 audit-agentic-cli/references/discovery-and-auth.md#Using Environment in Commands	3	1004	mapped	skills/agent-interface-design/references/cli/config-and-env.md:147	
 audit-agentic-cli/references/discovery-and-auth.md#Quick Reference	2	1032	dropped		Grouping heading with no content of its own; its four subsections are mapped individually
-audit-agentic-cli/references/discovery-and-auth.md#Common Commands	3	1034	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:127	
+audit-agentic-cli/references/discovery-and-auth.md#Common Commands	3	1034	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:126	
 audit-agentic-cli/references/discovery-and-auth.md#Standard Flags (All Commands)	3	1045	mapped	skills/agent-interface-design/references/cli/discovery-and-help.md:7	
 audit-agentic-cli/references/discovery-and-auth.md#Exit Codes~2	3	1059	mapped	skills/agent-interface-design/references/cli/caller-integration.md:17	
 audit-agentic-cli/references/discovery-and-auth.md#Config Precedence (High → Low)	3	1072	mapped	skills/agent-interface-design/references/cli/config-and-env.md:7	
@@ -119,23 +119,23 @@ audit-agentic-cli/references/examples.md#4. Exit Code Handling (Go)	2	244	mapped
 audit-agentic-cli/references/examples.md#5. Dry-Run Implementation (Python)	2	309	mapped	skills/agent-interface-design/references/frameworks/python/examples.md:46	
 audit-agentic-cli/references/examples.md#6. Batch Operations with Partial Failure (Go)	2	386	mapped	skills/agent-interface-design/references/frameworks/go/examples-batch-and-progress.md:7	
 audit-agentic-cli/references/examples.md#7. Auth Credential Resolution (Python)	2	469	mapped	skills/agent-interface-design/references/frameworks/python/examples.md:122	
-audit-agentic-cli/references/examples.md#8. Help Generation (Node.js with Commander)	2	531	mapped	skills/agent-interface-design/references/frameworks/node/examples.md:56	
+audit-agentic-cli/references/examples.md#8. Help Generation (Node.js with Commander)	2	531	mapped	skills/agent-interface-design/references/frameworks/node/examples.md:60	
 audit-agentic-cli/references/examples.md#9. Long-Running Task with Progress (Go)	2	586	mapped	skills/agent-interface-design/references/frameworks/go/examples-batch-and-progress.md:91	
 audit-agentic-cli/references/examples.md#10. Complete CLI Skeleton (Go with Cobra)	2	670	mapped	skills/agent-interface-design/references/frameworks/go/examples.md:138	
 audit-agentic-cli/references/examples.md#11. Real-World CLI Audit: GitHub CLI (gh)	2	755	mapped	skills/agent-interface-design/references/cli/case-studies.md:17	
 audit-agentic-cli/references/examples.md#Critical Checks	3	761	mapped	skills/agent-interface-design/references/cli/case-studies.md:17	
 audit-agentic-cli/references/examples.md#Important Checks (each +5)	3	771	mapped	skills/agent-interface-design/references/cli/case-studies.md:30	
-audit-agentic-cli/references/examples.md#Nice-to-Have Checks (each +2)	3	781	mapped	skills/agent-interface-design/references/cli/case-studies.md:41	
-audit-agentic-cli/references/examples.md#Final Score	3	790	mapped	skills/agent-interface-design/references/cli/case-studies.md:51	
-audit-agentic-cli/references/examples.md#Key Fixes Needed	3	801	mapped	skills/agent-interface-design/references/cli/case-studies.md:63	
-audit-agentic-cli/references/examples.md#What gh Does Right	3	810	mapped	skills/agent-interface-design/references/cli/case-studies.md:69	
-audit-agentic-cli/references/examples.md#12. Real-World CLI Audit: kubectl	2	820	mapped	skills/agent-interface-design/references/cli/case-studies.md:78	
-audit-agentic-cli/references/examples.md#Critical Checks~2	3	824	mapped	skills/agent-interface-design/references/cli/case-studies.md:78	
-audit-agentic-cli/references/examples.md#Summary	3	834	mapped	skills/agent-interface-design/references/cli/case-studies.md:78	
-audit-agentic-cli/references/examples.md#13. Real-World CLI Audit: AWS CLI	2	851	mapped	skills/agent-interface-design/references/cli/case-studies.md:101	
-audit-agentic-cli/references/examples.md#Critical Checks~3	3	855	mapped	skills/agent-interface-design/references/cli/case-studies.md:101	
-audit-agentic-cli/references/examples.md#Summary~2	3	865	mapped	skills/agent-interface-design/references/cli/case-studies.md:101	
-audit-agentic-cli/references/examples.md#Key Takeaways from Real-World Audits	2	882	mapped	skills/agent-interface-design/references/cli/case-studies.md:126	
+audit-agentic-cli/references/examples.md#Nice-to-Have Checks (each +2)	3	781	mapped	skills/agent-interface-design/references/cli/case-studies.md:39	
+audit-agentic-cli/references/examples.md#Final Score	3	790	mapped	skills/agent-interface-design/references/cli/case-studies.md:47	
+audit-agentic-cli/references/examples.md#Key Fixes Needed	3	801	mapped	skills/agent-interface-design/references/cli/case-studies.md:52	
+audit-agentic-cli/references/examples.md#What gh Does Right	3	810	mapped	skills/agent-interface-design/references/cli/case-studies.md:58	
+audit-agentic-cli/references/examples.md#12. Real-World CLI Audit: kubectl	2	820	mapped	skills/agent-interface-design/references/cli/case-studies.md:67	
+audit-agentic-cli/references/examples.md#Critical Checks~2	3	824	mapped	skills/agent-interface-design/references/cli/case-studies.md:67	
+audit-agentic-cli/references/examples.md#Summary	3	834	mapped	skills/agent-interface-design/references/cli/case-studies.md:67	
+audit-agentic-cli/references/examples.md#13. Real-World CLI Audit: AWS CLI	2	851	mapped	skills/agent-interface-design/references/cli/case-studies.md:81	
+audit-agentic-cli/references/examples.md#Critical Checks~3	3	855	mapped	skills/agent-interface-design/references/cli/case-studies.md:81	
+audit-agentic-cli/references/examples.md#Summary~2	3	865	mapped	skills/agent-interface-design/references/cli/case-studies.md:81	
+audit-agentic-cli/references/examples.md#Key Takeaways from Real-World Audits	2	882	mapped	skills/agent-interface-design/references/cli/case-studies.md:97	
 audit-agentic-cli/references/examples.md#14. Structured Output (Rust with Serde + Clap)	2	898	mapped	skills/agent-interface-design/references/frameworks/rust/examples.md:7	
 audit-agentic-cli/references/examples.md#Cargo.toml Dependencies	3	1206	mapped	skills/agent-interface-design/references/frameworks/rust/examples.md:157	
 audit-agentic-cli/references/examples.md#15. Shell/Bash Wrapper Scripts	2	1219	mapped	skills/agent-interface-design/references/frameworks/bash/examples-wrapper.md:7	
@@ -162,12 +162,12 @@ audit-agentic-cli/references/execution-patterns.md#2. Retry Logic	2	210	mapped	s
 audit-agentic-cli/references/execution-patterns.md#Retry Classification	3	212	mapped	skills/agent-interface-design/references/cli/retry.md:5	
 audit-agentic-cli/references/execution-patterns.md#Go Retry Implementation	3	225	mapped	skills/agent-interface-design/references/frameworks/go/execution-patterns-retry.md:44	
 audit-agentic-cli/references/execution-patterns.md#Python Retry Implementation	3	366	mapped	skills/agent-interface-design/references/frameworks/python/execution-patterns-retry.md:53	
-audit-agentic-cli/references/execution-patterns.md#Node.js Retry Implementation	3	447	mapped	skills/agent-interface-design/references/frameworks/node/execution-patterns-retry.md:63	
+audit-agentic-cli/references/execution-patterns.md#Node.js Retry Implementation	3	447	mapped	skills/agent-interface-design/references/frameworks/node/execution-patterns-retry.md:70	
 audit-agentic-cli/references/execution-patterns.md#Circuit Breaker Pattern	3	522	mapped	skills/agent-interface-design/references/cli/retry.md:44	
 audit-agentic-cli/references/execution-patterns.md#3. Dry-Run Modes	2	573	mapped	skills/agent-interface-design/references/cli/dry-run.md:5	
 audit-agentic-cli/references/execution-patterns.md#Client-side vs Server-side	3	575	mapped	skills/agent-interface-design/references/cli/dry-run.md:5	
 audit-agentic-cli/references/execution-patterns.md#Diff Output	3	584	mapped	skills/agent-interface-design/references/cli/dry-run.md:15	
-audit-agentic-cli/references/execution-patterns.md#Structured Dry-Run Response	3	606	mapped	skills/agent-interface-design/references/cli/dry-run.md:39	
+audit-agentic-cli/references/execution-patterns.md#Structured Dry-Run Response	3	606	mapped	skills/agent-interface-design/references/cli/dry-run.md:40	
 audit-agentic-cli/references/execution-patterns.md#Implementation	3	650	mapped	skills/agent-interface-design/references/frameworks/go/execution-patterns-safety.md:5	
 audit-agentic-cli/references/execution-patterns.md#4. Non-Interactive Mode	2	753	mapped	skills/agent-interface-design/references/cli/non-interactive.md:5	
 audit-agentic-cli/references/execution-patterns.md#Essential Flags	3	755	mapped	skills/agent-interface-design/references/cli/non-interactive.md:5	
@@ -191,7 +191,7 @@ audit-agentic-cli/references/execution-patterns.md#Timeout Output	3	1454	mapped	
 audit-agentic-cli/references/execution-patterns.md#Timeout Configuration	3	1479	dropped		empty heading with no body text; the timeout configuration content sits under Timeout Flag Standards and Signal Handling
 audit-agentic-cli/references/execution-patterns.md#Signal Handling	3	1481	mapped	skills/agent-interface-design/references/cli/timeouts-and-signals.md:58	
 audit-agentic-cli/references/execution-patterns.md#Context Cancellation Patterns	3	1491	mapped	skills/agent-interface-design/references/cli/timeouts-and-signals.md:73	
-audit-agentic-cli/references/execution-patterns.md#Implementation~5	3	1505	mapped	skills/agent-interface-design/references/frameworks/go/execution-patterns-async.md:95	
+audit-agentic-cli/references/execution-patterns.md#Implementation~5	3	1505	mapped	skills/agent-interface-design/references/frameworks/go/execution-patterns-async.md:102	
 audit-agentic-cli/references/execution-patterns.md#Cancellation Response	3	1618	mapped	skills/agent-interface-design/references/cli/timeouts-and-signals.md:90	
 audit-agentic-cli/references/execution-patterns.md#9. Pagination Patterns	2	1636	mapped	skills/agent-interface-design/references/cli/pagination.md:5	
 audit-agentic-cli/references/execution-patterns.md#Cursor-Based Pagination	3	1638	mapped	skills/agent-interface-design/references/cli/pagination.md:40	
@@ -210,7 +210,7 @@ audit-agentic-cli/references/execution-patterns.md#Rate Limit Response	3	2263	ma
 audit-agentic-cli/references/execution-patterns.md#Implementation~8	3	2288	mapped	skills/agent-interface-design/references/frameworks/go/execution-patterns-paging-rate.md:97	
 audit-agentic-cli/references/execution-patterns.md#16. Continuation Modes for Research and SEO CLIs	2	2715	mapped	skills/agent-interface-design/references/cli/continuation-modes.md:5	
 audit-agentic-cli/references/execution-patterns.md#Summary: Agent-Friendly Execution Patterns	2	2779	mapped	skills/agent-interface-design/references/cli/execution-patterns-overview.md:10	
-audit-agentic-cli/references/execution-patterns.md#Standard Flag Reference	3	2798	mapped	skills/agent-interface-design/references/cli/execution-patterns-overview.md:30	
+audit-agentic-cli/references/execution-patterns.md#Standard Flag Reference	3	2798	mapped	skills/agent-interface-design/references/cli/execution-patterns-overview.md:29	
 audit-agentic-cli/references/iterative-cli.md#Iterative CLI Patterns	1	1	dropped		Document title and intro; the intro idea is restated in cli/iterative-repair.md
 audit-agentic-cli/references/iterative-cli.md#1. When To Use Iterative CLI	2	9	mapped	skills/agent-interface-design/references/cli/iterative-repair.md:7	
 audit-agentic-cli/references/iterative-cli.md#2. The Semantic Shift	2	30	mapped	skills/agent-interface-design/references/cli/iterative-repair.md:21	
@@ -263,7 +263,7 @@ audit-agentic-cli/references/output-contracts.md#4. JSONL Streaming	2	593	mapped
 audit-agentic-cli/references/output-contracts.md#Stream Event Schema (Draft-07)	3	604	mapped	skills/agent-interface-design/references/cli/jsonl-event-schema.md:5	
 audit-agentic-cli/references/output-contracts.md#Event Types	3	699	mapped	skills/agent-interface-design/references/cli/streams-and-jsonl.md:39	
 audit-agentic-cli/references/output-contracts.md#Progress Event Patterns	3	710	mapped	skills/agent-interface-design/references/cli/jsonl-progress-patterns.md:5	
-audit-agentic-cli/references/output-contracts.md#Streaming Requirements	3	752	mapped	skills/agent-interface-design/references/cli/streams-and-jsonl.md:53	
+audit-agentic-cli/references/output-contracts.md#Streaming Requirements	3	752	mapped	skills/agent-interface-design/references/cli/streams-and-jsonl.md:54	
 audit-agentic-cli/references/output-contracts.md#Implementation Examples	3	761	mapped	skills/agent-interface-design/references/frameworks/go/output-contracts-streams.md:5	
 audit-agentic-cli/references/output-contracts.md#5. Field Selection	2	892	mapped	skills/agent-interface-design/references/cli/field-selection.md:5	
 audit-agentic-cli/references/output-contracts.md#Implementation	3	907	mapped	skills/agent-interface-design/references/frameworks/go/output-contracts.md:55	
@@ -280,8 +280,8 @@ audit-agentic-cli/references/output-contracts.md#Never Do This	3	1060	mapped	ski
 audit-agentic-cli/references/output-contracts.md#Do This Instead	3	1069	mapped	skills/agent-interface-design/references/frameworks/go/output-contracts-streams.md:72	
 audit-agentic-cli/references/output-contracts.md#Verbose Mode	3	1078	mapped	skills/agent-interface-design/references/cli/streams-and-jsonl.md:23	
 audit-agentic-cli/references/output-contracts.md#Complete Example	3	1097	mapped	skills/agent-interface-design/references/frameworks/go/output-contracts-streams.md:101	
-audit-agentic-cli/references/output-contracts.md#Quick Reference	2	1214	mapped	skills/agent-interface-design/references/cli/streams-and-jsonl.md:63	
-audit-agentic-cli/references/output-contracts.md#Output Mode Flags	3	1216	mapped	skills/agent-interface-design/references/cli/streams-and-jsonl.md:63	
+audit-agentic-cli/references/output-contracts.md#Quick Reference	2	1214	mapped	skills/agent-interface-design/references/cli/streams-and-jsonl.md:64	
+audit-agentic-cli/references/output-contracts.md#Output Mode Flags	3	1216	mapped	skills/agent-interface-design/references/cli/streams-and-jsonl.md:64	
 audit-agentic-cli/references/output-contracts.md#Exit Code Quick Reference	3	1226	mapped	skills/agent-interface-design/references/cli/exit-codes.md:46	
 audit-agentic-cli/references/output-contracts.md#Error Class Quick Reference	3	1240	mapped	skills/agent-interface-design/references/cli/error-classes.md:122	
 audit-agentic-cli/references/output-contracts.md#Checklist	3	1255	mapped	skills/agent-interface-design/references/cli/output-contract-checklist.md:5	
@@ -314,14 +314,14 @@ audit-agentic-mcp/SKILL.md#Pattern files (`references/patterns/`)	3	234	dropped	
 audit-agentic-mcp/SKILL.md#Decision-tree files (`references/decision-trees/`)	3	264	dropped		Routing rows for decision-tree files whose own Read-when lines and decisions/ file names now do this job.
 audit-agentic-mcp/SKILL.md#Freshness checks	2	278	mapped	skills/agent-interface-design/references/fresh/freshness-checklist.md:10	
 audit-agentic-mcp/SKILL.md#Delegation policy	2	292	dropped		User-level subagent policy (when to delegate, binary done criteria); it belongs to the user's own delegation settings, not to a reference about MCP servers, and the plugin forbids steering the user's agent configuration.
-audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Brainstorming a New MCP from Scratch	1	1	mapped	skills/design/references/interview.md:5	
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Brainstorming a New MCP from Scratch	1	1	mapped	skills/design/references/interview.md:7	
 audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Contents	2	5	dropped		Navigation: table of contents of the source file, replaced by the new file's sections.
-audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Decision Tree	2	14	mapped	skills/design/references/interview.md:5	
-audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Interview Questions (ask verbatim; adapt only to reference user-supplied context)	2	40	mapped	skills/design/references/interview.md:35	
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Decision Tree	2	14	mapped	skills/design/references/interview.md:7	
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Interview Questions (ask verbatim; adapt only to reference user-supplied context)	2	40	mapped	skills/design/references/interview.md:37	
 audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Framework Picker	2	55	mapped	skills/agent-interface-design/references/fresh/mcp-framework-picker.md:10	
 audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Architecture-Sketch Template	2	74	mapped	skills/design/references/mcp-design-workflow.md:25	
-audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Routing After This Tree	2	123	mapped	skills/design/references/interview.md:55	
-audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#When to Re-evaluate	2	136	mapped	skills/design/references/interview.md:71	
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Routing After This Tree	2	123	mapped	skills/design/references/interview.md:57	
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#When to Re-evaluate	2	136	mapped	skills/design/references/interview.md:73	
 audit-agentic-mcp/references/decision-trees/companion-toolchain.md#Companion Toolchain Decision Tree	1	1	mapped	skills/agent-interface-design/references/decisions/companion-routing.md:5	
 audit-agentic-mcp/references/decision-trees/companion-toolchain.md#Decision Tree	2	5	mapped	skills/agent-interface-design/references/decisions/companion-routing.md:5	
 audit-agentic-mcp/references/decision-trees/companion-toolchain.md#Positive Routing Rules	2	50	mapped	skills/agent-interface-design/references/decisions/companion-routing.md:53	
@@ -383,12 +383,12 @@ audit-agentic-mcp/references/patterns/auth-identity.md#Contents	2	7	dropped		nav
 audit-agentic-mcp/references/patterns/auth-identity.md#1. Know The Spec Diff Before You Touch Auth Code	2	29	mapped	skills/agent-interface-design/references/fresh/mcp-spec-revision-auth-diff.md:16	
 audit-agentic-mcp/references/patterns/auth-identity.md#2. Map Every MCP Behavior To The RFC That Governs It	2	54	mapped	skills/agent-interface-design/references/mcp/security/auth-rfc-map.md:16	
 audit-agentic-mcp/references/patterns/auth-identity.md#3. Flow Walkthrough — First Connection (2025-11-25)	2	76	mapped	skills/agent-interface-design/references/mcp/security/auth-flows.md:7	
-audit-agentic-mcp/references/patterns/auth-identity.md#4. Flow Walkthrough — Step-Up / Incremental Scope	2	101	mapped	skills/agent-interface-design/references/mcp/security/auth-flows.md:29	
+audit-agentic-mcp/references/patterns/auth-identity.md#4. Flow Walkthrough — Step-Up / Incremental Scope	2	101	mapped	skills/agent-interface-design/references/mcp/security/auth-flows.md:30	
 audit-agentic-mcp/references/patterns/auth-identity.md#5. Flow Walkthrough — On-Behalf-Of (OBO) For Upstream APIs	2	120	mapped	skills/agent-interface-design/references/mcp/security/auth-obo-and-token-passthrough.md:7	
 audit-agentic-mcp/references/patterns/auth-identity.md#6. Always Validate `aud` — And Never Pass Tokens Through	2	140	mapped	skills/agent-interface-design/references/frameworks/mcp-python/auth-identity.md:7;skills/agent-interface-design/references/mcp/security/auth-obo-and-token-passthrough.md:24	
-audit-agentic-mcp/references/patterns/auth-identity.md#7. Attack Primitive — Confused Deputy (MCP-As-Faux-AS)	2	171	mapped	skills/agent-interface-design/references/mcp/security/auth-client-identity.md:19	
+audit-agentic-mcp/references/patterns/auth-identity.md#7. Attack Primitive — Confused Deputy (MCP-As-Faux-AS)	2	171	mapped	skills/agent-interface-design/references/mcp/security/auth-client-identity.md:20	
 audit-agentic-mcp/references/patterns/auth-identity.md#8. Attack Primitive — Token Audience Confusion And Passthrough	2	188	mapped	skills/agent-interface-design/references/mcp/security/auth-obo-and-token-passthrough.md:36	
-audit-agentic-mcp/references/patterns/auth-identity.md#9. Attack Primitive — DCR Rug Pull And Tool Squatting	2	202	mapped	skills/agent-interface-design/references/fresh/mcp-auth-incidents.md:11;skills/agent-interface-design/references/mcp/security/auth-client-identity.md:34	
+audit-agentic-mcp/references/patterns/auth-identity.md#9. Attack Primitive — DCR Rug Pull And Tool Squatting	2	202	mapped	skills/agent-interface-design/references/fresh/mcp-auth-incidents.md:11;skills/agent-interface-design/references/mcp/security/auth-client-identity.md:35	
 audit-agentic-mcp/references/patterns/auth-identity.md#10. Attack Primitive — Session Hijacking Via Unscoped Endpoints (CVE-2025-6514)	2	217	mapped	skills/agent-interface-design/references/fresh/mcp-auth-incidents.md:16;skills/agent-interface-design/references/mcp/security/auth-attack-primitives.md:7	
 audit-agentic-mcp/references/patterns/auth-identity.md#11. Attack Primitive — Indirect Prompt Injection To Confused Agent	2	231	mapped	skills/agent-interface-design/references/fresh/mcp-auth-incidents.md:23;skills/agent-interface-design/references/mcp/security/auth-attack-primitives.md:19	
 audit-agentic-mcp/references/patterns/auth-identity.md#12. Attack Primitive — Cross-Tenant Data Leak Via Missing Per-Agent Identity	2	245	mapped	skills/agent-interface-design/references/fresh/mcp-auth-incidents.md:28;skills/agent-interface-design/references/mcp/security/auth-attack-primitives.md:33	
@@ -723,18 +723,18 @@ audit-agentic-mcp/references/patterns/security.md#8. Use OAuth2 with Granular Sc
 audit-agentic-mcp/references/patterns/session-and-state.md#Session and State	1	1	mapped	skills/agent-interface-design/references/mcp/ops-session-state.md:5	
 audit-agentic-mcp/references/patterns/session-and-state.md#Contents	2	5	dropped		navigation index only; every section it lists is migrated and claimed by its own marker
 audit-agentic-mcp/references/patterns/session-and-state.md#1. Log Successful Tool Calls to Build a Learning Database	2	15	mapped	skills/agent-interface-design/references/frameworks/mcp-python/session-and-state.md:7;skills/agent-interface-design/references/mcp/ops-success-log-and-compaction.md:5	
-audit-agentic-mcp/references/patterns/session-and-state.md#2. Return Task IDs for Long-Running Operations	2	63	mapped	skills/agent-interface-design/references/frameworks/mcp-python/session-and-state.md:40;skills/agent-interface-design/references/mcp/ops-long-running-tasks.md:5	
-audit-agentic-mcp/references/patterns/session-and-state.md#3. Scope State to Session, Not Global Variables	2	106	mapped	skills/agent-interface-design/references/frameworks/mcp-python/session-and-state.md:67;skills/agent-interface-design/references/mcp/ops-session-state.md:8	
+audit-agentic-mcp/references/patterns/session-and-state.md#2. Return Task IDs for Long-Running Operations	2	63	mapped	skills/agent-interface-design/references/frameworks/mcp-python/session-and-state.md:41;skills/agent-interface-design/references/mcp/ops-long-running-tasks.md:5	
+audit-agentic-mcp/references/patterns/session-and-state.md#3. Scope State to Session, Not Global Variables	2	106	mapped	skills/agent-interface-design/references/frameworks/mcp-python/session-and-state.md:68;skills/agent-interface-design/references/mcp/ops-session-state.md:8	
 audit-agentic-mcp/references/patterns/session-and-state.md#4. Session Pooling for 10x Throughput	2	158	mapped	skills/agent-interface-design/references/frameworks/mcp-ts/session-and-state.md:7;skills/agent-interface-design/references/fresh/mcp-transport-benchmarks.md:23;skills/agent-interface-design/references/mcp/ops-session-state.md:28	
 audit-agentic-mcp/references/patterns/session-and-state.md#5. Conversation Compaction Priorities	2	207	mapped	skills/agent-interface-design/references/frameworks/mcp-ts/session-and-state.md:39;skills/agent-interface-design/references/mcp/ops-success-log-and-compaction.md:18	
 audit-agentic-mcp/references/patterns/testing.md#Testing	1	1	mapped	skills/agent-interface-design/references/mcp/ops-testing-layers.md:5	
 audit-agentic-mcp/references/patterns/testing.md#Contents	2	7	dropped		navigation index only; every section it lists is migrated and claimed by its own marker
 audit-agentic-mcp/references/patterns/testing.md#1. Use Evaluation-Driven Development with Realistic Multi-Step Tasks	2	18	mapped	skills/agent-interface-design/references/frameworks/mcp-python/testing.md:7;skills/agent-interface-design/references/fresh/mcp-testing-tools.md:23;skills/agent-interface-design/references/mcp/ops-evals.md:5	
 audit-agentic-mcp/references/patterns/testing.md#2. Test Tools with MCP Inspector Before Involving an LLM	2	74	mapped	skills/agent-interface-design/references/fresh/mcp-testing-tools.md:11;skills/agent-interface-design/references/mcp/ops-testing-layers.md:14	
-audit-agentic-mcp/references/patterns/testing.md#3. Feed Evaluation Transcripts Back for Auto-Refactoring	2	115	mapped	skills/agent-interface-design/references/frameworks/mcp-python/testing.md:45;skills/agent-interface-design/references/mcp/ops-evals.md:26	
-audit-agentic-mcp/references/patterns/testing.md#4. Ask the LLM to Evaluate Your Server's Usability	2	163	mapped	skills/agent-interface-design/references/frameworks/mcp-python/testing.md:77;skills/agent-interface-design/references/mcp/ops-usability-review.md:5	
+audit-agentic-mcp/references/patterns/testing.md#3. Feed Evaluation Transcripts Back for Auto-Refactoring	2	115	mapped	skills/agent-interface-design/references/frameworks/mcp-python/testing.md:43;skills/agent-interface-design/references/mcp/ops-evals.md:26	
+audit-agentic-mcp/references/patterns/testing.md#4. Ask the LLM to Evaluate Your Server's Usability	2	163	mapped	skills/agent-interface-design/references/frameworks/mcp-python/testing.md:75;skills/agent-interface-design/references/mcp/ops-usability-review.md:5	
 audit-agentic-mcp/references/patterns/testing.md#5. Use PromptFoo for Systematic Tool Selection Evals	2	209	mapped	skills/agent-interface-design/references/fresh/mcp-testing-tools.md:29;skills/agent-interface-design/references/mcp/ops-tool-selection-evals.md:5	
-audit-agentic-mcp/references/patterns/testing.md#6. Use File Hashing to Prevent Agent Reprocessing Loops	2	260	mapped	skills/agent-interface-design/references/frameworks/mcp-python/testing.md:91;skills/agent-interface-design/references/mcp/ops-execution-cache.md:5	
+audit-agentic-mcp/references/patterns/testing.md#6. Use File Hashing to Prevent Agent Reprocessing Loops	2	260	mapped	skills/agent-interface-design/references/frameworks/mcp-python/testing.md:89;skills/agent-interface-design/references/mcp/ops-execution-cache.md:5	
 audit-agentic-mcp/references/patterns/threat-catalog.md#MCP Threat Catalog: Named Attacks, CVEs, Defense Tooling	1	1	mapped	skills/agent-interface-design/references/mcp/security/threat-catalog.md:5	
 audit-agentic-mcp/references/patterns/threat-catalog.md#Contents	2	5	dropped		navigation index only; every section it lists is migrated and claimed by its own marker
 audit-agentic-mcp/references/patterns/threat-catalog.md#1. Attack Catalog — 20 Named Primitives	2	21	mapped	skills/agent-interface-design/references/fresh/mcp-threat-attack-sources.md:9;skills/agent-interface-design/references/mcp/security/threat-catalog.md:8	
@@ -801,7 +801,7 @@ audit-agentic-mcp/references/patterns/tool-responses.md#Pattern 7: Use TSV for T
 audit-agentic-mcp/references/patterns/tool-responses.md#Pattern 8: Use Content Annotations to Separate User-Facing and Assistant-Facing Data	2	322	mapped	skills/agent-interface-design/references/mcp/responses-formats-and-structured.md:32	
 audit-agentic-mcp/references/patterns/tool-responses.md#Pattern 9: Declare Output Schemas and Return structuredContent	2	383	mapped	skills/agent-interface-design/references/mcp/responses-formats-and-structured.md:48	
 audit-agentic-mcp/references/patterns/tool-responses.md#Pattern 10: Put Example Responses in Tool Descriptions	2	432	mapped	skills/agent-interface-design/references/mcp/responses-steering-and-examples.md:25	
-audit-agentic-mcp/references/patterns/tool-responses.md#Pattern 11: Return a Search Frontier, Not Just the First SERP	2	486	mapped	skills/agent-interface-design/references/mcp/responses-steering-and-examples.md:42	
+audit-agentic-mcp/references/patterns/tool-responses.md#Pattern 11: Return a Search Frontier, Not Just the First SERP	2	486	mapped	skills/agent-interface-design/references/mcp/responses-steering-and-examples.md:44	
 audit-agentic-mcp/references/patterns/transport-and-ops.md#Transport and Operations	1	1	mapped	skills/agent-interface-design/references/mcp/ops-transport-selection.md:5	
 audit-agentic-mcp/references/patterns/transport-and-ops.md#Contents	2	5	dropped		navigation index only; every section it lists is migrated and claimed by its own marker
 audit-agentic-mcp/references/patterns/transport-and-ops.md#1. Keep stdout Pure JSON-RPC -- All Logs to stderr	2	22	mapped	skills/agent-interface-design/references/frameworks/mcp-python/transport-and-ops.md:7;skills/agent-interface-design/references/frameworks/mcp-ts/transport-and-ops.md:7;skills/agent-interface-design/references/mcp/ops-stdio-hygiene.md:5	
