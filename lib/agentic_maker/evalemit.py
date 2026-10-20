@@ -6,6 +6,7 @@ files. Receipts that eval has no grader for (cmd, json, mtime-in-window, unchang
 """
 import os
 import re
+import shlex
 
 from agentic_maker import scenario as sc_mod
 from agentic_maker.common import slug
@@ -82,6 +83,9 @@ def emit(root, sc, out_dir):
         for src, dest in copies:
             s = src if os.path.isabs(src) else os.path.join(root, src)
             d = dest or os.path.basename(s.rstrip("/"))
+            if os.path.isabs(d) or ".." in os.path.normpath(d).split(os.sep):
+                raise CliError("validation", "fixture_destination_escapes", "fixture destination %r leaves the workspace" % d,
+                               suggestion="use a relative destination without ..")
             files = [s] if os.path.isfile(s) else [os.path.join(dp, fn) for dp, _, fns in os.walk(s) for fn in fns] if os.path.isdir(s) else []
             if not files:
                 warns.append("fixture not found: %s" % src)
@@ -91,8 +95,11 @@ def emit(root, sc, out_dir):
                     continue
                 rel = d if fp == s else os.path.join(d, os.path.relpath(fp, s))
                 text = open(fp, encoding="utf-8", errors="replace").read()
-                tag = "AM_EOF"
-                lines += ['mkdir -p "$(dirname %s)"' % _q(rel), "cat > %s <<'%s'" % (_q(rel), tag), text.rstrip("\n"), tag]
+                tag, n = "AM_EOF", 0
+                while tag in text:          # the terminator must not occur anywhere in the fixture, or the rest of it would run as shell
+                    n += 1
+                    tag = "AM_EOF_%d" % n
+                lines += ["mkdir -p \"$(dirname %s)\"" % shlex.quote(rel), "cat > %s <<'%s'" % (shlex.quote(rel), tag), text.rstrip("\n"), tag]
         script = os.path.join(case, "fixture.sh")
         with open(script, "w", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")

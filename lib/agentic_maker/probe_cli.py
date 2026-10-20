@@ -124,13 +124,15 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
         danger = DESTRUCTIVE_WORD.search(" ".join("%s %s" % kv for kv in listed_top.items()) if listed_top else help_text)
         named = list(subcommands or [])
         if help_r is not None:
-            # flags usually live on the subcommands (clap, cobra): read --help of the listed ones that do not sound destructive,
-            # in addition to any the caller named (naming one must not hide the others, or a flag on `list` reads as missing)
+            # flags usually live on the subcommands (clap, cobra). `<sub> --help` only reads help if the CLI parses its arguments; one that
+            # does not would run the subcommand. So this is limited to subcommands whose names are read verbs (list, show, get, ...).
+            # Any other one you name yourself with --sub: the probe never makes that decision for you.
             listed = extract_commands(help_r["stdout"] + "\n" + help_r["stderr"], True)
-            auto = [n for n, ln in listed.items() if n != "help" and not DESTRUCTIVE_WORD.search(n + " " + ln)][:8]
+            auto = [n for n, ln in listed.items() if READ_VERB.match(n) and not DESTRUCTIVE_WORD.search(n + " " + ln)][:8]
             subcommands = named + [a for a in auto if a not in named]
             if auto:
                 outputs["auto_subcommand_help"] = [a for a in auto if a not in named]
+            outputs["subcommand_help_not_read"] = [n for n in listed if n not in subcommands and n != "help"]
         for line in subcommands or []:
             r = go(shlex.split(line) + ["--help"], "sub")
             if r:

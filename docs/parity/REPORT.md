@@ -33,7 +33,7 @@ The soft check looks for every table row key and every backticked token or thres
 | Carried in another form (a table split into cells, a short flag written as two cells, a marker inside a code block, a number written with a comma) | 27 | `-j, --json`; the Pare token benchmarks (`382 tokens` is now a number cell next to a unit) |
 | Navigation: links, source-tree paths, routing-table labels | 35 | `../patterns/security.md`; the row labels of the old reference-routing table |
 | Replaced script, placeholder of a replaced mechanism, harness-specific name, install path | 25 | `scripts/audit-cli-help.sh`; `$COORDINATOR_PANE_ID` (the worker now reports through files); `invoke_subagent` |
-| Author-local: recorded pane ids, project names in a case table, companion skills | 32 | `w2N:pP`, `<author-local-project>`, `linear-cli` |
+| Author-local: recorded pane ids, project names in a case table (listed by hash in `accounted.tsv`), companion skills | 32 | `w2N:pP`, a project name from a recorded case table, `linear-cli` |
 | Domain leak of the video-flow skill | 7 | `.mp4`, `__TAKE_RESULT_JSON_START__` |
 | A source repository cited as evidence; the claim is kept, the link is not | 3 | `GLips/Figma-Context-MCP` |
 
@@ -63,8 +63,8 @@ Fixtures are small, written by the same hand as the probes, and live in `fixture
 
 | Fixture | Planted defects | Plugin | Old scripts | Clean twin |
 |---|---|---|---|---|
-| bash CLI (`fixtures/cli/seeded-cli`) | 11 | **10 found directly, 1 through its cause** | 5, all text-level | 0 findings, exit 0 |
-| stdio MCP server (`fixtures/mcp/seeded-server.py`) | 11 groups, 24 tools | all groups found, 17 findings; budget 5724 chars / 24 tools equals a `jq` hand count | counted 15 tool candidates, ~459 tok, flagged nothing | 0 findings |
+| bash CLI (`fixtures/cli/seeded-cli`) | 11 | **10 found directly, 1 through its cause** | 4 directly, 1 more as a missing standard flag; all text-level | 0 findings, exit 0 |
+| stdio MCP server (`fixtures/mcp/seeded-server.py`) | 11 groups, 24 tools | all groups found, 18 findings today (17 when first recorded); budget 5724 chars / 24 tools equals a `jq` hand count | counted 15 tool candidates, ~459 tok, flagged nothing | 0 findings |
 | skill (`fixtures/skill-project`) | jargon description, opaque name, relative script path, typo in a reference path, a threshold without a number | 4 verified findings in run 1 (1 rejected); the run-2 reader found the untriggered skill (T1) | not runnable: the old modes name the skill | n/a |
 
 No finding that failed `check findings` was ever accepted: the reader's quotes are verified verbatim against the trace before any edit (2 of 8 reader findings were rejected in the two skill runs; see `docs/evidence/04-derail-loop.md`).
@@ -82,7 +82,7 @@ Tables per defect: `docs/evidence/05-audit-cli.md`, `06-audit-mcp.md`.
 
 | Item | State |
 |---|---|
-| Live Codex and agy workers | Not run. The Codex rollout parser is built from real rollout files; agy is never launched (its command is an account-rotating wrapper) |
+| Live Codex and agy workers | Not run. The Codex rollout parser is built from real rollout files; agy is never launched (a launch can have effects the plugin cannot see, such as which account or quota it uses) |
 | `Ctrl+O` behaviour in Codex and agy | Not observed |
 | Authenticated MCP servers (OAuth) | Not measured; reported as such and routed to `mcpc` or the MCP Inspector |
 | The `design` interview | The skill loads and routes; the 12-question interview is interactive and was not run end to end |

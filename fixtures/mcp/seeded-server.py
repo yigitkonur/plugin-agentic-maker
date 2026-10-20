@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""seeded-server: an MCP server with PLANTED defects for agentic-maker's MCP audit (see fixtures/mcp/DEFECTS.md)."""
+"""seeded-server: an MCP server with PLANTED defects for agentic-maker's MCP audit (the planted defects and what finds them are tabulated in docs/evidence/06-audit-mcp.md)."""
 import os
 import sys
 

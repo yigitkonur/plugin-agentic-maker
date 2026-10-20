@@ -41,24 +41,24 @@ scenario (an everyday request that never names the target; receipts say what mus
   -> rerun in a fresh session; check predicate decides
 ```
 
-Why it is built this way, with the evidence: [docs/what-is-true.md](docs/what-is-true.md) (sixteen things checked against a real Claude Code), [docs/evidence/](docs/evidence/) (one file per capability, with the runs), [docs/design/](docs/design/README.md) (the plan this was built from).
+Why it is built this way, with the evidence: [docs/what-is-true.md](docs/what-is-true.md) (sixteen questions put to a real Claude Code; most answered by running something, a few partly or not at all, and it says which), [docs/evidence/](docs/evidence/) (one file per capability, with the runs), [docs/design/](docs/design/README.md) (the plan this was built from).
 
 ## Status
 
-Everything below was watched working on 2026-10-20 (Claude Code 2.1.302, herdr 0.9.5, macOS). "Fixture-tested" means exercised on planted-defect fixtures that live in this repo.
+Each row says what was watched on 2026-10-20 (Claude Code 2.1.302 to 2.1.304, herdr 0.9.5, macOS) and what was not. "Fixture-tested" means exercised on planted-defect fixtures that live in this repo. Model runs are single samples: the numbers are recorded in `docs/evidence/`, the stream records themselves are not kept in the repo (they hold session metadata), and the deterministic parts are guarded by `scripts/check.sh`.
 
 | Capability | Status | Evidence |
 |---|---|---|
-| Derail loop on a skill (headless, clean room) | watched working, full loop unattended | [04](docs/evidence/04-derail-loop.md) |
+| Derail loop on a skill (headless, clean room) | watched working, the whole loop with no human in it | [04](docs/evidence/04-derail-loop.md) |
 | Stop gate blocks a premature "fixed" | watched working in the real harness | [04](docs/evidence/04-derail-loop.md) |
-| `audit` of a CLI (`probe cli`) | watched working; fixture-tested recall 10/11 (old script: 5/11), clean twin silent | [05](docs/evidence/05-audit-cli.md) |
+| `audit` of a CLI (`probe cli`) | watched working; fixture-tested: 10 of 11 planted defects found directly, 11 counting causes (the old script: 4, or 5), clean twin silent | [05](docs/evidence/05-audit-cli.md) |
 | `audit` of an MCP server (`probe mcp`, stdio and HTTP) | watched working; budget equals a hand count | [06](docs/evidence/06-audit-mcp.md) |
-| Live herdr round with a Claude worker | watched working, two rounds (the second after the safety fixes), receipts 11/11 both times | [07](docs/evidence/07-live-herdr.md) |
+| Live herdr round with a Claude worker | watched working, two rounds; receipts 11/11 (the first round needed an ingest fix first, the second passed at once) | [07](docs/evidence/07-live-herdr.md) |
 | Ingest a Claude session transcript or `stream-json` | watched working | 04, 07 |
 | Ingest a Codex rollout | parser built from real rollout files; no live Codex worker run | [07](docs/evidence/07-live-herdr.md) |
-| agy | never launched (its command is an account-rotating wrapper); scrollback ingest only | [07](docs/evidence/07-live-herdr.md) |
+| agy | never launched by the plugin (a launch can have effects it cannot see); scrollback ingest only | [07](docs/evidence/07-live-herdr.md) |
 | The plugin audits itself; three other stacks (Rust CLI, Python MCP server on the real SDK, bash + skill repo) | watched: found and fixed a data-loss bug in its own CLI; the derail loop ran on the bash + skill repo (receipts 4/4 on the last three takes) | [08](docs/evidence/08-self-audit.md) |
-| `eval-emit` (scenario -> `claude plugin eval` case) | watched working on one case | [08](docs/evidence/08-self-audit.md) |
+| `eval-emit` (scenario -> `claude plugin eval` case) | watched: one emitted case run by `claude plugin eval` with its no-plugin baseline (score 0.67 with the plugin, 0.33 without, on the seeded skill); 3 of 11 receipts expressible as graders, the rest are listed as not expressible | [08](docs/evidence/08-self-audit.md) |
 | Authenticated MCP servers (OAuth) | not measured: reported as such, routed to `mcpc` / MCP Inspector | - |
 | `design` skill | watched: picks the surface with labelled evidence and opens the interview (group 1 of 4); the rest of the interview needs a person and was not run | [08](docs/evidence/08-self-audit.md) |
 | Windows | not tested (macOS/Linux/WSL intended) | - |
@@ -69,17 +69,18 @@ The three skills `audit-agentic-cli`, `audit-agentic-mcp` and `audit-skill-by-de
 
 ## Footprint
 
-Always-on cost is the descriptions of the model-invocable skills and the reader: about 309 tokens (`claude plugin details agentic-maker`). The three commands are user-started and add almost nothing until typed.
+Always-on cost is about 309 tokens in total (`claude plugin details agentic-maker`): a short description for each of the five skills (about 40 for each of the three user-started commands, about 60 and 80 for the two knowledge skills) and about 50 for the reader. The skill bodies load only when a skill runs.
 
 ## Safety
 
-- Probes run only `--help`, `--version`, one invalid command and commands you declare read-only; each in an empty temp directory with stdin closed, a timeout and its own process group. A script that does not read its arguments is not run at all. `agy` is never launched.
+- Probes run only `--help`, `--version`, one invalid command, `--help` of subcommands named like read verbs (`list`, `show`, `get`, ...), anything you name with `--sub` or declare read-only with `--safe`; each in an empty temp directory with stdin closed, a timeout and its own process group. A script that does not read its arguments is not run at all. `agy` is never launched.
+- A scenario is data that can come from a repository you did not write. Its `copy:` fixtures read only from inside the project and write only inside a fresh workspace; its `shell:` fixtures and `cmd` receipts are code and run as you, so read them first (`agentic-maker check receipts <take> --list` prints the receipts without running them).
 - Fresh-agent runs use `--restricted` and an allowlist of tools and environment variables; destructive-capable targets need throwaway fixtures. Every run has a turn cap, a budget ceiling and a time limit, and the cost preview comes before the spend.
-- A live herdr round follows `herdr-conductor`'s rules: one command per reply, never poll, never touch the session's own pane. Accepting the trust dialog for a scratch folder adds an entry to `~/.claude.json` (use `run --prepare --workspace-dir` to reuse one folder).
-- No telemetry, no network access except the one you point a probe at.
+- A live herdr round (optional; needs `herdr`) follows the rules of the `herdr-conductor` plugin when it is installed: one command per reply, never poll, never touch the session's own pane. Accepting the trust dialog for a scratch folder adds an entry to `~/.claude.json` (use `run --prepare --workspace-dir` to reuse one folder).
+- No telemetry. The plugin's own code opens a network connection only for `probe mcp` against a URL you give it; fresh-agent runs start `claude`, which talks to the model API as it always does.
 
 ## Develop
 
-`scripts/check.sh` (no network, no model): compiles on Python 3.9 and the current one, smoke-tests the CLI, lints the 300+ reference files (shape and size), checks links, injected-command safety, manifests and `claude plugin validate`, scans for personal data, and reports parity. See [AGENTS.md](AGENTS.md).
+`scripts/check.sh` (no network, no model): compiles on Python 3.9 and the current one, smoke-tests the CLI, lints the 300+ reference files (shape and size), checks links and generated indexes, injected-command safety, manifests (and that the three version numbers agree) and `claude plugin validate`, guards the scenario and probe safety rules, measures the always-on footprint, scans for personal data, and reports parity. See [AGENTS.md](AGENTS.md).
 
 MIT licensed.

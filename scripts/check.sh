@@ -43,8 +43,10 @@ python3 -c 'import json,sys; d=json.load(open(sys.argv[1]))["result"]; ids=" ".j
 bin/agentic-maker probe mcp "python3 fixtures/mcp/clean-server.py" --call 'get_user={"id":"zz"}' --json >/dev/null 2>&1; [ "$?" = 0 ] || bad "probe mcp must report nothing on the clean server"
 rm -rf "$tmp"
 
-step "reference files: shape and size"
+step "reference files: shape and size, links, generated indexes"
 python3 scripts/lint-refs.py || bad "lint-refs"
+python3 scripts/check-links.py || bad "broken link"
+python3 scripts/build-index.py --check || bad "stale generated index (run scripts/build-index.py)"
 
 step "skills: every injected !command must end in || true (a failing one aborts the whole skill silently)"
 if [ -d skills ]; then
@@ -63,15 +65,20 @@ python3 - <<'PY' || fail=1
 import json, sys
 p = json.load(open(".claude-plugin/plugin.json")); m = json.load(open(".claude-plugin/marketplace.json"))
 v = m["plugins"][0]["version"]
-ok = p["version"] == v == m["metadata"]["version"] and p["name"] == m["plugins"][0]["name"]
-print("  plugin %s %s / marketplace %s" % (p["name"], p["version"], v))
+import re
+code = re.search(r'__version__ = "([^"]+)"', open("lib/agentic_maker/__init__.py").read()).group(1)
+ok = p["version"] == v == m["metadata"]["version"] == code and p["name"] == m["plugins"][0]["name"]
+print("  plugin %s %s / marketplace %s / code %s" % (p["name"], p["version"], v, code))
 bad = [k for k in p if k in ("commands", "agents", "skills", "hooks", "mcpServers")]
 if bad: print("  manual path fields in plugin.json:", bad); ok = False
 sys.exit(0 if ok else 1)
 PY
 [ "$?" = 0 ] || bad "manifest versions/names/path fields"
 if command -v claude >/dev/null 2>&1; then
-  out=$(claude plugin validate . 2>&1); echo "$out" | grep -q 'Validation passed' || { echo "$out"; bad "claude plugin validate"; }
+  for target in . .claude-plugin/plugin.json skills agents; do
+    out=$(claude plugin validate "$target" 2>&1); echo "$out" | grep -q 'Validation passed' || { echo "$out"; bad "claude plugin validate $target"; }
+  done
+elif [ -n "${CI:-}" ]; then bad "claude is not installed on this CI runner: validate and footprint cannot run"
 else echo "  claude not found: skipped"; fi
 
 step "safety: run --prepare never empties a directory it did not make; the Stop gate never hangs on a silent pipe"
@@ -89,6 +96,50 @@ except subprocess.TimeoutExpired:
     p.kill(); sys.exit(1)
 PY
 
+step "safety: a scenario cannot write outside its workspace or read outside its project; eval-emit fixtures cannot become shell; the probe runs no subcommand you did not name"
+python3 - <<'PY' || bad "scenario/probe containment"
+import json, os, subprocess, sys, tempfile
+CLI = [sys.executable, "-I", "lib/agentic_maker/__main__.py"]
+def run(*a, cwd=None):
+    return subprocess.run(CLI + list(a), capture_output=True, text=True, cwd=cwd or os.getcwd())
+repo = os.getcwd()
+CLI[2] = os.path.join(repo, "lib/agentic_maker/__main__.py")
+bad = []
+with tempfile.TemporaryDirectory() as t:
+    proj = os.path.join(t, "proj"); os.makedirs(os.path.join(proj, ".agentic-maker/scenarios")); os.makedirs(os.path.join(proj, "x"))
+    open(os.path.join(proj, "x", "SKILL.md"), "w").write("---\nname: x\ndescription: x\n---\nx\n")
+    open(os.path.join(proj, "data.txt"), "w").write("keep\nAM_EOF\ntouch %s\n" % os.path.join(t, "pwned-heredoc"))
+    def scenario(name, fixture):
+        open(os.path.join(proj, ".agentic-maker/scenarios/%s.md" % name), "w").write(
+            "---\nname: %s\nkind: skill\ntarget: x\n---\n\n## Prompt\n\nDo it.\n\n## Fixtures\n\n- copy: %s\n\n## Receipts\n\n- exists: data.txt\n" % (name, fixture))
+    for name, fx in (("up", "data.txt -> ../escape.txt"), ("abs", "data.txt -> %s" % os.path.join(t, "escape-abs.txt")), ("out", "/etc/hosts -> hosts")):
+        scenario(name, fx)
+        r = run("--root", proj, "run", name, "--prepare", "--workspace-dir", os.path.join(t, "ws-" + name))
+        if r.returncode != 6: bad.append("%s: exit %s, wanted 6" % (name, r.returncode))
+    for leak in ("escape.txt", "escape-abs.txt"):
+        for d in (t, os.path.dirname(t)):
+            if os.path.exists(os.path.join(d, leak)): bad.append("fixture wrote %s outside the workspace" % leak)
+    scenario("emit", "data.txt")
+    r = run("--root", proj, "eval-emit", "emit", "--out", os.path.join(t, "evals"))
+    sh = os.path.join(t, "evals", "emit", "fixture.sh")
+    if r.returncode != 0 or not os.path.exists(sh): bad.append("eval-emit failed: %s" % r.stderr[:200])
+    else:
+        w = os.path.join(t, "scaffold"); os.makedirs(w)
+        subprocess.run(["sh", sh], cwd=w, capture_output=True)
+        if os.path.exists(os.path.join(t, "pwned-heredoc")): bad.append("a fixture line ran as shell")
+        if open(os.path.join(w, "data.txt")).read().split("\n")[:2] != ["keep", "AM_EOF"]: bad.append("fixture not reproduced byte for byte")
+    # a CLI whose subcommands ignore --help and act: the probe must not run `sync` or `deploy`
+    cli = os.path.join(t, "actor"); sentinel = os.path.join(t, "pwned-probe")
+    open(cli, "w").write("#!/bin/sh\ncase \"$1\" in\n  list) echo \"list [--json]\";;\n  sync|deploy) touch %s;;\n  *) printf 'usage: actor <command>\\n\\nCommands:\\n  list    List things\\n  sync    Sync things\\n  deploy  Deploy things\\n'; exit 0;;\nesac\n" % sentinel)
+    os.chmod(cli, 0o755)
+    r = run("probe", "cli", cli)
+    try: rep = json.loads(r.stdout)["result"]
+    except Exception: rep = {}; bad.append("probe produced no envelope: %s" % r.stderr[:200])
+    if os.path.exists(sentinel): bad.append("the probe ran an undeclared subcommand")
+    if rep and set(rep.get("documentation", {}).get("subcommand_help_not_read", [])) != {"sync", "deploy"}: bad.append("probe did not report the subcommands it left unread")
+print("\n".join(bad)); sys.exit(1 if bad else 0)
+PY
+
 step "eval-emit: a scenario becomes a claude plugin eval case (no model)"
 ed=$(mktemp -d); trap 'rm -rf "$ed"' EXIT
 python3 -I lib/agentic_maker/__main__.py --root fixtures/skill-project eval-emit release-notes --out "$ed" --json >/dev/null || bad "eval-emit failed"
@@ -102,6 +153,7 @@ if command -v claude >/dev/null 2>&1; then
   tok=$(printf '%s\n' "$det" | sed -n 's/.*Always-on:[^0-9]*\([0-9.]*\)\(k\)\{0,1\} *tok.*/\1\2/p' | head -1)
   echo "  always-on: ${tok:-unknown} tok"
   case "$tok" in ""|*k) bad "footprint unreadable or above 1k" ;; *) [ "${tok%.*}" -le 400 ] || bad "always-on footprint above 400 tokens" ;; esac
+elif [ -n "${CI:-}" ]; then bad "claude is not installed on this CI runner"
 else echo "  claude not found: skipped"; fi
 
 step "hygiene: no personal path, email or token anywhere in the tree"
@@ -116,7 +168,9 @@ runs=$(find . -path ./.git -prune -o -type d -path '*/.agentic-maker/runs' -prin
 
 step "parity (source headings -> destinations)"
 if [ -d /tmp/am-src/skills-by-yigitkonur/skills ] || [ -n "${AM_SRC:-}" ]; then
-  python3 scripts/parity.py check --no-write ${AM_SRC:+--src "$AM_SRC"}; prc=$?
+  python3 scripts/parity.py check ${AM_SRC:+--src "$AM_SRC"}; prc=$?
+  rm -f docs/parity/table-keys-missing.tsv docs/parity/tokens-missing.tsv      # written only when something is unaccounted; gitignored
+  if git rev-parse --git-dir >/dev/null 2>&1 && ! git diff --quiet -- docs/parity/ledger.tsv 2>/dev/null; then bad "docs/parity/ledger.tsv was stale (regenerated: review and commit it)"; fi
   if [ "$prc" != 0 ]; then if [ "$strict" = 1 ]; then bad "parity"; else echo "  (informational until the migration is complete; use --strict-parity)"; fi; fi
 else echo "  source clone not found: skipped (set AM_SRC)"; fi
 

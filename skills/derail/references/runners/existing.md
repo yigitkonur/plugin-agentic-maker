@@ -22,7 +22,7 @@ Two honest limits: a session transcript has no `init` event, so what the agent c
 2. **Codex rollout:** `~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl`.
 3. **Terminal scrollback** for harnesses with no readable record (and as a cross-check): `herdr agent read <agent> --source recent-unwrapped --lines 500 > capture.txt`, then `--from capture.txt`. Scrollback is weaker evidence (see [trace-sources](../trace-sources.md)).
 
-**agy is never launched by this plugin** - its command on PATH may be a wrapper that rotates accounts at every start. Audit an agy session the user already runs by reading its scrollback.
+**agy is never launched by this plugin** - a launch can have effects the plugin cannot see (which account, which quota). Audit an agy session the user already runs by reading its scrollback.
 
 <!-- src: audit-skill-by-derailment/references/herdr-pane-audit.md#Discovery Commands -->
 ### Finding panes

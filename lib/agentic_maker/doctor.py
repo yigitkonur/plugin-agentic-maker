@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 TOOLS = ("claude", "python3", "git", "rg", "jq", "herdr", "codex", "agy")
-NEVER_RUN = {"agy"}  # its PATH wrapper may rotate accounts on every launch
+NEVER_RUN = {"agy"}  # a launch can have effects the plugin cannot see (account, quota)
 
 
 def _version(cmd):

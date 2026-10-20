@@ -135,15 +135,32 @@ def plan(root, sc, args, run_dir):
     return cmd, exposure, warnings, path_dirs, {"tools": tools, "allowed_tools": allowed}
 
 
+def _inside(path, base):
+    path, base = os.path.realpath(path), os.path.realpath(base)
+    return path == base or path.startswith(base.rstrip(os.sep) + os.sep)
+
+
 def seed_workspace(root, sc, ws):
+    """Copy the scenario's fixtures into ws. A scenario is data from a repository you may not have written: a `copy:` line can read
+    only from inside the project and write only inside the workspace (symlinked parents included). `shell:` fixtures and `cmd`
+    receipts are code by design; read them first (`check receipts --list`)."""
     copies, shell = sc_mod.fixture_steps(sc)
     for src, dest in copies:
         s = _abs(root, src)
-        d = os.path.join(ws, dest or os.path.basename(s.rstrip("/")))
+        if not _inside(s, root):
+            raise CliError("validation", "fixture_source_outside_project", "fixture source %s is outside the project %s" % (src, root),
+                           suggestion="put the fixture inside the project and name it relative to the project")
+        rel = dest or os.path.basename(s.rstrip("/"))
+        if os.path.isabs(rel) or ".." in os.path.normpath(rel).split(os.sep):
+            raise CliError("validation", "fixture_destination_escapes", "fixture destination %r leaves the workspace" % rel,
+                           suggestion="use a relative destination without ..")
+        d = os.path.join(ws, rel)
+        os.makedirs(os.path.dirname(d), exist_ok=True)
+        if not _inside(os.path.dirname(d), ws) or os.path.islink(d):
+            raise CliError("validation", "fixture_destination_escapes", "fixture destination %r leaves the workspace through a link" % rel)
         if os.path.isdir(s):
             shutil.copytree(s, d, symlinks=True)
         elif os.path.exists(s):
-            os.makedirs(os.path.dirname(d), exist_ok=True)
             shutil.copy2(s, d)
         else:
             raise CliError("not_found", "fixture_not_found", "fixture source not found: %s" % s)

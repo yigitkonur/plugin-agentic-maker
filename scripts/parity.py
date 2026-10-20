@@ -12,6 +12,7 @@ Python 3.9+, standard library only.
 """
 import argparse
 import csv
+import hashlib
 import os
 import re
 import sys
@@ -241,15 +242,20 @@ def main(argv=None):
     if args.soft:
         corpus = corpus_text(args.dest)
         accounted = {(r[0], r[1]) for r in read_tsv(os.path.join(parity_dir, "accounted.tsv")) if len(r) >= 3 and len(r[2].strip()) >= 10}
+
+        def is_accounted(rel, item):
+            # an item may be listed literally or as sha1:<first 12 hex of the sha1 of its text>, so private names need not be published
+            return (rel, item) in accounted or (rel, "sha1:" + hashlib.sha1(item.encode("utf-8")).hexdigest()[:12]) in accounted
+
         miss_keys, miss_tokens = [], []
         for rel in md:
             with open(os.path.join(args.src, rel), encoding="utf-8") as f:
                 text = f.read()
             for k in table_keys(text):
-                if re.sub(r"\s+", " ", k.lower()) not in corpus and (rel, k) not in accounted:
+                if re.sub(r"\s+", " ", k.lower()) not in corpus and not is_accounted(rel, k):
                     miss_keys.append((rel, k))
             for t in sorted(tokens_of(text)):
-                if t.lower() not in corpus and (rel, t) not in accounted:
+                if t.lower() not in corpus and not is_accounted(rel, t):
                     miss_tokens.append((rel, t))
         if not args.no_write:
             for name, rows in (("table-keys-missing.tsv", miss_keys), ("tokens-missing.tsv", miss_tokens)):

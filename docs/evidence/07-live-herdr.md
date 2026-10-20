@@ -38,5 +38,5 @@ Folded tool output ended with "… +12 lines (ctrl+o to expand)". After `ctrl+o`
 ## What was not done
 
 - **Codex worker, `Ctrl+O` in Codex:** not started. It would add a trust entry to `~/.codex/config.toml` and use Codex quota for a point (the key's meaning) that the transcript source makes unnecessary. A Codex **rollout adapter** exists, built from real rollout files read from disk (`~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`, codex-cli 0.163): 189 events and 13 tool calls from one real session, no unparsed lines. It is `documented only` as a live runner.
-- **agy:** never launched; its command on PATH is an account-rotating wrapper.
+- **agy:** never launched: a launch can select an account or use quota in ways this plugin cannot see. Its sessions are analysed after the fact.
 - One round, one worker, one scenario: it shows the sequence works under the conductor's rules and produces a record the same checks accept, not how often a live worker differs from a headless one.

@@ -217,6 +217,7 @@ def analyze(tools, instructions, thresholds):
     if tools and not any_ann:
         findings.append(_f("annotations.none", "safety", "Medium", "Without read-only and destructive hints a client cannot gate dangerous calls.", "add readOnlyHint / destructiveHint / idempotentHint to every tool", {"tools": n}, "mcp/security/least-privilege-and-confirmation.md"))
     total_chars = 0
+    thin = []
     for t in tools:
         name, desc = t.get("name") or "", t.get("description")
         schema = t.get("inputSchema") or {}
@@ -239,7 +240,7 @@ def analyze(tools, instructions, thresholds):
             elif d_chars > thresholds["description_chars"]:
                 findings.append(_f("description.long.%s" % name, "budget", "Low", "Over the description-length cue.", "shorten", {"tool": name, "chars": d_chars}, "mcp/descriptions-structure-and-length.md"))
             if d_chars < 25:
-                findings.append(_f("description.thin.%s" % name, "discovery", "Medium", "A description this short cannot say what the tool does or when to pick it over its neighbours.", "write one sentence: Verb + Resource, then when to use it and what it returns", {"tool": name, "chars": d_chars, "description": desc}, "mcp/descriptions-structure-and-length.md"))
+                thin.append(name)
             first = re.findall(r"[A-Za-z]+", desc)[:5]
             if first and first[0].lower() not in VERBS and not any(w.lower() in VERBS for w in first[:3]):
                 findings.append(_f("description.verb.%s" % name, "discovery", "Low", "Descriptions that open with Verb + Resource are matched to the task more reliably.", "start with the action", {"tool": name, "starts": " ".join(first)}, "mcp/descriptions-structure-and-length.md"))
@@ -259,6 +260,10 @@ def analyze(tools, instructions, thresholds):
             findings.append(_f("schema.undocumented.%s" % name, "discovery", "Low", "Parameters without a description are guessed.", "describe each parameter with an example value", {"tool": name, "params": undocumented[:6]}, "mcp/descriptions-schema-split-and-examples.md"))
         if DESTRUCTIVE_NAME.search(name) and (t.get("annotations") or {}).get("destructiveHint") is not True:
             findings.append(_f("destructive.unmarked.%s" % name, "safety", "High", "A destructive-looking tool with no destructiveHint lets a client run it without a gate.", "set destructiveHint: true and say in the description that it needs confirmation", {"tool": name, "annotations": t.get("annotations")}, "mcp/security/least-privilege-and-confirmation.md"))
+    if thin:     # one finding for the group, not one per tool: a server of near-identical tools would otherwise bury the rest
+        findings.append(_f("description.thin", "discovery", "Medium", "A description under 25 characters cannot say what the tool does or when to pick it over its neighbours.",
+                           "write one sentence: Verb + Resource, then when to use it and what it returns",
+                           {"tools": thin[:12], "count": len(thin)}, "mcp/descriptions-structure-and-length.md"))
     return findings, rows, total_chars
 
 

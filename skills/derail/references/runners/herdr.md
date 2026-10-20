@@ -12,7 +12,7 @@ herdr is a terminal workspace manager that runs coding agents in tabs and panes 
 - **Interactive agents only via `agent start`.** Never `claude -p` / `codex exec` / `agy -p` for a herdr worker. (The headless runner is a different mechanism with its own exit code and is not under herdr.)
 - **`--no-focus` on everything you create.** The user's herdr is live.
 - **The agent's report is a claim; the machine is the witness.** Verify with files and exit codes.
-- **agy is never started by this plugin** (its command may be a wrapper that rotates accounts at every launch). Use agy only when the user already runs one, through the `existing` runner.
+- **agy is never started by this plugin** (a launch can have effects the plugin cannot see, such as which account or quota it uses). Use agy only when the user already runs one, through the `existing` runner.
 
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#1. Pre-Flight Environment & Session Verification -->
 ## 1. Before you start

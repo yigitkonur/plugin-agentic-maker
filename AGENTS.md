@@ -11,11 +11,11 @@ Claude Code plugin `agentic-maker` (marketplace `plugin-agentic-maker`). Python 
 - `docs/design/`: the plan this was built from (a record, not a spec). `docs/what-is-true.md`: what was checked against the real harness. `docs/evidence/`: one file per capability. `docs/parity/`: the mechanical ledger against the three source skills.
 
 ## Rules for changes
-1. Run `scripts/check.sh` before every commit; run it with `/usr/bin/python3` (3.9) on macOS as well as the current Python. `--strict-parity` is the gate when the source clone is present (`AM_SRC=<dir with the three skills>`).
-2. Bump the version in `.claude-plugin/plugin.json` **and** `.claude-plugin/marketplace.json` together with any shipped change. No path fields in `plugin.json`.
+1. Run `scripts/check.sh` before every commit. It compiles the package with both `/usr/bin/python3` (3.9 on macOS) and the `python3` on PATH; to run the rest of it on 3.9, put that interpreter first on PATH. `--strict-parity` is the gate when the source clone is present (`AM_SRC=<dir with the three skills>`).
+2. Bump the version in `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both fields) **and** `lib/agentic_maker/__init__.py` together with any shipped change; `scripts/check.sh` fails when the three differ. No path fields in `plugin.json`.
 3. Every injected command in a skill ends in `|| true` (a failing one aborts the invocation silently). Hook commands use `${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker`: `bin/` is on the Bash tool's PATH, not on a hook's.
 4. A claim about Claude Code or herdr behaviour goes in `docs/what-is-true.md` with what was run. A time-sensitive fact goes in `references/.../fresh/` with `as_of`.
 5. Reference files: `# Title`, then `> Read when: ...`, one decision, at most 8 KB; migrated sections carry a `<!-- src: ... -->` marker (the parity checker reads them).
 6. Fixtures are re-recorded only after reading the diff. Fixture CLIs that can do damage create a sentinel; `check.sh` fails if a probe ever creates it.
 7. Never commit a token, a run directory (`.agentic-maker/runs/`), a trace of a real session, a personal path or an email. Commit under the GitHub noreply identity.
-8. `agy` is never launched by anything here: its command on PATH may rotate accounts.
+8. `agy` is never launched by anything here: a launch can have effects the plugin cannot see (which account, which quota). Analyse a session the user already ran, with `--runner existing`.

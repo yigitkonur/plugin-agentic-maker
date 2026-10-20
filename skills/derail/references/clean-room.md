@@ -27,7 +27,7 @@ What each part does, observed:
 - `--bare`: never reads the login, so it needs an API key, and it sends no skill listing (no trigger testing).
 - `--safe-mode`: removes skills, hooks and MCP, but also the skills of a `--plugin-dir` target.
 - A temporary `CLAUDE_CONFIG_DIR`: the login is lost; the run fails with an API error and zero tokens.
-- A plain child `claude -p`: inherits everything (103 skills, 8 plugins, the user's hooks, `bypassPermissions`).
+- A plain child `claude -p`: inherits everything the user has installed (on the test machine 103 skills, 8 plugins, the user's hooks, a bypass permission mode).
 
 ## The contamination report
 

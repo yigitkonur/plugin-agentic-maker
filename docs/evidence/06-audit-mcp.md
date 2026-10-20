@@ -29,7 +29,7 @@ $ agentic-maker probe mcp "python3 fixtures/mcp/seeded-server.py" --json | jq -c
 | a 14-value enum | Low | no |
 | 24 tools | Low past the comfortable range (a cue, not a verdict) | flags only above 20 candidates by regex (it found 15) |
 
-17 findings: 1 Critical, 4 High, 6 Medium, 6 Low. Every planted defect has a finding. **Clean twin: 0 findings, exit 0.**
+18 findings today: 1 Critical, 4 High, 7 Medium, 6 Low (17 when this was first recorded; a later check, a description under 25 characters, adds one clustered Medium). Every planted defect has a finding. **Clean twin: 0 findings, exit 0.**
 
 The HTTP transport was exercised against the same fixtures in `--http` mode: `probe mcp http://127.0.0.1:18765/mcp` reports `streamable-http` and the same numbers; an unreachable port exits 7 (`network/connect_failed`).
 
@@ -41,7 +41,7 @@ The HTTP transport was exercised against the same fixtures in `--http` mode: `pr
 
 ## The skill, run for real
 
-`/agentic-maker:audit "python3 .../seeded-server.py"` in a fresh session with only the plugin loaded: two `agentic-maker` calls (`probe mcp`, `scan mcp`), the MCP hard rules and the scoring rubric read from the references, and a report with a scorecard, all fifteen probe findings plus source-level findings, what was executed, what was not run (`tools/call` for anything), and assumptions. Cost about $0.075, no permission denials.
+`/agentic-maker:audit "python3 .../seeded-server.py"` in a fresh session with only the plugin loaded: two `agentic-maker` calls (`probe mcp`, `scan mcp`), the MCP hard rules and the scoring rubric read from the references, and a report with a scorecard, the probe's findings of that day (before the thin-description check) plus source-level findings, what was executed, what was not run (`tools/call` for anything), and assumptions. Cost about $0.075, no permission denials.
 
 Friction found by running it, fixed afterwards:
 

@@ -285,18 +285,18 @@ audit-agentic-cli/references/output-contracts.md#Output Mode Flags	3	1216	mapped
 audit-agentic-cli/references/output-contracts.md#Exit Code Quick Reference	3	1226	mapped	skills/agent-interface-design/references/cli/exit-codes.md:46	
 audit-agentic-cli/references/output-contracts.md#Error Class Quick Reference	3	1240	mapped	skills/agent-interface-design/references/cli/error-classes.md:122	
 audit-agentic-cli/references/output-contracts.md#Checklist	3	1255	mapped	skills/agent-interface-design/references/cli/output-contract-checklist.md:5	
-audit-agentic-cli/scripts/audit-cli-help.md#audit-cli-help.sh	1	1	UNMAPPED		
-audit-agentic-cli/scripts/audit-cli-help.md#Inputs	2	5	UNMAPPED		
-audit-agentic-cli/scripts/audit-cli-help.md#Commands Run	2	18	UNMAPPED		
-audit-agentic-cli/scripts/audit-cli-help.md#Output	2	30	UNMAPPED		
-audit-agentic-cli/scripts/audit-cli-help.md#Example	2	40	UNMAPPED		
-audit-agentic-cli/scripts/audit-cli-help.md#Limitations	2	47	UNMAPPED		
-audit-agentic-cli/scripts/diff-cli-help.md#diff-cli-help.sh	1	1	UNMAPPED		
-audit-agentic-cli/scripts/diff-cli-help.md#Inputs	2	5	UNMAPPED		
-audit-agentic-cli/scripts/diff-cli-help.md#Output	2	20	UNMAPPED		
-audit-agentic-cli/scripts/diff-cli-help.md#Safe Usage	2	32	UNMAPPED		
-audit-agentic-cli/scripts/diff-cli-help.md#Example	2	36	UNMAPPED		
-audit-agentic-cli/scripts/diff-cli-help.md#Limitations	2	42	UNMAPPED		
+audit-agentic-cli/scripts/audit-cli-help.md#audit-cli-help.sh	1	1	mapped	skills/audit/references/probes-cli.md:7	
+audit-agentic-cli/scripts/audit-cli-help.md#Inputs	2	5	mapped	skills/audit/references/probes-cli.md:12	
+audit-agentic-cli/scripts/audit-cli-help.md#Commands Run	2	18	mapped	skills/audit/references/probes-cli.md:16	
+audit-agentic-cli/scripts/audit-cli-help.md#Output	2	30	mapped	skills/audit/references/probes-cli.md:20	
+audit-agentic-cli/scripts/audit-cli-help.md#Example	2	40	mapped	skills/audit/references/probes-cli.md:24	
+audit-agentic-cli/scripts/audit-cli-help.md#Limitations	2	47	mapped	skills/audit/references/probes-cli.md:31	
+audit-agentic-cli/scripts/diff-cli-help.md#diff-cli-help.sh	1	1	mapped	skills/audit/references/probes-cli.md:35	
+audit-agentic-cli/scripts/diff-cli-help.md#Inputs	2	5	mapped	skills/audit/references/probes-cli.md:39	
+audit-agentic-cli/scripts/diff-cli-help.md#Output	2	20	mapped	skills/audit/references/probes-cli.md:43	
+audit-agentic-cli/scripts/diff-cli-help.md#Safe Usage	2	32	mapped	skills/audit/references/probes-cli.md:47	
+audit-agentic-cli/scripts/diff-cli-help.md#Example	2	36	mapped	skills/audit/references/probes-cli.md:51	
+audit-agentic-cli/scripts/diff-cli-help.md#Limitations	2	42	mapped	skills/audit/references/probes-cli.md:55	
 audit-agentic-mcp/SKILL.md#audit-agentic-mcp — Audit, Optimize, Architect MCP Servers	1	7	mapped	skills/audit/references/mcp-audit-workflow.md:7	
 audit-agentic-mcp/SKILL.md#When to use	2	13	mapped	skills/audit/references/mcp-audit-workflow.md:12	
 audit-agentic-mcp/SKILL.md#Hard rules (load-bearing)	2	34	mapped	skills/agent-interface-design/references/mcp/hard-rules.md:5	
@@ -816,24 +816,24 @@ audit-agentic-mcp/references/patterns/transport-and-ops.md#9. Token Bucket Rate 
 audit-agentic-mcp/references/patterns/transport-and-ops.md#10. Multi-Level Caching for MCP Responses	2	502	mapped	skills/agent-interface-design/references/frameworks/mcp-ts/transport-and-ops-caching.md:7;skills/agent-interface-design/references/mcp/ops-rate-limiting-and-caching.md:35	
 audit-agentic-mcp/references/patterns/transport-and-ops.md#11. Health Checks with KPI Targets	2	587	mapped	skills/agent-interface-design/references/frameworks/mcp-ts/transport-and-ops-health.md:7;skills/agent-interface-design/references/mcp/ops-observability.md:27	
 audit-agentic-mcp/references/patterns/transport-and-ops.md#12. Kubernetes Deployment for MCP Servers	2	659	mapped	skills/agent-interface-design/references/frameworks/mcp-ts/transport-and-ops.md:60;skills/agent-interface-design/references/mcp/ops-kubernetes.md:5	
-audit-agentic-mcp/scripts/audit-mcp-server.sh.md#audit-mcp-server.sh	1	1	UNMAPPED		
-audit-agentic-mcp/scripts/audit-mcp-server.sh.md#Usage	2	5	UNMAPPED		
-audit-agentic-mcp/scripts/audit-mcp-server.sh.md#What it reports	2	13	UNMAPPED		
-audit-agentic-mcp/scripts/audit-mcp-server.sh.md#Design constraints	2	24	UNMAPPED		
-audit-agentic-mcp/scripts/audit-mcp-server.sh.md#Exit codes	2	31	UNMAPPED		
-audit-agentic-mcp/scripts/audit-mcp-server.sh.md#When to run	2	38	UNMAPPED		
-audit-agentic-mcp/scripts/measure-context-budget.sh.md#measure-context-budget.sh	1	1	UNMAPPED		
-audit-agentic-mcp/scripts/measure-context-budget.sh.md#Usage	2	5	UNMAPPED		
-audit-agentic-mcp/scripts/measure-context-budget.sh.md#Options	2	14	UNMAPPED		
-audit-agentic-mcp/scripts/measure-context-budget.sh.md#What it reports	2	23	UNMAPPED		
-audit-agentic-mcp/scripts/measure-context-budget.sh.md#Design constraints	2	32	UNMAPPED		
-audit-agentic-mcp/scripts/measure-context-budget.sh.md#Exit codes	2	39	UNMAPPED		
-audit-agentic-mcp/scripts/measure-context-budget.sh.md#When to run	2	46	UNMAPPED		
+audit-agentic-mcp/scripts/audit-mcp-server.sh.md#audit-mcp-server.sh	1	1	mapped	skills/audit/references/probes-mcp.md:47	
+audit-agentic-mcp/scripts/audit-mcp-server.sh.md#Usage	2	5	mapped	skills/audit/references/probes-mcp.md:52	
+audit-agentic-mcp/scripts/audit-mcp-server.sh.md#What it reports	2	13	mapped	skills/audit/references/probes-mcp.md:56	
+audit-agentic-mcp/scripts/audit-mcp-server.sh.md#Design constraints	2	24	mapped	skills/audit/references/probes-mcp.md:60	
+audit-agentic-mcp/scripts/audit-mcp-server.sh.md#Exit codes	2	31	mapped	skills/audit/references/probes-mcp.md:64	
+audit-agentic-mcp/scripts/audit-mcp-server.sh.md#When to run	2	38	mapped	skills/audit/references/probes-mcp.md:68	
+audit-agentic-mcp/scripts/measure-context-budget.sh.md#measure-context-budget.sh	1	1	mapped	skills/audit/references/probes-mcp.md:5	
+audit-agentic-mcp/scripts/measure-context-budget.sh.md#Usage	2	5	mapped	skills/audit/references/probes-mcp.md:10	
+audit-agentic-mcp/scripts/measure-context-budget.sh.md#Options	2	14	mapped	skills/audit/references/probes-mcp.md:20	
+audit-agentic-mcp/scripts/measure-context-budget.sh.md#What it reports	2	23	mapped	skills/audit/references/probes-mcp.md:31	
+audit-agentic-mcp/scripts/measure-context-budget.sh.md#Design constraints	2	32	mapped	skills/audit/references/probes-mcp.md:35	
+audit-agentic-mcp/scripts/measure-context-budget.sh.md#Exit codes	2	39	mapped	skills/audit/references/probes-mcp.md:39	
+audit-agentic-mcp/scripts/measure-context-budget.sh.md#When to run	2	46	mapped	skills/audit/references/probes-mcp.md:43	
 audit-skill-by-derailment/SKILL.md#Audit Skill by Derailment: The Native Two-Tier Auditor	1	7	mapped	skills/derailment-method/SKILL.md:7	
 audit-skill-by-derailment/SKILL.md#When to Use	2	18	mapped	skills/derail/SKILL.md:14	
 audit-skill-by-derailment/SKILL.md#The 5 Non-Negotiable Invariants	2	34	mapped	skills/derailment-method/SKILL.md:12	
 audit-skill-by-derailment/SKILL.md#Severity & Root-Cause Cheat Sheet	2	44	mapped	skills/derailment-method/SKILL.md:28	
-audit-skill-by-derailment/SKILL.md#Tri-Modal Routing Decision Tree	2	59	mapped	skills/derail/SKILL.md:51	
+audit-skill-by-derailment/SKILL.md#Tri-Modal Routing Decision Tree	2	59	mapped	skills/derail/SKILL.md:53	
 audit-skill-by-derailment/SKILL.md#Mode C: The Native Two-Tier Herdr Loop (Recommended)	2	75	mapped	skills/derail/references/runners/herdr-record-and-teardown.md:42	
 audit-skill-by-derailment/SKILL.md#Step 1: Provision a Dedicated Tab & Resolve Pane ID	3	79	mapped	skills/derail/references/runners/herdr-record-and-teardown.md:47	
 audit-skill-by-derailment/SKILL.md#Step 2: Launch Worker Agent Engine	3	97	mapped	skills/derail/references/runners/herdr-record-and-teardown.md:50	
@@ -844,8 +844,8 @@ audit-skill-by-derailment/SKILL.md#Step 6: Dispatch Tier 2 Forensic Auditor Suba
 audit-skill-by-derailment/SKILL.md#Step 7: Apply Verified Patches & Clean Up	3	143	mapped	skills/derail/references/runners/herdr-record-and-teardown.md:65	
 audit-skill-by-derailment/SKILL.md#Mode B: Live Herdr Multi-Pane Fleet Audit	2	155	mapped	skills/derail/references/runners/existing.md:5	
 audit-skill-by-derailment/SKILL.md#Mode A: Synthetic Subagent Execution	2	172	mapped	skills/derail/references/runners/headless.md:5	
-audit-skill-by-derailment/SKILL.md#Available Scripts	2	182	mapped	skills/derail/SKILL.md:61	
-audit-skill-by-derailment/SKILL.md#Reference Routing	2	193	mapped	skills/derail/SKILL.md:75	
+audit-skill-by-derailment/SKILL.md#Available Scripts	2	182	mapped	skills/derail/SKILL.md:63	
+audit-skill-by-derailment/SKILL.md#Reference Routing	2	193	mapped	skills/derail/SKILL.md:77	
 audit-skill-by-derailment/references/ctrl-o-verbose-physics.md#AGY Terminal TUI Physics & The Ctrl+O Verbose Audit Protocol	1	1	mapped	skills/derail/references/trace-sources.md:5	
 audit-skill-by-derailment/references/ctrl-o-verbose-physics.md#1. The Anatomy of AGY TUI Rendering	2	7	mapped	skills/derail/references/trace-sources.md:16	
 audit-skill-by-derailment/references/ctrl-o-verbose-physics.md#Collapsed Standard View (Default)	3	11	mapped	skills/derail/references/trace-sources.md:21	

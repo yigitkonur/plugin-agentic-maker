@@ -1,6 +1,6 @@
 # Evidence, ledger row 5: auditing a CLI
 
-Recorded 2026-10-20. Target: `fixtures/cli/seeded-cli/seeded-cli`, a bash CLI with eleven planted defects (`DEFECTS.md`), and its clean twin `fixtures/cli/clean-cli/clean-cli`. Both come with a sentinel: the seeded CLI's destructive `delete` creates `/tmp/seeded-cli-delete-ran` before it prompts, so an audit that runs it leaves a trace.
+Recorded 2026-10-20. Target: `fixtures/cli/seeded-cli/seeded-cli`, a bash CLI with eleven planted defects (`DEFECTS.md`), and its clean twin `fixtures/cli/clean-cli/clean-cli`. The seeded CLI comes with a sentinel: its destructive `delete` creates `/tmp/seeded-cli-delete-ran` before it prompts, so an audit that runs it leaves a trace.
 
 ## What `probe cli` found, against what the old help-scan script found
 
@@ -18,7 +18,7 @@ Recorded 2026-10-20. Target: `fixtures/cli/seeded-cli/seeded-cli`, a bash CLI wi
 | D10 | `--token TOKEN` documented (secret on argv) | found (High) | missed |
 | D11 | destructive `delete` without `--dry-run` | found (Medium) | found as "standard flag missing" |
 
-`probe cli`: 11 findings (4 High, 6 Medium, 1 Low), 10 of 11 defects found directly and the eleventh through its cause. Old script: 5 of 11, all text-level. Clean twin: **0 findings, exit 0** (no false positive). Sentinel after every run: **absent** - the probe ran only `--help`, `--version`, one invalid command and the four arguments in `safe-cmds.txt`, 7 commands in total, each in an empty temp dir with stdin closed.
+`probe cli`: 11 findings (4 High, 6 Medium, 1 Low), 10 of 11 defects found directly and the eleventh through its cause (11 of 11 counting causes). Old script: 4 of 11 directly (D1, D2, D3, D11) and D9 only as a missing standard flag (5 of 11 counting causes), all text-level. Clean twin: **0 findings, exit 0** (no false positive). Sentinel after every run: **absent** - the probe ran only `--help`, `--version`, one invalid command, `--help` of the subcommands named like read verbs (`list`, `get`, ...) and the four arguments in `safe-cmds.txt`, 9 commands in total (7 when first recorded, before the read-verb subcommand help existed), each in an empty temp dir with stdin closed.
 
 ## The skill, run for real
 

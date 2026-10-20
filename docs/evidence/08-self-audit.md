@@ -131,7 +131,7 @@ Seen and left alone: the reader, under `--restricted`, tried to open the worker'
 ## 6. Footprint and `eval-emit`
 
 - `claude plugin details agentic-maker` on a temporary-config install of this repo: **Always-on ~309 tok** (design 40, derail 40, derailment-method 60, audit 40, agent-interface-design 80, trace-reader 50); on-invoke 540 to 2k. `scripts/check.sh` fails above 400.
-- `eval-emit` converts the fixture scenario into a `claude plugin eval` case and `check.sh` runs it on every change.
+- `eval-emit` converts the fixture scenario into a `claude plugin eval` case, and `check.sh` converts it on every change. The emitted case was also run for real: written into the wrapper plugin of a `run --prepare` of the seeded skill, then `claude plugin eval <wrapper> --scaffold --case release-notes --runs 1 --trust-plugin` (2.1.304, 25 s, $0.10). With the plugin the score was 0.67 (the file exists and the `## Features` heading matches; the title regex fails and the skill did not fire); without it 0.33; delta +0.33. Four graders were emitted (file exists, two regexes, skill fired); 8 of the scenario's 11 receipts (commands, exact counts, unchanged files, mtime window, no extra files) cannot be expressed as eval graders and are listed in the emit result instead of being dropped silently.
 
 ## Limits
 

@@ -112,18 +112,18 @@ audit-skill-by-derailment/references/herdr-native-runner.md	run_command	harness-
 audit-skill-by-derailment/references/herdr-native-runner.md	~/.cargo/bin/herdr	install path of herdr on the author's machine; 'agentic-maker doctor' reports the binary it finds
 audit-skill-by-derailment/references/herdr-pane-audit.md	.github/workflows/	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
 audit-skill-by-derailment/references/herdr-pane-audit.md	30KB	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
-audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	sha1:c98ba75bc65c	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
 audit-skill-by-derailment/references/herdr-pane-audit.md	ci.yml	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
-audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
-audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
-audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	sha1:fa2022ff73d4	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	sha1:d0f2c994ec65	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	sha1:b184ca9744f8	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
 audit-skill-by-derailment/references/herdr-pane-audit.md	wG:p6	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
 audit-skill-by-derailment/references/herdr-pane-audit.md	wH:p4	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
 audit-skill-by-derailment/references/herdr-pane-audit.md	wJ:p2	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
 audit-skill-by-derailment/references/herdr-pane-audit.md	wK:p2	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
 audit-skill-by-derailment/references/herdr-pane-audit.md	wV:p2	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
-audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
-audit-skill-by-derailment/references/herdr-pane-audit.md	<author-local-project>	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	sha1:ebb682120174	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
+audit-skill-by-derailment/references/herdr-pane-audit.md	sha1:3e0fe9b7d2af	author-local project in a recorded case table of the source; the audit pattern is kept in references/synthesis-matrix.md without the case data
 audit-skill-by-derailment/scripts/audit-worker-pane.sh.md	__TAKE_RESULT_JSON_START__	domain leak of the video-flow skill (docs/design/appendix-b-inherited-defects.md, item 24); receipts are generic kinds now
 audit-skill-by-derailment/scripts/audit-worker-pane.sh.md	w2N:pP	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
 audit-skill-by-derailment/scripts/audit-worker-pane.sh.md	w2N:pQ	author-local herdr pane id from a recorded session; the pane-audit pattern is kept without the ids
