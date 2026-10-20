@@ -3,7 +3,7 @@ name: derail
 description: Test a skill, plugin, CLI or MCP tool with fresh agents, read their runs, fix the text that caused each drift, rerun. Started by you; spends model usage.
 disable-model-invocation: true
 argument-hint: "<target path or scenario> [--rounds N] [--runner headless|existing] [--from <record>]"
-allowed-tools: Bash(agentic-maker *) Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker *)
+allowed-tools: Bash(agentic-maker *) Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker *) Bash(git diff *)
 hooks:
   Stop:
     - hooks:
@@ -40,7 +40,7 @@ Work serially through these steps. Every step ends in a command whose output you
 6. **Synthesize.** Merge findings across takes and scenarios, rank by severity, apply the compound-P0 rule. See [synthesis-matrix](references/synthesis-matrix.md).
 7. **Fix the cause.** `agentic-maker ledger fix <ids> --session ${CLAUDE_SESSION_ID} --findings <file> --trace <norm>`, then rewrite or delete the controlling text named in the finding (patterns: `derailment-method/references/fix-patterns.md`). You are the only writer. After each edit run `agentic-maker check diff --findings <file> --finding <id>` (it flags an edit that only adds a rule beside unchanged cause text) and `agentic-maker check nice --findings <file>`.
 8. **Rerun** in a fresh session: run the scenario again, then `agentic-maker check predicate --findings <file> --trace <new take>/trace.norm.jsonl`. The finding is closed only when its predicate passes and the receipts pass. A predicate that is "not met" while the trace plainly shows the behaviour is a badly written predicate (it tested a command's exact wording): say so in the report, judge it from the trace, and do not edit it to pass.
-9. **Stop** when there is no P0 or P1, the receipts pass and two consecutive takes are clean; or when the round limit (default 5) or the budget is reached. Then `agentic-maker ledger close --session ${CLAUDE_SESSION_ID} --outcome clean|open|unverified --reason "<why>"`. Report the rounds, the text that changed (`git diff`), the evidence references, and everything left open or unverified.
+9. **Stop** when there is no P0 or P1, the receipts pass and two consecutive takes are clean; or when the round limit (default 5) or the budget is reached. Then `agentic-maker ledger close --session ${CLAUDE_SESSION_ID} --outcome clean|open|unverified --reason "<why>"`. Report the rounds, the text that changed (`git diff -- <target>`, run from the project directory), the evidence references, and everything left open or unverified.
 
 ## Rules
 

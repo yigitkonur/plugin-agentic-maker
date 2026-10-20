@@ -12,9 +12,9 @@ It works on any project and language: the probes act on the public interface (an
 /plugin install agentic-maker@plugin-agentic-maker
 ```
 
-Or in one step on Claude Code 2.1.275+: `/plugin install agentic-maker --marketplace yigitkonur/plugin-agentic-maker`.
+Or from a shell in one step: `claude plugin install agentic-maker --marketplace yigitkonur/plugin-agentic-maker`.
 
-Needs `python3` 3.9+ (standard library only) and, for fresh-agent runs, Claude Code 2.1.269+ on PATH. `herdr` is optional (live interactive rounds). Nothing else.
+Needs `python3` 3.9+ (standard library only) and, for fresh-agent runs, `claude` on PATH. Built and tested on Claude Code 2.1.302 (`claude plugin eval`, used by `eval-emit`, needs 2.1.269 or later). `herdr` is optional (live interactive rounds). Nothing else.
 
 ## Commands
 
