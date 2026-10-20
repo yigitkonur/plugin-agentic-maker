@@ -122,12 +122,12 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
         top_help = help_text
         listed_top = extract_commands(help_text, True)
         danger = DESTRUCTIVE_WORD.search(" ".join("%s %s" % kv for kv in listed_top.items()) if listed_top else help_text)
+        named = list(subcommands or [])
         if help_r is not None:
             # flags usually live on the subcommands (clap, cobra): read --help of the listed ones that do not sound destructive,
             # in addition to any the caller named (naming one must not hide the others, or a flag on `list` reads as missing)
             listed = extract_commands(help_r["stdout"] + "\n" + help_r["stderr"], True)
             auto = [n for n, ln in listed.items() if n != "help" and not DESTRUCTIVE_WORD.search(n + " " + ln)][:8]
-            named = list(subcommands or [])
             subcommands = named + [a for a in auto if a not in named]
             if auto:
                 outputs["auto_subcommand_help"] = [a for a in auto if a not in named]
@@ -135,9 +135,13 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
             r = go(shlex.split(line) + ["--help"], "sub")
             if r:
                 help_text += "\n" + r["stdout"] + "\n" + r["stderr"]
-                sub_rows.append({"subcommand": line, "help_exit": r["exit"],
-                                 "examples": bool(EXAMPLES.search(r["stdout"] + r["stderr"])),
-                                 "exit_codes": bool(EXIT_DOCS.search(r["stdout"] + r["stderr"]))})
+                body = r["stdout"] + "\n" + r["stderr"]
+                row = {"subcommand": line, "help_exit": r["exit"], "examples": bool(EXAMPLES.search(body)),
+                       "exit_codes": bool(EXIT_DOCS.search(body)), "has_subcommands": bool(extract_commands(body)),
+                       "needs_argument": requires_argument(body, line.split()[0])}
+                if line in named:      # the caller asked for this one: give its own help, capped
+                    row["help"] = "\n".join(body.strip().splitlines()[:40])
+                sub_rows.append(row)
 
         # ---- discoverability
         if help_r is None:
@@ -250,7 +254,14 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
                 findings.append(_finding("destructive.no_dry_run", "safety", "Medium", "fail", "The agent cannot preview a destructive change before making it.",
                                          "add --dry-run that prints the plan and changes nothing", {"help_mentions": danger.group(0), "unverified": unverified}, "cli/dry-run.md"))
         sug = suggest_safe(top_help) if top_help else {"suggested_safe": [], "read_commands_needing_arguments": []}
-        return {"binary": path, "kind": kind, "help_excerpt": "\n".join(help_text.splitlines()[:60]), "executed": executed, **sug, "not_executed": not_executed + (
+        has_sub = {row["subcommand"] for row in sub_rows if row.get("has_subcommands") or row.get("needs_argument")}
+        if has_sub:      # `check` (sub-actions) or `scan` (a kind) fail alone with a usage error: they need an argument, so they are not safe-as-is suggestions
+            keep = [c for c in sug["suggested_safe"] if c.split(" ")[0] not in has_sub]
+            sug = {"suggested_safe": keep, "read_commands_needing_arguments": sug["read_commands_needing_arguments"] + [c.split(" ")[0] for c in sug["suggested_safe"] if c.split(" ")[0] in has_sub]}
+        evidence = [{"args": " ".join(shlex.quote(a) for a in r["argv"][1:]) or "(none)", "exit": r["exit"], "timed_out": r["timed_out"], "ms": r["ms"],
+                     "stdout_head": r["stdout"].strip()[:160], "stderr_head": r["stderr"].strip()[:160]}
+                    for r in runs if not r["argv"][-1] == "--help"]
+        return {"binary": path, "kind": kind, "runs": evidence, "help_excerpt": "\n".join(help_text.splitlines()[:60]), "executed": executed, **sug, "not_executed": not_executed + (
                     ["destructive-looking commands in the help are never run: only declared safe commands are"] if danger else []),
                 "findings": findings, "subcommands": sub_rows, "documentation": outputs}
     finally:
@@ -265,8 +276,28 @@ def finalize(result):
     result["summary"] = {"findings": len(result["findings"]), "by_severity": sev, "executed": len(result["executed"])}
     result["limits"] = ["a black-box probe of read-only commands; it does not prove the CLI is agent-ready",
                         "flag detection is text-based and can miss unusual help formats",
+                        "output is checked as JSON only for commands that carry --json (or --format json); other commands are only run and recorded in `runs`",
                         "commands not listed as safe were not run"]
     return result
+
+
+def requires_argument(help_body, name):
+    """True when the usage line of `name --help` shows a positional that is not in [brackets] (so the command fails alone with a usage error)."""
+    m = re.search(r"^[Uu]sage:\s*(.*?)(?:\n\s*\n|\Z)", help_body, re.S | re.M)
+    if not m:
+        return False
+    usage = " ".join(m.group(1).split())
+    i = usage.find(" %s " % name)
+    rest = usage[i + len(name) + 2:] if i >= 0 else usage
+    depth, kept = 0, []
+    for ch in rest:
+        if ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth = max(0, depth - 1)
+        elif depth == 0:
+            kept.append(ch)
+    return any(tok and not tok.startswith("-") and tok not in ("...", "[...]") for tok in "".join(kept).split())
 
 
 def extract_commands(t, with_lines=False):
@@ -300,7 +331,7 @@ def extract_commands(t, with_lines=False):
     return out if with_lines else sorted(out)
 
 
-READ_VERB = re.compile(r"^(list|ls|get|show|status|describe|version|whoami|search|view|inspect|info|cat|read|find|query|check|diff|log|logs)$", re.I)
+READ_VERB = re.compile(r"^(list|ls|get|show|status|describe|version|whoami|search|view|inspect|info|cat|read|find|query|check|diff|log|logs|doctor|detect|scan)$", re.I)
 
 
 def suggest_safe(help_text):

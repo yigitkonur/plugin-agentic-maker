@@ -1,7 +1,13 @@
 #!/bin/sh
 # agentic-maker: CLI behind the /agentic-maker:* skills. Needs python3 >= 3.9 (standard library only).
 # Runs the package in isolated mode (-I) so a file in the current directory can never shadow a stdlib module.
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
+# follow symlinks so the launcher works when linked onto a PATH directory
+SELF=$0
+while [ -L "$SELF" ]; do
+  LINK=$(readlink "$SELF")
+  case "$LINK" in /*) SELF=$LINK ;; *) SELF=$(dirname -- "$SELF")/$LINK ;; esac
+done
+ROOT=$(CDPATH= cd -- "$(dirname -- "$SELF")/.." && pwd -P)
 for py in python3 python; do
   if command -v "$py" >/dev/null 2>&1 && "$py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' 2>/dev/null; then
     exec "$py" -I "$ROOT/lib/agentic_maker/__main__.py" "$@"

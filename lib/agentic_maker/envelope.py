@@ -35,6 +35,17 @@ class CliError(Exception):
         return CLASS_EXIT.get(self.cls, 1)
 
 
+def _mark_templates(next_actions):
+    """A next action whose command still holds a <placeholder> is a template, not something to run as written."""
+    out = []
+    for na in next_actions or []:
+        na = dict(na)
+        if "<" in str(na.get("command", "")):
+            na["template"] = True
+        out.append(na)
+    return out
+
+
 class Output(object):
     """Decides JSON vs human once, then prints the envelope."""
 
@@ -48,7 +59,7 @@ class Output(object):
 
     def ok(self, result, next_actions=None, human=None, warnings=None, exit_code=0):
         env = {"ok": True, "result": result, "schema_version": SCHEMA_VERSION,
-               "next_actions": next_actions or []}
+               "next_actions": _mark_templates(next_actions)}
         if warnings:
             env["warnings"] = warnings
         self._print(env, human)
@@ -56,8 +67,8 @@ class Output(object):
 
     def partial(self, result, message, next_actions=None, human=None, warnings=None):
         """The command ran and produced data, but not everything succeeded: exit 8."""
-        env = {"ok": True, "result": result, "schema_version": SCHEMA_VERSION,
-               "next_actions": next_actions or [], "partial": True, "reason": message}
+        env = {"ok": True, "status": "partial", "partial": True, "reason": message, "result": result, "schema_version": SCHEMA_VERSION,
+               "next_actions": _mark_templates(next_actions)}
         if warnings:
             env["warnings"] = warnings
         self._print(env, human)

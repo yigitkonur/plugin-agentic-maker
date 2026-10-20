@@ -146,6 +146,12 @@ def _one_receipt(r, ws, run):
     return False, "unknown receipt kind %r" % kind
 
 
+def list_receipts(take_dir):
+    """What `check receipts` would do, without doing any of it."""
+    run = read_json(os.path.join(os.path.abspath(take_dir), "run.json"))
+    return [{"kind": r["kind"], "spec": r["spec"]} for r in sc_mod.receipt_specs(sc_mod.parse(run["scenario_file"]))]
+
+
 def check_receipts(take_dir, workspace=None):
     take_dir = os.path.abspath(take_dir)
     run = read_json(os.path.join(take_dir, "run.json"))
@@ -160,7 +166,8 @@ def check_receipts(take_dir, workspace=None):
         ok, detail = _one_receipt(r, ws, run)
         results.append({"kind": r["kind"], "spec": r["spec"], "ok": bool(ok), "detail": detail})
     passed = sum(1 for r in results if r["ok"])
-    out = {"take_dir": take_dir, "workspace": ws, "total": len(results), "passed": passed, "failed": len(results) - passed, "receipts": results}
+    out = {"take_dir": take_dir, "workspace": ws, "total": len(results), "passed": passed, "failed": len(results) - passed, "receipts": results,
+           "wrote": os.path.join(take_dir, "receipts.json")}
     write_json(os.path.join(take_dir, "receipts.json"), out)
     return out
 

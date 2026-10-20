@@ -24,6 +24,7 @@ EXIT_TABLE = """exit codes:
   0 success   1 crash (unexpected)   2 usage   3 not_found   4 auth   5 conflict
   6 validation (a check failed: nothing passed)   7 transient (retry may help)
   8 partial (ran, but not everything passed or completed; the result says what)
+     the envelope then has "status": "partial" and a "reason"; "ok" stays true because the command itself ran
 output: one JSON envelope on stdout when piped or with --json (--human forces text);
         diagnostics on stderr; never prompts. Global flags: --json --human --root DIR"""
 
@@ -125,7 +126,7 @@ def build():
             "example:\n  agentic-maker detect . --kind cli mcp")
     dt.add_argument("path", nargs="?", default=".")
     dt.add_argument("--kind", nargs="*", choices=["skill", "plugin", "mcp", "cli"], help="limit to these kinds")
-    sc = _p(sub, "scan", "Locate one kind with evidence lines (alias of detect --kind K); e.g. scan mcp finds the tool registrations.",
+    sc = _p(sub, "scan", "Locate one kind with more evidence lines than detect (5 per candidate, and for mcp the risky patterns); e.g. scan mcp finds the tool registrations.",
             "example:\n  agentic-maker scan mcp src")
     sc.add_argument("kind", choices=["skill", "plugin", "mcp", "cli"])
     sc.add_argument("path", nargs="?", default=".")
@@ -133,10 +134,11 @@ def build():
     c = _p(sub, "check", "Deterministic gates: receipts, findings, diff, nice.",
            "examples:\n  agentic-maker check receipts .agentic-maker/runs/<run>/<scenario>/01\n  agentic-maker check findings f1.json --trace <take>/trace.norm.jsonl")
     csub = c.add_subparsers(dest="what", metavar="<gate>", parser_class=_Parser)
-    cr = _p(csub, "receipts", "Did the run leave the world as the scenario's Receipts say? (anti-self-report). Receipts of kind `cmd` run through /bin/sh in the workspace: read the scenario's Receipts before checking one you did not write.",
+    cr = _p(csub, "receipts", "Did the run leave the world as the scenario's Receipts say? (anti-self-report). Receipts of kind `cmd` run through /bin/sh in the workspace: `--list` shows them without running anything.",
             "example:\n  agentic-maker check receipts .agentic-maker/runs/<run>/<scenario>/01")
-    cr.add_argument("take_dir")
+    cr.add_argument("take_dir", help="a take directory under .agentic-maker/runs/<run>/<scenario>/NN")
     cr.add_argument("--workspace", help="check this directory instead of the recorded workspace")
+    cr.add_argument("--list", action="store_true", help="print the receipts (including every `cmd` that would run) and run nothing")
     cf = _p(csub, "findings", "Verify the reader's findings: quotes verbatim in cited events, fields valid, ids unique.",
             "example:\n  agentic-maker check findings findings/f1.json --trace <take>/trace.norm.jsonl")
     cf.add_argument("findings")
@@ -144,7 +146,7 @@ def build():
     cf.add_argument("--out", help="also write {verified_ids: [...]} here")
     cd = _p(csub, "diff", "Did the applied edit fix the cause, or only add a rule beside the unchanged cause?",
             "example:\n  agentic-maker check diff --findings f1.json --finding F2")
-    cd.add_argument("--findings", required=True)
+    cd.add_argument("--findings", required=True, help="the verified findings file")
     cd.add_argument("--finding", required=True, help="finding id")
     cd.add_argument("--base", default="HEAD", help="git revision to diff against (default HEAD)")
     cd.add_argument("--justify", help="record why a flagged edit is nevertheless right (turns a flag into ok)")
@@ -162,19 +164,19 @@ def build():
     lsub = lg.add_subparsers(dest="what", metavar="<action>", parser_class=_Parser)
     li = _p(lsub, "init", "Open a ledger for this orchestrator session.",
             "example:\n  agentic-maker ledger init --session \"$CLAUDE_SESSION_ID\" --target skills/my-skill")
-    li.add_argument("--session", required=True)
+    li.add_argument("--session", required=True, help="the orchestrator's session id (${CLAUDE_SESSION_ID}); the Stop gate keys on it")
     li.add_argument("--target", nargs="+", required=True, help="files or directories the fixes will edit")
-    li.add_argument("--run-id")
-    li.add_argument("--budget-usd", type=float, default=10.0)
-    li.add_argument("--rounds", type=int, default=5)
-    li.add_argument("--ttl-hours", type=float, default=6.0)
-    li.add_argument("--force", action="store_true")
+    li.add_argument("--run-id", help="name of the run directory (default: a timestamp); an existing id is refused")
+    li.add_argument("--budget-usd", type=float, default=10.0, help="ceiling for workers and readers together (default 10)")
+    li.add_argument("--rounds", type=int, default=5, help="fix-and-rerun rounds before the loop must stop (default 5)")
+    li.add_argument("--ttl-hours", type=float, default=6.0, help="after this long the Stop gate stops blocking (default 6)")
+    li.add_argument("--force", action="store_true", help="replace this session's open ledger pointer (the old run directory is kept)")
     ls = _p(lsub, "status", "Show the ledger.", "example:\n  agentic-maker ledger status --session \"$CLAUDE_SESSION_ID\"")
     ls.add_argument("--session")
     ls.add_argument("--run-id")
     lt = _p(lsub, "trace", "Record a completed take (done automatically by `run --session`).",
             "example:\n  agentic-maker ledger trace .agentic-maker/runs/<run>/<scenario>/01 --session \"$CLAUDE_SESSION_ID\"")
-    lt.add_argument("take_dir")
+    lt.add_argument("take_dir", help="a completed take directory")
     lt.add_argument("--session", required=True)
     lf = _p(lsub, "fix", "Mark verified findings as being fixed. Refuses ids that did not verify.",
             "example:\n  agentic-maker ledger fix F1 F2 --session \"$CLAUDE_SESSION_ID\" --findings f1.json --trace <take>/trace.norm.jsonl")
@@ -411,10 +413,17 @@ def dispatch_check(args, root, out):
     w = args.what
     if w == "receipts":
         td = args.take_dir if os.path.isabs(args.take_dir) else os.path.join(root, args.take_dir)
+        if args.list:
+            specs = check_mod.list_receipts(td)
+            return out.ok({"take_dir": os.path.abspath(td), "total": len(specs), "receipts": specs},
+                          [{"command": "agentic-maker check receipts %s" % td, "why": "run them (cmd receipts execute through /bin/sh in the workspace)"}],
+                          "%d receipt(s)" % len(specs) + "".join("\n  %s: %s" % (r["kind"], r["spec"]) for r in specs))
         res = check_mod.check_receipts(td, args.workspace)
         human = "%d/%d receipts passed" % (res["passed"], res["total"]) + "".join("\n  FAIL %s: %s" % (r["line"] if "line" in r else r["kind"] + ": " + r["spec"], r["detail"]) for r in res["receipts"] if not r["ok"])
-        if res["total"] == 0 or res["failed"] == 0:
-            return out.ok(res, [], human, warnings=([] if res["total"] else ["the scenario has no Receipts: completion rests on the agent's own report"]))
+        if res["total"] == 0:
+            return out.partial(res, "the scenario has no Receipts: nothing was checked, completion rests on the agent's own report", [], human)
+        if res["failed"] == 0:
+            return out.ok(res, [], human)
         if res["passed"] == 0:
             raise CliError("validation", "no_receipt_passed", "0 of %d receipts passed" % res["total"], details=res)
         return out.partial(res, "%d of %d receipts failed" % (res["failed"], res["total"]), [], human)
@@ -444,9 +453,11 @@ def dispatch_check(args, root, out):
         res = check_mod.check_predicates(args.findings, args.trace, args.finding)
         human = "%d passed, %d failed, %d need a judge" % (res["passed"], res["failed"], res["needs_judgement"]) + "".join(
             "\n  %s %s: %s" % ({True: "PASS", False: "FAIL", None: "JUDGE"}[r["passed"]], r["id"], r["detail"]) for r in res["results"])
-        if res["total"] and res["passed"] == res["total"]:
+        if res["total"] == 0:
+            return out.ok(res, [], human, warnings=["the findings carry no rerun predicate: there is nothing to judge a fix by"])
+        if res["passed"] == res["total"]:
             return out.ok(res, [], human)
-        if res["passed"] == 0 and res["total"]:
+        if res["passed"] == 0:
             raise CliError("validation", "predicates_not_met", "no rerun predicate passed", details=res,
                            suggestion="the controlling text still misleads: reread the new trace for the same drift")
         return out.partial(res, "%d of %d predicates not (yet) met" % (res["total"] - res["passed"], res["total"]), [], human)
@@ -528,8 +539,7 @@ def main(argv):
     except CliError as e:
         return out.fail(e)
     except KeyboardInterrupt:
-        sys.stderr.write("interrupted\n")
-        return 130
+        return out.fail(CliError("transient", "interrupted", "interrupted before it finished", suggestion="run it again"))
     except Exception as e:  # never a traceback on stdout
         if os.environ.get("AGENTIC_MAKER_DEBUG"):
             traceback.print_exc()

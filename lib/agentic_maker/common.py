@@ -15,7 +15,20 @@ def now_iso():
 
 
 def project_root(arg=None):
-    return os.path.abspath(arg or os.getcwd())
+    """--root if given; else the nearest ancestor (cwd included) holding .agentic-maker, failing that .git or .claude-plugin, failing that cwd."""
+    if arg:
+        return os.path.abspath(arg)
+    cwd = os.path.abspath(os.getcwd())
+    for markers in ((STATE_DIR,), (".git", ".claude-plugin")):
+        d = cwd
+        while True:
+            if any(os.path.exists(os.path.join(d, m)) for m in markers):
+                return d
+            parent = os.path.dirname(d)
+            if parent == d:
+                break
+            d = parent
+    return cwd
 
 
 def state_dir(root):
@@ -31,7 +44,8 @@ def read_json(path):
         with open(path, encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
-        raise CliError("not_found", "file_not_found", "no such file: %s" % path)
+        raise CliError("not_found", "file_not_found", "no such file: %s" % path,
+                       suggestion="pass a take directory made by `agentic-maker run` (it holds run.json), or check the path" if path.endswith("run.json") else None)
     except ValueError as e:
         raise CliError("validation", "invalid_json", "%s is not valid JSON: %s" % (path, e))
 

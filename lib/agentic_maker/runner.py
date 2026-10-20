@@ -360,11 +360,11 @@ def prepare_live(root, sc, args):
     claude = shutil.which(os.environ.get("AGENTIC_MAKER_CLAUDE", "claude")) or "claude"
     args = dict(args, claude=claude, session_id=args.get("session_id") or str(uuid.uuid4()))
     run_id = args.get("run_id") or "%s-%s" % (time.strftime("%Y%m%d-%H%M%S"), slug(meta["name"]))
-    take = next_take_dir(root, run_id, meta["name"])
-    cmd, exposure, warnings, path_dirs, toolset = plan(root, sc, args, take)
+    ws = None
     if args.get("workspace_dir"):
         # a stable directory: the trust dialog is answered once, not once per round. It is emptied and reseeded every time,
         # so it must be new, empty, or one this command made before (the marker); never a directory that holds anything else.
+        # Refused before anything is created, so a rejected call leaves nothing behind.
         ws = os.path.realpath(_abs(root, args["workspace_dir"]))
         home, proj = os.path.realpath(os.path.expanduser("~")), os.path.realpath(root)
         contains = lambda inner: inner == ws or inner.startswith(ws.rstrip(os.sep) + os.sep)
@@ -376,6 +376,10 @@ def prepare_live(root, sc, args):
             if held and WORKSPACE_MARK not in held:
                 raise CliError("conflict", "workspace_dir_not_ours", "%s is not empty and was not made by `run --prepare`; it would be emptied" % ws,
                                suggestion="pass a directory that does not exist yet, or an empty one")
+    take = next_take_dir(root, run_id, meta["name"])
+    cmd, exposure, warnings, path_dirs, toolset = plan(root, sc, args, take)
+    if ws:
+        if os.path.exists(ws):
             shutil.rmtree(ws)
         os.makedirs(ws)
     else:
