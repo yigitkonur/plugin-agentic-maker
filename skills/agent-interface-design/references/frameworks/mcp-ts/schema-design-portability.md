@@ -53,9 +53,9 @@ The 7 rules as code comments:
 ```typescript
 // Rule 1: No oneOf / anyOf / allOf -- Gemini ignores tools with these
 // Bad
-{ oneOf: [{ type: "string" }, { type: "number" }] }
+const bad = { oneOf: [{ type: "string" }, { type: "number" }] };
 // Good -- pick the most permissive type, coerce server-side
-{ type: "string", description: "Can also be a number (will be converted)" }
+const good = { type: "string", description: "Can also be a number (will be converted)" };
 
 // Rule 2: Max 3 levels of nesting -- GPT-4 degrades beyond this
 

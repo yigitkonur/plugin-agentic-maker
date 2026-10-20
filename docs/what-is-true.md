@@ -62,10 +62,18 @@ Details: [evidence/09-second-review.md](evidence/09-second-review.md).
 
 | U | Verdict | Observed |
 |---|---|---|
-| **E10** skill `allowed-tools` path patterns | **TRUE for an absolute pattern written `//**/dir-*/**`, FALSE for `**/dir-*/**`** | `claude -p --permission-mode dontAsk --allowedTools 'Read(//**/am-ws-*/**)'` read a file in the system temp directory outside the project; with `Read(**/am-ws-*/**)` the same read was denied. `derail` uses the first form |
-| **E11** `allowed-tools` `Write(<relative glob>)` | **TRUE** | `Write(.agentic-maker/runs/**)` in the `derail` frontmatter let the orchestrator save reader replies with no prompt in the skill and CLI runs (the MCP run had accept-edits on, so it does not count) |
-| **E12** plugin agent name | **TRUE** | The reader runs as `agentic-maker:trace-reader` (shown by that name in the agent list of a live session) |
-| **E13** `context: fork` background | **OBSERVED** | `/agentic-maker:audit` ran as a background agent named after the skill and the main session summarised its report afterwards; the main session then ran the target itself to spot-check. The fork's tool set was not inspected, so "reports, changes nothing" stays an instruction |
-| **E14** pre-approved commands that still prompt | **PARTLY EXPLAINED** | In a manual-permission session `agentic-maker check nice`, `check findings`, `check predicate` and `check receipts` each asked once; three of the four were issued in the same assistant message as another tool call (the fourth alone), and a one-call message never prompted for a command of the same kind although `Bash(agentic-maker *)` was in the skill's `allowed-tools`; many other `agentic-maker` calls did not. The same commands ran without a prompt under `claude -p --permission-mode dontAsk` with the same rule |
-| **E15** orchestrator environment reaching a worker | **FIXED** | `CLAUDE_CODE_MESSAGING_SOCKET` and `CLAUDE_CODE_MESSAGING_TOKEN` of the orchestrator were in the worker's environment under the old `CLAUDE_CODE_` prefix rule; they are excluded now and a worker still starts and authenticates |
+| **E11** skill `allowed-tools` path patterns | **TRUE for an absolute pattern written `//**/dir-*/**`, FALSE for `**/dir-*/**`** | `claude -p --permission-mode dontAsk --allowedTools 'Read(//**/am-ws-*/**)'` read a file in the system temp directory outside the project; with `Read(**/am-ws-*/**)` the same read was denied. `derail` uses the first form |
+| **E12** `allowed-tools` `Write(<relative glob>)` | **TRUE** | `Write(.agentic-maker/runs/**)` in the `derail` frontmatter let the orchestrator save reader replies with no prompt in the skill and CLI runs (the MCP run had accept-edits on, so it does not count) |
+| **E13** plugin agent name | **TRUE** | The reader runs as `agentic-maker:trace-reader` (shown by that name in the agent list of a live session) |
+| **E14** `context: fork` background | **OBSERVED** | `/agentic-maker:audit` ran as a background agent named after the skill and the main session summarised its report afterwards; the main session then ran the target itself to spot-check. The fork's tool set was not inspected, so "reports, changes nothing" stays an instruction |
+| **E15** pre-approved commands that still prompt | **PARTLY EXPLAINED** | In a manual-permission session `agentic-maker check nice`, `check findings`, `check predicate` and `check receipts` each asked once; three of the four were issued in the same assistant message as another tool call (the fourth alone), and a one-call message never prompted for a command of the same kind although `Bash(agentic-maker *)` was in the skill's `allowed-tools`; many other `agentic-maker` calls did not. The same commands ran without a prompt under `claude -p --permission-mode dontAsk` with the same rule |
+| **E16** orchestrator environment reaching a worker | **FIXED** | `CLAUDE_CODE_MESSAGING_SOCKET` and `CLAUDE_CODE_MESSAGING_TOKEN` of the orchestrator were in the worker's environment under the old `CLAUDE_CODE_` prefix rule; they are excluded now and a worker still starts and authenticates |
 
+
+## S8 - round two (2026-10-21, Claude Code 2.1.304)
+
+Details: [evidence/10-round-two.md](evidence/10-round-two.md).
+
+| U | Verdict | Observed |
+|---|---|---|
+| **E17** the user's `CLAUDE.md` in a subagent or a worker | **OBSERVED: workers clean, in-session reader not** | Counting the transcripts saved on the test machine for the injected marker "Contents of `<home>/.claude/CLAUDE.md`": **0 of 38** `--restricted` worker transcripts carry it, **11 of 26** in-session `agentic-maker:trace-reader` transcripts do. Positive control: the interactive orchestrator transcript matches on 23 lines, so the search works. The reader is the judge in every derail loop, so its context was not clean. The remaining 15 reader transcripts did not carry it; the cause (a different working directory or settings at the time) was not established |

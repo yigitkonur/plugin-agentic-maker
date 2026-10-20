@@ -65,8 +65,8 @@ directory with optional params."
 What belongs in the schema, not the description: put parameter-level guidance in each parameter's `describe()`.
 
 ```typescript
-{
+const searchParams = {
   query: z.string().describe("Search term. Supports regex if prefixed with 're:'"),
   file_type: z.string().optional().describe("Filter by extension, e.g. '.ts' or '.py'"),
-}
+};
 ```

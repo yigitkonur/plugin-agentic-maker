@@ -7,6 +7,11 @@ Types (`ExitStatus`, `Response`, `AppError`) are in `examples.md`. Rules: `../..
 ## CLI argument parsing with Clap (standard flags)
 
 ```rust
+use clap::{Parser, Subcommand};
+use serde::Serialize;
+use std::process::ExitCode;
+// Response, Meta and AppError are defined in examples.md; import them from where you put them.
+
 #[derive(Parser)]
 #[command(name = "mycli")]
 #[command(about = "Agent-friendly CLI example")]

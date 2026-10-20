@@ -77,6 +77,7 @@ export default new OAuthProvider({
   authorizeEndpoint: "/authorize",
   tokenEndpoint: "/token",
   clientRegistrationEndpoint: "/register",
+  resourceMetadata: { resource: "https://mcp.example.com/mcp" }, // required since workers-oauth-provider 1.x; RFC 9728 metadata for /.well-known/oauth-protected-resource
   tokenExchangeCallback: async (options) => {
     // Federate to GitHub/Google/Slack/Stytch/Auth0/WorkOS/Cloudflare Access
     const upstream = await exchangeWithUpstream(options); // verify option names against the installed version
@@ -92,9 +93,11 @@ Facts: `../../fresh/mcp-platform-vercel.md`.
 
 ```typescript
 // app/api/[transport]/route.ts
-import { createMcpHandler } from "@vercel/mcp-adapter";
+import { createMcpHandler } from "mcp-handler"; // formerly @vercel/mcp-adapter
 
-const handler = createMcpHandler(/* ... */);
+const handler = createMcpHandler((server) => {
+  // register tools on `server` here
+});
 
 export const maxDuration = 800; // Override quickstart default - requires Fluid Compute ON
 export { handler as GET, handler as POST };

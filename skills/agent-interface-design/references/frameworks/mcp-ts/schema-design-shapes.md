@@ -92,7 +92,7 @@ Strategy 1: split by workflow stage.
 
 ```typescript
 // One tool with 40+ params
-server.tool("deploy", { env, region, scaling, healthCheck, rollback, ... })
+server.tool("deploy", { env, region, scaling, healthCheck, rollback /* ...35 more */ });
 
 // Three focused tools
 server.tool("deploy_configure", {

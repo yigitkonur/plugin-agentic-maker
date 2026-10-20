@@ -39,8 +39,8 @@ function serfError(category: SERFCategory, message: string, opts: Partial<SERFEr
   };
 }
 
-// Usage:
-return serfError("RATE_LIMITED", "GitHub API rate limit exceeded", {
+// Usage, inside a tool handler:
+const rateLimited = serfError("RATE_LIMITED", "GitHub API rate limit exceeded", {
   retry_after_ms: 60_000,
   suggested_actions: ["wait_60s_then_retry"],
 });

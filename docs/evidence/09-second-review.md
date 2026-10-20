@@ -101,7 +101,7 @@ Rewriting the description itself, in the same file, printed `"verdict": "ok", "r
 - `/agentic-maker:audit cli/seeded-cli`: 11 findings (4 High, 6 Medium, 1 Low), overall 70, 5 of 8 dimensions measured; `/tmp/seeded-cli-delete-ran` absent; the main session's summary of the fork's report shows probe-based evidence and no instruction to run a step by hand (the fork's full text was not kept). The fixture has 11 planted defects.
 - It found that two reference files rated the same defect differently (section 1), which is fixed.
 - After the fork returned, the main session spot-checked three claims by running the target itself. The audit's report spec now ends with one line saying the probe output is the evidence and the target is not to be run again by hand. The skill's `allowed-tools` pre-approves; it does not restrict, and the README says "instructed", not "sandboxed".
-- Clean twin (`cli/clean-cli`): see the last line of this section.
+- Clean twin (`cli/clean-cli`): the audit with its own extra probe commands was recorded only as a count ("9 gaps") and the list was never written down; round two reran it and recorded it: `docs/evidence/10-round-two.md` section 1.
 
 ### 3.6b The whole ledger once more, on the final text
 
@@ -131,7 +131,7 @@ Mean Δ +0.50, 148 s, $0.88. The two "ignores" cases score the same with and wit
 
 Five workers (one per language folder, Sonnet, medium effort) took the 307 reviewer findings one by one: read the cited line, skip if already fixed, reject if the reviewer was wrong, otherwise make the smallest edit. Where a finding rested on an SDK detail nobody could confirm offline, the sample was rewritten to avoid the claim or marked "illustrative, confirm against your SDK version" (a handful of places). Rejections worth keeping: the Go and Node reviewers said JSON progress events on stderr break the stderr rule; they do not, `cli/streams-and-jsonl.md` defines them as the one carve-out (typed progress lines on stderr, the terminal line on stdout).
 
-After the edits, every Python block parses (`ast.parse`, 123 blocks), every bash block passes `bash -n`, every Go block passes `gofmt -e` (42 blocks). TypeScript (98 blocks) and Rust (6 blocks) were not compiled: `tsc` and `rustfmt` are not installed here. They are UNVERIFIED beyond a read.
+After the edits, every Python block parses (`ast.parse`, 123 blocks), every bash block passes `bash -n`, every Go block passes `gofmt -e` (42 blocks). TypeScript (98 blocks) and Rust (6 blocks) were not compiled in this round (`tsc` was absent and the `rustfmt` component was missing). Round two compiled them and found real defects: `docs/evidence/10-round-two.md` section 1.
 
 ## 5. Not done, or not proven
 

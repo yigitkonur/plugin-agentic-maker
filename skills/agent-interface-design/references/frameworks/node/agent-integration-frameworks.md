@@ -17,7 +17,7 @@ const cliTool = new DynamicStructuredTool({
   schema: z.object({
     command: z.string().describe('CLI command (e.g., "mycli task start")'),
     args: z.array(z.string()).optional().describe('Positional arguments'),
-    flags: z.record(z.string()).optional().describe('Named flags as key-value pairs'),
+    flags: z.record(z.string(), z.string()).optional().describe('Named flags as key-value pairs'),
     timeout: z.number().optional().default(30).describe('Timeout in seconds'),
     dryRun: z.boolean().optional().describe('If true, adds --dry-run flag'),
   }),

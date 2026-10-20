@@ -63,7 +63,7 @@ Fixtures are small, written by the same hand as the probes, and live in `fixture
 
 | Fixture | Planted defects | Plugin | Old scripts | Clean twin |
 |---|---|---|---|---|
-| bash CLI (`fixtures/cli/seeded-cli`) | 11 | **10 found directly, 1 through its cause** | 4 directly, 1 more as a missing standard flag; all text-level | 0 findings, exit 0 from the default probe (an audit that adds its own `--safe` commands finds 9 ordinary gaps the twin never claimed to lack: `docs/evidence/09-second-review.md`) |
+| bash CLI (`fixtures/cli/seeded-cli`) | 11 | **10 found directly, 1 through its cause** | 4 directly, 1 more as a missing standard flag; all text-level | 0 findings, exit 0 from the default probe and from the extra probes a full audit chose (the first twin was not clean under a full audit: it found 6 gaps, a High among them, and the twin was fixed; `docs/evidence/10-round-two.md`) |
 | stdio MCP server (`fixtures/mcp/seeded-server.py`) | 11 groups, 24 tools | all groups found, 18 findings today (17 when first recorded); budget 5724 chars / 24 tools equals a `jq` hand count | counted 15 tool candidates, ~459 tok, flagged nothing | 0 findings |
 | skill (`fixtures/skill-project`) | jargon description, opaque name, relative script path, typo in a reference path, a threshold without a number | 4 verified findings in run 1 (1 rejected); the run-2 reader found the untriggered skill (T1) | not runnable: the old modes name the skill | n/a |
 
