@@ -1,0 +1,8 @@
+.DS_Store
+__pycache__/
+*.pyc
+.agentic-maker/runs/
+.env
+.env.*
+!.env.example
+node_modules/
