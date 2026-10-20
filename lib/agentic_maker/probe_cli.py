@@ -235,7 +235,8 @@ def probe(binary, subcommands=None, safe_cmds=None, timeout=10):
             if "--dry-run" not in help_text:
                 findings.append(_finding("destructive.no_dry_run", "safety", "Medium", "fail", "The agent cannot preview a destructive change before making it.",
                                          "add --dry-run that prints the plan and changes nothing", {"help_mentions": DESTRUCTIVE_WORD.search(help_text).group(0)}, "cli/dry-run.md"))
-        return {"binary": path, "kind": kind, "executed": executed, "not_executed": not_executed + (
+        sug = suggest_safe(help_text) if help_text else {"suggested_safe": [], "read_commands_needing_arguments": []}
+        return {"binary": path, "kind": kind, "help_excerpt": "\n".join(help_text.splitlines()[:60]), "executed": executed, **sug, "not_executed": not_executed + (
                     ["destructive-looking commands in the help are never run: only declared safe commands are"] if DESTRUCTIVE_WORD.search(help_text) else []),
                 "findings": findings, "subcommands": sub_rows, "documentation": outputs}
     finally:
@@ -254,6 +255,40 @@ def finalize(result):
     return result
 
 
+def extract_commands(t, with_lines=False):
+    """Names listed under a Commands:/Subcommands:/Available Commands: heading. A new unindented heading ends the list."""
+    out, inside = {}, False
+    for ln in t.splitlines():
+        if re.match(r"^\s*(Commands|Subcommands|Available Commands):\s*$", ln):
+            inside = True
+            continue
+        if not inside or not ln.strip():
+            continue
+        if not ln[0].isspace():
+            inside = False
+            continue
+        if ln.lstrip().startswith("-"):
+            continue
+        m = re.match(r"^\s+([A-Za-z0-9][A-Za-z0-9:_-]+)([\s,]|$)", ln)
+        if m:
+            out[m.group(1)] = ln.strip()
+    return out if with_lines else sorted(out)
+
+
+READ_VERB = re.compile(r"^(list|ls|get|show|status|describe|version|whoami|search|view|inspect|info|cat|read|find|query|check|diff|log|logs)$", re.I)
+
+
+def suggest_safe(help_text):
+    """Read-only commands that need no positional argument, from the help text alone. Nothing here is run."""
+    ok, needs_args = [], []
+    for name, line in extract_commands(help_text, True).items():
+        if not READ_VERB.match(name) or DESTRUCTIVE_WORD.search(line):
+            continue
+        (needs_args if re.search(r"[<\[]", line.split("  ")[0]) else ok).append(name)
+    flag = " --json" if "--json" in help_text else ""
+    return {"suggested_safe": [n + flag for n in ok], "read_commands_needing_arguments": needs_args}
+
+
 def diff_help(old_text, new_text):
     """Compare two help snapshots (no CLI is run). Breaking = removed command, removed flag, changed usage line."""
     flag = re.compile(r"--[A-Za-z0-9][A-Za-z0-9_-]*")
@@ -261,23 +296,7 @@ def diff_help(old_text, new_text):
     def flags(t):
         return sorted(set(flag.findall(t)))
 
-    def commands(t):
-        out, inside = set(), False
-        for ln in t.splitlines():
-            if re.match(r"^\s*(Commands|Subcommands|Available Commands):\s*$", ln):
-                inside = True
-                continue
-            if not inside or not ln.strip():
-                continue
-            if not ln[0].isspace():          # a new, unindented section heading ends the command list
-                inside = False
-                continue
-            if ln.lstrip().startswith("-"):
-                continue
-            m = re.match(r"^\s+([A-Za-z0-9][A-Za-z0-9:_-]+)([\s,]|$)", ln)
-            if m:
-                out.add(m.group(1))
-        return sorted(out)
+    commands = extract_commands
 
     def usage(t):
         return sorted(set(re.sub(r"\s+", " ", ln.strip()) for ln in t.splitlines() if re.match(r"^\s*Usage:", ln, re.I)))

@@ -71,7 +71,10 @@ def build():
             "safe.txt: one set of arguments per line, e.g. `get missing --json  # expect-exit 3`")
     pc.add_argument("binary", help="path or name of the executable (a crate or package name is not a path)")
     pc.add_argument("--safe-cmds", help="file of read-only argument lists the audit may run (one per line, `# expect-exit N` optional)")
+    pc.add_argument("--safe", action="append", default=[], metavar="ARGS",
+                    help="one read-only argument list the audit may run, no file needed; repeatable (e.g. --safe 'list --json' --safe 'get 1 --json  # expect-exit 0')")
     pc.add_argument("--subcommands", help="file of subcommands whose --help to check (one per line)")
+    pc.add_argument("--sub", action="append", default=[], metavar="SUBCOMMAND", help="one subcommand whose --help to check; repeatable")
     pc.add_argument("--timeout", type=int, default=10, help="seconds per invocation (default 10)")
     pd = _p(psub, "cli-diff", "Compare two saved help snapshots (runs nothing): added/removed commands and flags, likely breaking changes.",
             "example:\n  agentic-maker probe cli-diff help-v1.txt help-v2.txt")
@@ -272,8 +275,9 @@ def _read_lines(path, root, what):
 def dispatch_probe(args, root, out):
     w = args.what
     if w == "cli":
-        subs = _read_lines(args.subcommands, root, "subcommands") if args.subcommands else None
-        safe = _read_lines(args.safe_cmds, root, "safe-cmds") if args.safe_cmds else None
+        subs = (_read_lines(args.subcommands, root, "subcommands") if args.subcommands else []) + list(args.sub) or None
+        safe = (_read_lines(args.safe_cmds, root, "safe-cmds") if args.safe_cmds else []) + [a.strip() for a in args.safe if a.strip()]
+        safe = safe or None
         res = probe_cli_mod.finalize(probe_cli_mod.probe(args.binary, subs, safe, args.timeout))
         if safe is None:
             res["limits"].insert(0, "no --safe-cmds were declared: only help, version and one invalid command were run, so stdout purity and exit codes of real commands are unchecked")
@@ -281,7 +285,11 @@ def dispatch_probe(args, root, out):
         for f in res["findings"]:
             lines.append("- [%s] %s: %s (fix: %s)" % (f["severity"], f["check"], f["why_it_matters"], f["fix"]))
         lines += ["", "executed:"] + ["  " + e for e in res["executed"]] + (["not executed:"] + ["  " + e for e in res["not_executed"]] if res["not_executed"] else [])
-        nxt = [{"command": "agentic-maker probe cli %s --safe-cmds <file>" % args.binary, "why": "declare read-only commands to check JSON purity and exit codes"}] if safe is None else []
+        nxt = []
+        if safe is None:
+            picks = " ".join('--safe "%s"' % c for c in res["suggested_safe"]) or '--safe "<read-only args>"'
+            nxt.append({"command": "agentic-maker probe cli %s %s" % (args.binary, picks),
+                        "why": "declare read-only commands (add arguments for %s) so JSON purity and exit codes are checked" % (", ".join(res["read_commands_needing_arguments"]) or "commands that need them")})
         if res["findings"]:
             return out.partial(res, "%d finding(s) in the CLI contract" % len(res["findings"]), nxt, "\n".join(lines))
         return out.ok(res, nxt, "\n".join(lines))
