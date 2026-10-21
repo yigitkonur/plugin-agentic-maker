@@ -28,7 +28,7 @@ Lost your place (a long loop, a compaction)? `agentic-maker ledger status --sess
 
 Work serially through these steps. Every step ends in a command whose output you read; a claim is not a result.
 
-**How to run the commands:** one `agentic-maker` command per Bash call, and one Bash call per message (a second call issued in the same message has been seen to ask for approval although its pattern is pre-approved), with literal paths copied from the previous reply (every reply carries the next command in `next_actions`). Shell variables, `&&` or `;` chains and heredocs cannot be checked against the allowed-tools patterns and are denied. A scenario can be named instead of pathed: `agentic-maker run release-notes`.
+**How to run the commands:** one `agentic-maker` command per Bash call, with literal paths copied from the previous reply (every reply carries the next command in `next_actions`). Shell variables, `&&` or `;` chains and heredocs cannot be checked against the allowed-tools patterns and are denied. A scenario can be named instead of pathed: `agentic-maker run release-notes`.
 
 1. **Frame.**
    - The target is in the arguments. If it is not, or you cannot tell its kind (`skill`, `plugin`, `cli`, `mcp`), ask the user once.

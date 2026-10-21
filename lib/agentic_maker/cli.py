@@ -271,6 +271,11 @@ def dispatch(args, root, out):
                                suggestion="agentic-maker run %s --dry-run  (the plan and cost ceiling), then --prepare without --dry-run" % args.scenario)
             res, warns = runner_mod.prepare_live(root, sc, a)
             return out.ok(res, [{"command": "herdr tab create --cwd %s --label derail --no-focus" % res["workspace"], "why": "then follow skills/derail/references/runners/herdr.md; one herdr command per reply"}], json.dumps(res, indent=2), warnings=warns)
+        if args.session and not args.run_id and not args.dry_run:
+            try:                                    # every take of a loop lives under the ledger's run, with no flag to remember after a compaction
+                a["run_id"] = ledger_mod.load(root, session=args.session)[0]["run_id"]
+            except CliError:
+                pass
         if args.session and runner == "headless" and not args.dry_run:
             ledger_mod.refuse_if_over_budget(root, args.session)
             if sc["meta"]["kind"] == "cli":
@@ -535,7 +540,7 @@ def dispatch_ledger(args, root, out):
     w = args.what
     if w == "init":
         led = ledger_mod.init(root, args.session, args.target, args.run_id, args.budget_usd, args.rounds, args.ttl_hours, args.force)
-        return out.ok(led, [{"command": "agentic-maker run <scenario> --session %s --run-id %s" % (args.session, led["run_id"]), "why": "first take"}],
+        return out.ok(led, [{"command": "agentic-maker run <scenario> --session %s" % args.session, "why": "first take; its takes are kept under this ledger's run"}],
                       "ledger %s opened for session %s" % (led["run_id"], args.session))
     if w == "status":
         led, p = ledger_mod.load(root, args.session, args.run_id)
