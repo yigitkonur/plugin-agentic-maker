@@ -58,7 +58,7 @@ async function invokeCLIWithLogging(cmd: string[]): Promise<CLIResult> {
 ## Metrics collection
 
 ```typescript
-import { Counter, Histogram, Registry } from 'prom-client';
+import { Counter, Histogram, Registry } from '@prometheus-io/client';
 
 const registry = new Registry();
 
