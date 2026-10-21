@@ -43,7 +43,7 @@ const cliTool = new DynamicStructuredTool({
 
 // LangChain agent usage
 import { ChatOpenAI } from '@langchain/openai';
-import { AgentExecutor, createOpenAIToolsAgent } from 'langchain/agents';
+import { AgentExecutor, createOpenAIToolsAgent } from '@langchain/classic/agents';
 import { pull } from 'langchain/hub';
 import type { ChatPromptTemplate } from '@langchain/core/prompts';
 
@@ -220,6 +220,7 @@ async function runAgentLoop(userMessage: string): Promise<string> {
       messages.push(choice.message);
 
       for (const toolCall of choice.message.tool_calls || []) {
+        if (toolCall.type !== 'function') continue; // skip custom tool calls
         const result = await processOpenAIFunctionCall(
           toolCall.function.name,
           toolCall.function.arguments

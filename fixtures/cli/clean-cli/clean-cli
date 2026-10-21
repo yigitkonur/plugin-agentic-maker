@@ -28,8 +28,10 @@ Examples:
   clean-cli get 1 --json
   clean-cli delete 1 --dry-run
 
+Errors (--json): {"ok":false,"error":{"class":"usage","code":"unknown_option","message":"unknown option '--x'","retryable":false,"suggestion":"run: clean-cli --help"},"schema_version":1}
+
 Exit codes:
-  0 success, 2 usage error, 3 not found, 6 validation, 7 transient
+  0 success, 2 usage error, 3 not found
 USAGE
 }
 
@@ -39,7 +41,7 @@ cmd_usage() {
 clean-cli list - show all items
 
 Usage: clean-cli list [--json]
-Output (--json): {"ok":true,"command":"list","result":{"items":[{"id":1,"name":"widget"}]},"meta":{"total_count":2}}
+Output (--json): {"ok":true,"command":"list","result":{"items":[{"id":1,"name":"widget"},{"id":2,"name":"gadget"}]},"meta":{"total_count":2},"schema_version":1}
 Example: clean-cli list --json
 Exit codes: 0 success, 2 usage error
 U
@@ -48,7 +50,7 @@ U
 clean-cli get - show one item
 
 Usage: clean-cli get <id> [--json]
-Output (--json): {"ok":true,"command":"get","result":{"id":1,"name":"widget"}}
+Output (--json): {"ok":true,"command":"get","result":{"id":1,"name":"widget"},"schema_version":1}
 Example: clean-cli get 1 --json
 Exit codes: 0 success, 2 usage error, 3 not found
 U
@@ -57,8 +59,9 @@ U
 clean-cli delete - remove an item
 
 Usage: clean-cli delete <id> (--yes | --force | --dry-run) [--json]
+Output (--json): {"ok":true,"command":"delete","result":{"deleted":"1"},"schema_version":1}; with --dry-run: {"ok":true,"command":"delete","result":{"would_delete":"1"},"schema_version":1}
 Example: clean-cli delete 1 --dry-run
-Exit codes: 0 success, 2 usage error (no --yes and no terminal)
+Exit codes: 0 success, 2 usage error (no id, or no --yes and no terminal), 3 not found
 U
     ;;
   esac
@@ -96,6 +99,9 @@ if [ "$help" = 1 ]; then
   exit 0
 fi
 
+case "$cmd" in list) max=1 ;; get|delete) max=2 ;; *) max=${#pos[@]} ;; esac
+[ "${#pos[@]}" -le "$max" ] || fail usage unexpected_argument 2 "unexpected argument '${pos[$max]}'" "run: clean-cli $cmd --help"
+
 case "$cmd" in
   list)
     if [ "$json" = 1 ]; then echo '{"ok":true,"command":"list","result":{"items":[{"id":1,"name":"widget"},{"id":2,"name":"gadget"}]},"meta":{"total_count":2},"schema_version":1}'
@@ -106,6 +112,7 @@ case "$cmd" in
     if [ "$json" = 1 ]; then echo "{\"ok\":true,\"command\":\"get\",\"result\":{\"id\":$id,\"name\":\"$n\"},\"schema_version\":1}"; else echo "$id  $n"; fi ;;
   delete)
     [ -n "$id" ] || fail usage missing_argument 2 "delete requires <id>" "run: clean-cli delete 1 --dry-run"
+    name_of "$id" >/dev/null || fail not_found item_not_found 3 "item '$id' does not exist" "run: clean-cli list --json"
     if [ "$dry" = 1 ]; then
       if [ "$json" = 1 ]; then echo "{\"ok\":true,\"command\":\"delete\",\"result\":{\"would_delete\":\"$id\"},\"schema_version\":1}"; else echo "would delete $id"; fi
       exit 0
