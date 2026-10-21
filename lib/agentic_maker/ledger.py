@@ -326,7 +326,7 @@ def phase_and_next(led, session):
     done = {f.get("id") for f in led.get("findings", {}).values() if f.get("findings_file") == last.get("findings_file")}
     todo = [i for i in last.get("verified_ids", []) if i not in done]
     if todo:
-        return "fixing", [{"command": "agentic-maker ledger fix %s --session %s --findings %s --trace %s" % (" ".join(todo), session, last["findings_file"], os.path.join(newest["take_dir"], "trace.norm.jsonl")),
+        return "fixing", [{"command": "agentic-maker ledger fix %s --session %s --findings %s" % (" ".join(todo), session, last["findings_file"]),
                            "why": "keep a copy of the controlling file, then rewrite the text it names"}]
     problems, nxt = witness_problems(led, session)
     if not problems:

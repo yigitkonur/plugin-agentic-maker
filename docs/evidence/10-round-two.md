@@ -152,3 +152,45 @@ A fresh interactive session in manual-permission mode, the skill invoked, then: 
 - A herdr pane running agy resolves to `.../logs/transcript_full.jsonl` (not the 4096-character `transcript.jsonl`); a pane running Claude resolves to its `<session id>.jsonl`; an unknown id fails with `session_not_found` and a suggestion.
 - A live Codex worker was started under herdr to run two commands. **It could not run**: the pane showed "Your access token could not be refreshed because you have since logged out or signed in to another account. Please sign in again." That is a step only the user can do, so the live Codex worker round is UNVERIFIED. What the attempt did show: herdr 0.9.5 reports no `agent_session` for that Codex pane, and the resolver's fallback (read the id from the pane's status line, accept it only if a rollout of that id was recorded in the pane's directory) found the right rollout; its 8 events (including the harness's `developer` instructions) normalize.
 - A reader can cite a Codex-derived trace: `claude -p --agent agentic-maker:trace-reader --restricted ...` over the 28-event Codex session returned valid JSON in 2 turns ($0.037); its finding cited events [14, 16, 18] and `check findings` verified it (1 verified, 0 rejected). This also shows the headless reader is a working fallback if the hook route ever fails.
+
+## 6. A real skill, not planted: `convert-to-natural-writing`
+
+The skill is one of the author's own (`skills-by-yigitkonur`), 1184 words plus six references and a script. It has `disable-model-invocation: true`, so a worker cannot choose it; only a slash command starts it. That case was not handled (A11): `scenario.py` now reads the skill's frontmatter, the dry-run says the prompt must begin with `/<wrapper>:<skill>` and that T1 cannot be observed, and `targets/skill.md` and `scenarios.md` carry a sentence about it. Without the slash the dry-run warns "a worker cannot choose it, so a run would never use it".
+
+Two scenarios in Turkish on a scratch copy: a rewrite of a translationese paragraph (receipts: the version, date, percentage, command and link survive character for character, "yaklaşık" keeps its hedge, nothing invented, the source unchanged) and an audit (a findings file that quotes the text, the source unchanged). A fresh interactive orchestrator ran `/agentic-maker:derail skills/convert-to-natural-writing --rounds 1` ($4, 6 takes approved).
+
+| | Result |
+|---|---|
+| Takes | rewrite 01, 02, 03: **11/11** receipts each; audit 01, 02: **6/6** each; five takes, $0.416 of $4 |
+| What the skill does well (receipts and readers agree) | every protected literal survived in all three rewrites, nothing was invented, the audit quotes verbatim: the skill's invariants hold |
+| Findings, not planted (readers: verified 4 of 4 and 2 of 2, none rejected) | the Rewrite row of the mode table says the deliverable is "backed by an internal invariant reconciliation pass", while section 3 calls the Active Ledger "mandatory"; the same contradiction in the completion checklist (F2, F3, P1). `scripts/audit-rewrite.py` is named nowhere in `SKILL.md` or the references, so a worker cannot discover it (F4, P2). In audit mode the Context & Genre field is stated once, not per entry, and the checklist mixes rewrite-only items into audit mode (audit, both P2) |
+| The fix (two sentences, `check diff` accepted both, every `[NICE]` line intact) | see the diff below |
+| Effect on the rerun | **none on the behaviour it aimed at**: in rewrite/02 and rewrite/03 the worker still goes Read, then Write and replies with a change summary, no Active Ledger. The orchestrator recorded F2 and F3 as failed (`ledger judge`, with its reasons, after reading event 8 of both takes) and **closed `open`**, not `clean` |
+| Predicates | the two machine predicates could not judge fairly: one was an `order` of `Write` before `Write` (before at 6, after at 6), the other needed a ledger file the fix does not ask for. `check findings` now rejects an `order` predicate whose two calls are the same |
+| Tooling quirk | both readers numbered their findings F1, F2; `ledger fix` refused the second reader's ids because the orchestrator passed the first take's trace. `--trace` now defaults to the one beside the `findings/` directory the file is in |
+| Left to the skill's owner | whether a visible ledger in rewrite mode is wanted at all: all three rewrites were correct without one |
+
+The edit, as a diff against the original (offered, not applied to the source repository):
+
+```diff
+--- /tmp/am-src/skills-by-yigitkonur/skills/convert-to-natural-writing/SKILL.md	2026-10-20 05:45:52
++++ /tmp/am-nw/skills/convert-to-natural-writing/SKILL.md	2026-10-21 03:43:24
+@@ -31,7 +31,7 @@
+ | Mode | Trigger Condition | Primary Deliverable |
+ | :--- | :--- | :--- |
+ | **Audit / Diagnose** | User asks why copy feels robotic, generic, translated, stiff, or AI-generated. | A structured Active Ledger identifying exact excerpts, structural flaws, reader harm, and natural alternatives. |
+-| **Rewrite** | User requests humanizing, polishing, naturalizing, or rewriting draft content. | Clean, restructured deliverable backed by an internal invariant reconciliation pass. |
++| **Rewrite** | User requests humanizing, polishing, naturalizing, or rewriting draft content. | The rewritten text, saved where the user said. Write the Active Ledger (Phase 1) before the first rewrite and show it in your reply; create a ledger file only if the user asks for one. |
+ | **Publication Review** | Draft is near-final and requires pre-publication verification. | Strict verification report detailing blockers, warnings, invariant checks, and release-ready text. |
+ 
+ ---
+@@ -107,7 +107,7 @@
+ ## 6. Completion Checklist
+ 
+ Before delivering output:
+-- [ ] Active Ledger created with verbatim location, flaw, impact, and fix.
++- [ ] Active Ledger (verbatim location, flaw, impact, fix) was written before the rewrite began, and it is in your reply, or in the file the user named for an audit.
+ - [ ] Every Exact, Value, Force, and Document invariant is strictly preserved.
+ - [ ] Zero mechanical token blacklists or regex bans were applied.
+ - [ ] No fake personal anecdotes or synthetic human quirks were fabricated.
+```

@@ -266,7 +266,7 @@ def run_headless(root, sc, args):
            "note": "the budget is a client-side estimate that can overshoot slightly; subscription auth has no per-token bill but uses plan limits"}
     try:
         cmd, exposure, warnings, path_dirs, toolset = plan(root, sc, args, scratch)
-        warnings = warnings + sc_mod.target_name_warnings(sc) + sc_mod.writability_warnings(sc, toolset["allowed_tools"], toolset["tools"])
+        warnings = warnings + sc_mod.target_name_warnings(sc, root) + sc_mod.writability_warnings(sc, toolset["allowed_tools"], toolset["tools"])
         if args.get("dry_run"):
             shown = [("<prompt>" if i == PROMPT_INDEX else c) for i, c in enumerate(cmd)]
             # `run` evaluates the receipts when the take ends; `cmd` receipts run through /bin/sh as you, so the approval to spend covers reading them here
@@ -397,7 +397,7 @@ def run_existing(root, sc, args):
               "unknown_event_types": stats["unknown"]}
     if resolved:
         result["session"] = {k: resolved[k] for k in ("harness", "id", "path")}
-    return result, sc_mod.target_name_warnings(sc) + (resolved["warnings"] if resolved else []), 0
+    return result, sc_mod.target_name_warnings(sc, root) + (resolved["warnings"] if resolved else []), 0
 
 
 def prepare_live(root, sc, args):

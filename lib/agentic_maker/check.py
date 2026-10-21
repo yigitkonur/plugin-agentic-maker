@@ -220,7 +220,10 @@ def _in_events(quote, refs, norm, notes=None):
 def _predicate_problems(p):
     if not isinstance(p, dict) or p.get("type") not in PREDICATE_FIELDS:
         return ["rerun_predicate.type must be one of %s" % "|".join(sorted(PREDICATE_FIELDS))]
-    return ["rerun_predicate.%s missing" % f for f in PREDICATE_FIELDS[p["type"]] if p.get(f) in (None, "")]
+    probs = ["rerun_predicate.%s missing" % f for f in PREDICATE_FIELDS[p["type"]] if p.get(f) in (None, "")]
+    if p["type"] == "order" and not probs and p.get("before") == p.get("after"):
+        probs.append("rerun_predicate order: `before` and `after` are the same call, so it can never be true; name two different calls (e.g. Read, then Write)")
+    return probs
 
 
 def verify_finding(f, norm, root, notes=None):

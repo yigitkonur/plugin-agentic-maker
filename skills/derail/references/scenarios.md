@@ -32,7 +32,7 @@ Front matter is flat `key: value`, one key per line. A value that starts with `[
 
 ## The four sections
 
-- **Prompt:** exactly what a user would type. Everyday energy, two or three implicit constraints, **never the target's name or path** unless a user really would say it. Naming the target hides the most common skill failure - the skill not being chosen (T1) - and `run` warns when the prompt contains the target's name.
+- **Prompt:** exactly what a user would type. Everyday energy, two or three implicit constraints, **never the target's name or path** unless a user really would say it. Naming the target hides the most common skill failure - the skill not being chosen (T1) - and `run` warns when the prompt contains the target's name. The exception is a skill that only the user can start (`disable-model-invocation: true`): its prompt begins with `/<wrapper_name>:<skill>` and `run` checks that it does.
 - **Implicit constraints:** what the worker is not told but a good result respects (the output goes in the working directory; inputs stay untouched). The reader checks these.
 - **Fixtures:** how a fresh workspace is seeded. `- copy: src -> dest` lines (paths relative to the project) and, optionally, one fenced `sh` block run in the workspace with a minimal environment.
 - **Receipts:** what must be true afterwards, one per line, evaluated by `agentic-maker check receipts`. This is the anti-self-report ledger.

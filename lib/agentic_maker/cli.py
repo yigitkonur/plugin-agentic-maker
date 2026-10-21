@@ -144,7 +144,7 @@ def build():
     cf = _p(csub, "findings", "Verify the reader's findings: quotes verbatim in cited events, fields valid, ids unique.",
             "example:\n  agentic-maker check findings findings/f1.json --trace <take>/trace.norm.jsonl")
     cf.add_argument("findings")
-    cf.add_argument("--trace", required=True, help="the take's trace.norm.jsonl")
+    cf.add_argument("--trace", help="the take's trace.norm.jsonl (default: the one beside the `findings/` directory the file is in)")
     cf.add_argument("--out", help="also write {verified_ids: [...]} here")
     cd = _p(csub, "diff", "Did the applied edit fix the cause, or only add a rule beside the unchanged cause?",
             "example:\n  agentic-maker check diff --findings f1.json --finding F2 --session \"$CLAUDE_SESSION_ID\"")
@@ -187,7 +187,7 @@ def build():
     lf.add_argument("ids", nargs="+")
     lf.add_argument("--session", required=True)
     lf.add_argument("--findings", required=True)
-    lf.add_argument("--trace", required=True)
+    lf.add_argument("--trace", help="the trace.norm.jsonl the findings were read from (default: the one beside the `findings/` directory the file is in)")
     lj = _p(lsub, "judge", "Record your own verdict on a fix when its rerun predicate cannot decide (type `judged`, or a predicate that tested the wrong thing). The reason is kept.",
             "example:\n  agentic-maker ledger judge F2 --session \"$CLAUDE_SESSION_ID\" --findings f1.json --pass --reason \"the new trace shows the worker reading references/format.md at event 14\"")
     lj.add_argument("id")
@@ -451,6 +451,18 @@ def dispatch_probe(args, root, out):
     raise CliError("usage", "no_surface", "choose a surface: cli|cli-diff|mcp", suggestion="agentic-maker probe --help")
 
 
+def _trace_of(root, findings_path, given):
+    """The trace a findings file was read from: the take's trace.norm.jsonl when the file sits in <take>/findings/."""
+    if given:
+        return given
+    p = os.path.abspath(findings_path if os.path.isabs(findings_path) else os.path.join(root, findings_path))
+    cand = os.path.join(os.path.dirname(os.path.dirname(p)), "trace.norm.jsonl")
+    if os.path.basename(os.path.dirname(p)) == "findings" and os.path.isfile(cand):
+        return cand
+    raise CliError("usage", "trace_required", "--trace is needed: %s is not inside a take's findings/ directory" % findings_path,
+                   suggestion="pass the trace.norm.jsonl of the take the findings were read from")
+
+
 def _finding_file(findings_path, fid):
     data = read_json(findings_path)
     for f in (data.get("findings") if isinstance(data, dict) else data) or []:
@@ -481,6 +493,7 @@ def dispatch_check(args, root, out):
             raise CliError("validation", "no_receipt_passed", "0 of %d receipts passed" % res["total"], details=res)
         return out.partial(res, "%d of %d receipts failed" % (res["failed"], res["total"]), [], human)
     if w == "findings":
+        args.trace = _trace_of(root, args.findings, args.trace)
         res = check_mod.check_findings(args.findings, args.trace, root)
         if args.out:
             write_json(args.out, {"verified_ids": res["verified_ids"]})
@@ -559,6 +572,7 @@ def dispatch_ledger(args, root, out):
         led = ledger_mod.record_trace(root, args.session, args.take_dir)
         return out.ok({"run_id": led["run_id"], "status": led["status"], "traces": len(led["traces"])}, [], "recorded")
     if w == "fix":
+        args.trace = _trace_of(root, args.findings, args.trace)
         chk = check_mod.check_findings(args.findings, args.trace, root)
         led = ledger_mod.fix(root, args.session, args.ids, set(chk["verified_ids"]),
                              args.trace if os.path.isabs(args.trace) else os.path.join(root, args.trace), args.findings)
