@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1 - 2026-10-21
+
+- README rewritten in a plainer, lowercase voice. Install now leads with the one-line shell command, `claude plugin install agentic-maker --marketplace yigitkonur/plugin-agentic-maker`, run in an empty config with and without a GitHub ssh key (Claude Code retries over https). `/plugin marketplace add` and `/plugin install` were run in a real session too: the plugin is active at once, and `/agentic-maker:audit` worked in that session.
+- Three TypeScript samples fixed after their packages were installed and type-checked, which round two had left at syntax only: `AgentExecutor` and `createOpenAIToolsAgent` come from `@langchain/classic/agents` (`langchain` 1.5 has no `./agents`); an OpenAI tool call is narrowed to `type === 'function'` before `.function` is read (`openai` 7.39); `prom-client` is deprecated in favour of `@prometheus-io/client`. Every npm import in the samples now resolves; what is left are names a sample takes from another page, user files and the Workers runtime types.
+- The clean twin (the audit's false-positive control) was audited again from an ordinary session and was not clean: extra positional arguments were dropped silently (`get 1 2 --json` returned item 1, exit 0; two Medium findings from the probe, rated High by the audit), and `delete` of an item that does not exist succeeded. It now refuses both (exit 2 `unexpected_argument`, exit 3 `item_not_found`), its help examples match the real output and show the error envelope, and it lists only exit codes it uses. The default probe and every probe set the audits chose report 0 findings.
+- A live Codex worker was run (`codex exec` on the seeded CLI task) and read by id: `--from session:<id>` found the rollout, the trace keeps Codex's exit codes, receipts 3/3, the reader's finding verified after one hook send-back. `--from herdr:<pane>` resolved a live Codex pane through its status line.
+
+Known gaps: the interactive Codex TUI on this machine could not refresh its login (`codex exec` could); a Codex worker reads its own memory folder, so it is not a clean room the way a `--restricted` Claude worker is. The OpenTelemetry sample still uses `@opentelemetry/sdk-trace-node` 2.x, deprecated in favour of `@opentelemetry/sdk-trace` 3.0, which has no drop-in `NodeTracerProvider`.
+
 ## 0.2.0 - 2026-10-21
 
 Two review rounds on 0.1.0, from the top, each claim checked before it was edited and each change watched running (`docs/evidence/09-second-review.md`, `docs/evidence/10-round-two.md`). 0.1.1 was never tagged; its changes are in this release.

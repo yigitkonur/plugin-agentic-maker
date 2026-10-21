@@ -19,17 +19,17 @@ claude plugin install agentic-maker --marketplace yigitkonur/plugin-agentic-make
 
 that adds the marketplace (in your user settings) and installs the plugin in one go. no github ssh key? no stress: claude code retries over https on its own, and the repo is public.
 
-rather do it from inside claude code? same result, two slash commands:
+rather do it from inside claude code? same result, two slash commands, and the plugin is live in that session right away:
 
 ```
 /plugin marketplace add yigitkonur/plugin-agentic-maker
 /plugin install agentic-maker@plugin-agentic-maker
 ```
 
-then start a new session so the plugin loads. check it landed, pull updates later, or bail:
+after the shell install, start a new session so the plugin loads. check it landed, pull updates later, or bail:
 
 ```sh
-claude plugin list                                            # agentic-maker@plugin-agentic-maker, 0.2.0, enabled
+claude plugin list                                            # agentic-maker@plugin-agentic-maker, 0.2.1, enabled
 claude plugin marketplace update plugin-agentic-maker && claude plugin update agentic-maker@plugin-agentic-maker
 claude plugin uninstall agentic-maker@plugin-agentic-maker
 ```
@@ -102,23 +102,23 @@ no cap, every row says what was actually watched on 2026-10-20 and 21 (claude co
 |---|---|---|
 | derail loop on a skill (headless, clean room) | watched working, the whole loop with no human in it | [04](docs/evidence/04-derail-loop.md) |
 | stop gate blocks a premature "fixed" | watched working in the real harness | [04](docs/evidence/04-derail-loop.md) |
-| `audit` of a cli (`probe cli`) | watched working; fixture-tested: 10 of 11 planted defects found directly, 11 counting causes (the old script: 4, or 5); the clean twin stays silent under the default probe and under the extra probes a full audit picked (the first twin wasn't clean under a full audit: 6 gaps, fixed in 0.2.0) | [05](docs/evidence/05-audit-cli.md), [09](docs/evidence/09-second-review.md) |
+| `audit` of a cli (`probe cli`) | watched working; fixture-tested: 10 of 11 planted defects found directly, 11 counting causes (the old script: 4, or 5); the clean twin stays silent under the default probe and under the extra probes a full audit picked (the twin wasn't clean twice: 6 gaps found by a full audit, fixed in 0.2.0; extra arguments silently dropped, found by an audit in a real session, fixed in 0.2.1) | [05](docs/evidence/05-audit-cli.md), [09](docs/evidence/09-second-review.md) |
 | `audit` of an mcp server (`probe mcp`, stdio and http) | watched working; the budget matches a hand count | [06](docs/evidence/06-audit-mcp.md) |
 | round limit, budget ceiling and the per-fix snapshot of `check diff` | watched: `rounds_exhausted` and `budget_exhausted` (exit 5), a rule added beside an unchanged cause gets flagged, a rewritten cause passes | [09](docs/evidence/09-second-review.md) |
 | derail loop on a cli and on an mcp server | watched working on the seeded fixtures, one scenario each: the reader found a harness-induced stop (O6) on the cli and tools listed with no handler on the mcp server; fixes verified by 3/3 receipts on two reruns | [09](docs/evidence/09-second-review.md) |
 | `claude plugin eval` over `evals/` | watched: 10 cases, 3 runs each, with and without the plugin (mean Δ +0.40): the five stay-quiet cases score 1.00 / 1.00; the trigger cases written in plain words fire (+1.00), except a small "write this tool's definition" question, which gets answered without the skill (1 of 3) | [10](docs/evidence/10-round-two.md) |
 | live herdr round with a claude worker | watched working, two rounds; receipts 11/11 (the first round needed an ingest fix first, the second passed straight away) | [07](docs/evidence/07-live-herdr.md) |
 | ingest a claude session transcript or `stream-json` | watched working | 04, 07 |
-| ingest a codex rollout | matches the `jq` recipes event for event on a real recorded run (28 events); **no live codex worker run**: codex asked to log in again, which only the user can do | [10](docs/evidence/10-round-two.md) |
+| codex sessions | a live codex worker (`codex exec` on the seeded cli task) read by id: rollout found, exit codes kept, receipts 3/3, the reader's finding verified; a live codex pane resolved with `herdr:<pane>`; the adapter matches the `jq` recipes event for event (28 events). heads-up: a codex worker reads its own memory folder, so it's not a clean room like a `--restricted` claude worker | [10](docs/evidence/10-round-two.md) |
 | agy | never launched by the plugin (a launch can have effects it can't see); a session you already ran is read from its transcript by id or herdr pane (matches the recipes on a real session, 20 events) | [10](docs/evidence/10-round-two.md) |
 | the ledger as witness | watched: `clean` refused until each fix has a passing verdict from a take that ran after it, an edit before `ledger fix` refused (content, not clock), a stale built binary refused, the same F1 from two takes kept apart, phase and next command in `ledger status` | [10](docs/evidence/10-round-two.md) |
 | the reader's hand-over by hook | watched in three whole loops under herdr: the reply saved verbatim, sent back once on a bad quote and repaired, tokens recorded, no user `CLAUDE.md` in any reader (it was in 11 of 26 before), no file written by hand by the orchestrator in the two loops counted (4 Writes before); a `/compact` mid-loop survived; the last loop, on the 0.2.0 text, closed `open` because one fix didn't change the behaviour, and said so | [10](docs/evidence/10-round-two.md) |
 | derail on one of the author's own skills | watched: contradictions in its text that nobody planted; the fix didn't change the behaviour it aimed at and the loop closed `open`, saying so | [10](docs/evidence/10-round-two.md) |
 | does the knowledge help? | measured on three build tasks, 3 runs per arm, graded by the probe: the cli task ends with 4.0 findings without the plugin, 2.0 with the knowledge alone, 0 with the instruction to probe; the skill fires on plain wording; small mcp servers come out clean without the plugin too | [10](docs/evidence/10-round-two.md) |
-| typescript and rust samples | compiled against the real packages (caught a dead package name, a required field, a zod 4 break); samples that need packages not installed here are checked for syntax only | [10](docs/evidence/10-round-two.md) |
+| typescript and rust samples | compiled against the real packages, third-party ones included (caught a dead package name, a required field, a zod 4 break, a moved langchain import, an openai union type, a deprecated `prom-client`); every npm import resolves; what's left are names a sample borrows from another page | [10](docs/evidence/10-round-two.md) |
 | the plugin audits itself; three other stacks (rust cli, python mcp server on the real sdk, bash + skill repo) | watched: found and fixed a data-loss bug in its own cli; the derail loop ran on the bash + skill repo (receipts 4/4 on the last three takes) | [08](docs/evidence/08-self-audit.md) |
 | `eval-emit` (scenario -> `claude plugin eval` case) | watched: one emitted case run by `claude plugin eval` with its no-plugin baseline (0.67 with the plugin, 0.33 without, on the seeded skill); 3 of 11 receipts expressible as graders, the rest listed as not expressible | [08](docs/evidence/08-self-audit.md) |
-| install from github | watched: the one-liner above in an empty config (with and without an ssh key), `list`, `details`, `update`, `uninstall`; the installed copy ran a full audit | - |
+| install from github | watched: the one-liner above in an empty config (with and without an ssh key), `list`, `details`, `update`, `uninstall`; the two slash commands in a real session, then `/agentic-maker:audit` in that same session | [10](docs/evidence/10-round-two.md) |
 | authenticated mcp servers (oauth) | not measured: reported as such, routed to `mcpc` / mcp inspector | - |
 | `design` skill | watched: picks the surface with labelled evidence and asks that surface's interview; run for a cli idea (no mcp question) and an mcp idea up to the second group; an approved sketch at the end wasn't run | [10](docs/evidence/10-round-two.md) |
 | windows | not tested (macos/linux/wsl intended) | - |
