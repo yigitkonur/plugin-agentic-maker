@@ -7,7 +7,7 @@ The rule behind `Ctrl+O` is **never judge from a view that hides what the agent 
 
 ## The ladder
 
-1. **A structured record the harness wrote.** Claude: `claude -p --output-format stream-json` (what `run` uses), or the session transcript `~/.claude/projects/<cwd with / as ->/<session>.jsonl` (its path is in every hook payload as `transcript_path`, and under herdr in `agent get` -> `agent_session.value`). Codex: `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`. These carry every tool call with full arguments, every result, hook events. The Claude transcript format is internal and can change between versions: `normalize` is tolerant and reports what it did not understand.
+1. **A structured record the harness wrote.** Claude: `claude -p --output-format stream-json` (what `run` uses), or the session transcript `~/.claude/projects/<cwd with / as ->/<session>.jsonl` (its path is in every hook payload as `transcript_path`, and under herdr in `agent get` -> `agent_session.value`). Codex: `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`. agy: `~/.gemini/antigravity-cli/brain/<id>/.system_generated/logs/transcript_full.jsonl`. Give `normalize` or `run --runner existing --from` the id (`session:<id>`) or the herdr pane (`herdr:<pane>`) instead of the path; the same files read with plain `jq`: [session-recipes](session-recipes.md). These carry every tool call with full arguments, every result, hook events. The Claude transcript format is internal and can change between versions: `normalize` is tolerant and reports what it did not understand.
 2. **Terminal scrollback**, taken with `recent-unwrapped`. Weaker: it contains only what the screen showed. If the view is folded, unfold it before capturing (below).
 3. **The agent's own report.** A claim; never evidence.
 

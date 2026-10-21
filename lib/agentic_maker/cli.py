@@ -16,6 +16,7 @@ from agentic_maker import probe_mcp as probe_mcp_mod
 from agentic_maker import ledger as ledger_mod
 from agentic_maker import runner as runner_mod
 from agentic_maker import scenario as sc_mod
+from agentic_maker import sessions as sessions_mod
 from agentic_maker import trace as trace_mod
 from agentic_maker.common import project_root, read_json, write_json
 from agentic_maker.envelope import CliError, Output
@@ -66,7 +67,7 @@ def build():
            "  agentic-maker run s.md --runner existing --from ~/.claude/projects/<cwd>/<session>.jsonl")
     r.add_argument("scenario", help="scenario file, or just its name when it lives in .agentic-maker/scenarios/")
     r.add_argument("--runner", choices=["headless", "existing"], default=None, help="default: the scenario's `runner`")
-    r.add_argument("--from", dest="from_file", help="existing: the stream-json file or session transcript to ingest")
+    r.add_argument("--from", dest="from_file", help="existing: the stream-json file or session transcript to ingest, or session:<id> / herdr:<pane> to find the record of a claude, codex or agy session")
     r.add_argument("--workspace", help="existing: directory whose files the receipts should check")
     r.add_argument("--run-id", help="group takes under this run id (default: timestamp-scenario)")
     r.add_argument("--session", help="orchestrator session id: records the trace in that session's ledger")
@@ -84,7 +85,7 @@ def build():
 
     n = _p(sub, "normalize", "Turn a record into trace.norm.jsonl and trace.md with [n] evidence references.",
            "example:\n  agentic-maker normalize .agentic-maker/runs/<run>/<scenario>/01")
-    n.add_argument("source", help="a take directory, or a stream-json / session JSONL file")
+    n.add_argument("source", help="a take directory, a stream-json / session JSONL file, session:<id> (claude, codex or agy), or herdr:<pane>")
     n.add_argument("--out", help="output directory (default: the take directory, or next to the file)")
 
     pr = _p(sub, "probe", "Black-box audit of a surface: run it the way an agent would and report what comes back.",
@@ -321,7 +322,12 @@ def dispatch(args, root, out):
         return out.ok(res, [{"command": res["run_with"], "why": "run the emitted case (needs Claude Code 2.1.269 or later)"}],
                       "wrote %s: %s" % (res["case_dir"], ", ".join(res["written"])), warnings=(res["warnings"] + (["not expressible as eval graders: %s" % "; ".join(res["receipts_not_expressible"])] if res["receipts_not_expressible"] else [])) or None)
     if cmd == "normalize":
-        src = args.source if os.path.isabs(args.source) else os.path.join(root, args.source)
+        session_warns = []
+        if re.match(r"^(session|herdr):", args.source):
+            got = sessions_mod.resolve(args.source)
+            src, session_warns = got["path"], got["warnings"]
+        else:
+            src = args.source if os.path.isabs(args.source) else os.path.join(root, args.source)
         if os.path.isdir(src):
             f = os.path.join(src, "stream.jsonl")
             outdir = args.out or src
@@ -330,7 +336,7 @@ def dispatch(args, root, out):
         recs, stats = trace_mod.normalize_file(f)
         norm, md = trace_mod.write_outputs(recs, stats, f, outdir)
         res = dict(stats, trace_md=md, trace_norm=norm)
-        warns = []
+        warns = list(session_warns)
         if stats["unparsed"] or stats["unknown"]:
             warns.append("unparsed lines: %d, unknown event types: %s" % (stats["unparsed"], json.dumps(stats["unknown"])))
         return out.ok(res, [{"delegate": "trace-reader", "input": md, "why": "the reader cites events as [n]"}],

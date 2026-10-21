@@ -20,9 +20,12 @@ Two honest limits: a session transcript has no `init` event, so what the agent c
 
 1. **Claude session transcript:** `~/.claude/projects/<cwd with / as ->/<session-id>.jsonl`. The session id comes from the run, from a hook payload's `transcript_path`, or from `herdr agent get <agent>` -> `.result.agent.agent_session.value`.
 2. **Codex rollout:** `~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl`.
-3. **Terminal scrollback** for harnesses with no readable record (and as a cross-check): `herdr agent read <agent> --source recent-unwrapped --lines 500 > capture.txt`, then `--from capture.txt`. Scrollback is weaker evidence (see [trace-sources](../trace-sources.md)).
+3. **agy transcript:** `~/.gemini/antigravity-cli/brain/<session-id>/.system_generated/logs/transcript_full.jsonl`.
+4. **Terminal scrollback** for harnesses with no readable record (and as a cross-check): `herdr agent read <agent> --source recent-unwrapped --lines 500 > capture.txt`, then `--from capture.txt`. Scrollback is weaker evidence (see [trace-sources](../trace-sources.md)).
 
-**agy is never launched by this plugin** - a launch can have effects the plugin cannot see (which account, which quota). Audit an agy session the user already runs by reading its scrollback.
+**agy is never launched by this plugin** - a launch can have effects the plugin cannot see (which account, which quota). Audit an agy session the user already ran from its transcript.
+
+You do not have to find the file: `--from session:<id>` finds a Claude, Codex or agy session by its id, and `--from herdr:<pane>` asks herdr which session the pane's agent is running (for a Codex pane herdr may report none; the id is then read from the pane's status line and accepted only if a rollout of that id was recorded in the pane's directory). `agentic-maker normalize session:<id>` does the same without a scenario. The same reading as plain `jq`: [session-recipes](../session-recipes.md).
 
 <!-- src: audit-skill-by-derailment/references/herdr-pane-audit.md#Discovery Commands -->
 ### Finding panes

@@ -85,5 +85,6 @@ Each command has `--help` with examples and its exit codes (0 ok, 2 usage, 3 not
 | [references/runners/existing.md](references/runners/existing.md) | auditing sessions that already happened |
 | [references/runners/herdr.md](references/runners/herdr.md) | a live round under herdr |
 | [references/trace-sources.md](references/trace-sources.md) | choosing what record to read; what `Ctrl+O` does |
+| [references/session-recipes.md](references/session-recipes.md) | reading a Claude, Codex or agy session by id with `jq`: events, last message, tokens, failed commands |
 | [references/synthesis-matrix.md](references/synthesis-matrix.md) | merging findings across takes, scenarios, repos |
 | [references/targets/](references/targets/skill.md) | target-specific scenarios and lenses: skill, plugin, cli, mcp |

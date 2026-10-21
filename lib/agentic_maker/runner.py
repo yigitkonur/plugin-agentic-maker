@@ -5,6 +5,7 @@ existing: ingest a record that already exists (no launch).
 """
 import json
 import os
+import re
 import shlex
 import shutil
 import signal
@@ -14,6 +15,7 @@ import time
 import uuid
 
 from agentic_maker import scenario as sc_mod
+from agentic_maker import sessions as sessions_mod
 from agentic_maker import trace as trace_mod
 from agentic_maker.common import ensure_state_gitignore, read_json, runs_dir, sha256_file, slug, write_json
 from agentic_maker.envelope import CliError
@@ -364,7 +366,11 @@ def run_existing(root, sc, args):
     src = args.get("from_file")
     if not src:
         raise CliError("usage", "from_required", "--runner existing needs --from <record file>",
-                       suggestion="pass a Claude stream-json file or a session transcript JSONL")
+                       suggestion="pass a Claude stream-json file or a session transcript JSONL, or session:<id>, or herdr:<pane>")
+    resolved = None
+    if re.match(r"^(session|herdr):", src):
+        resolved = sessions_mod.resolve(src)
+        src = resolved["path"]
     src = _abs(root, src)
     if not os.path.isfile(src):
         raise CliError("not_found", "record_not_found", "no such record: %s" % src)
@@ -389,7 +395,9 @@ def run_existing(root, sc, args):
               "tool_calls": stats["tool_calls"], "tool_errors": stats["tool_errors"], "trace_md": md, "trace_norm": norm,
               "env_json": os.path.join(take, "env.json"), "isolated": cont.get("isolated"), "unparsed": stats["unparsed"],
               "unknown_event_types": stats["unknown"]}
-    return result, sc_mod.target_name_warnings(sc), 0
+    if resolved:
+        result["session"] = {k: resolved[k] for k in ("harness", "id", "path")}
+    return result, sc_mod.target_name_warnings(sc) + (resolved["warnings"] if resolved else []), 0
 
 
 def prepare_live(root, sc, args):

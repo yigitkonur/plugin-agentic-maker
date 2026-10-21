@@ -917,23 +917,23 @@ audit-skill-by-derailment/references/herdr-native-runner.md#8. Teardown & Lifecy
 audit-skill-by-derailment/references/herdr-pane-audit.md#Herdr Multi-Pane Live Session Audit & Agent Fleet Coordination	1	1	mapped	skills/derail/references/runners/existing.md:5	
 audit-skill-by-derailment/references/herdr-pane-audit.md#1. When to Use Mode B (Herdr Multi-Pane Audit)	2	7	mapped	skills/derail/references/runners/existing.md:10	
 audit-skill-by-derailment/references/herdr-pane-audit.md#2. Herdr CLI Discovery & Scrollback Retrieval	2	17	mapped	skills/derail/references/runners/existing.md:18	
-audit-skill-by-derailment/references/herdr-pane-audit.md#Discovery Commands	3	19	mapped	skills/derail/references/runners/existing.md:27	
-audit-skill-by-derailment/references/herdr-pane-audit.md#Scrollback Retrieval Commands	3	34	mapped	skills/derail/references/runners/existing.md:31	
+audit-skill-by-derailment/references/herdr-pane-audit.md#Discovery Commands	3	19	mapped	skills/derail/references/runners/existing.md:30	
+audit-skill-by-derailment/references/herdr-pane-audit.md#Scrollback Retrieval Commands	3	34	mapped	skills/derail/references/runners/existing.md:34	
 audit-skill-by-derailment/references/herdr-pane-audit.md#3. Cognitive Mental Model Reconstruction Heuristics	2	50	mapped	skills/derailment-method/references/reading-traces.md:26	
 "audit-skill-by-derailment/references/herdr-pane-audit.md#A. Detecting ""Premature Completion Illusion"" (C1)"	3	54	mapped	skills/derailment-method/references/reading-traces.md:42	
 "audit-skill-by-derailment/references/herdr-pane-audit.md#B. Detecting ""Destructive / Mutation Hesitation"" (C2)"	3	59	mapped	skills/derailment-method/references/reading-traces.md:48	
 "audit-skill-by-derailment/references/herdr-pane-audit.md#C. Detecting ""Tooling & Environment Ignorance"" (C3)"	3	64	mapped	skills/derailment-method/references/reading-traces.md:54	
 "audit-skill-by-derailment/references/herdr-pane-audit.md#D. Detecting ""Monorepo & Structural Drift"" (S3 / C4)"	3	69	mapped	skills/derailment-method/references/reading-traces.md:60	
-audit-skill-by-derailment/references/herdr-pane-audit.md#4. Live Agent Fleet Coordination (Prompting Running Agents)	2	76	mapped	skills/derail/references/runners/existing.md:35	
-audit-skill-by-derailment/references/herdr-pane-audit.md#Step 1: Check Agent Readiness	3	80	mapped	skills/derail/references/runners/existing.md:40	
-audit-skill-by-derailment/references/herdr-pane-audit.md#Step 2: Dispatch Targeted Corrective Prompt	3	86	mapped	skills/derail/references/runners/existing.md:43	
-audit-skill-by-derailment/references/herdr-pane-audit.md#Step 3: Monitor Execution	3	93	mapped	skills/derail/references/runners/existing.md:46	
+audit-skill-by-derailment/references/herdr-pane-audit.md#4. Live Agent Fleet Coordination (Prompting Running Agents)	2	76	mapped	skills/derail/references/runners/existing.md:38	
+audit-skill-by-derailment/references/herdr-pane-audit.md#Step 1: Check Agent Readiness	3	80	mapped	skills/derail/references/runners/existing.md:43	
+audit-skill-by-derailment/references/herdr-pane-audit.md#Step 2: Dispatch Targeted Corrective Prompt	3	86	mapped	skills/derail/references/runners/existing.md:46	
+audit-skill-by-derailment/references/herdr-pane-audit.md#Step 3: Monitor Execution	3	93	mapped	skills/derail/references/runners/existing.md:49	
 audit-skill-by-derailment/references/herdr-pane-audit.md#5. Multi-Repository Cross-Pattern Matrix Template	2	101	mapped	skills/derail/references/synthesis-matrix.md:17	
-audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#audit-worker-pane.sh	1	1	mapped	skills/derail/references/runners/existing.md:49	
-audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#Usage	2	7	mapped	skills/derail/references/runners/existing.md:53	
-audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#Arguments	3	13	mapped	skills/derail/references/runners/existing.md:57	
-audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#Options	3	16	mapped	skills/derail/references/runners/existing.md:61	
-audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#Output	3	24	mapped	skills/derail/references/runners/existing.md:65	
+audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#audit-worker-pane.sh	1	1	mapped	skills/derail/references/runners/existing.md:52	
+audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#Usage	2	7	mapped	skills/derail/references/runners/existing.md:56	
+audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#Arguments	3	13	mapped	skills/derail/references/runners/existing.md:60	
+audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#Options	3	16	mapped	skills/derail/references/runners/existing.md:64	
+audit-skill-by-derailment/scripts/audit-worker-pane.sh.md#Output	3	24	mapped	skills/derail/references/runners/existing.md:68	
 audit-skill-by-derailment/scripts/launch-derailment.sh.md#launch-derailment.sh	1	1	mapped	skills/derail/references/runners/headless.md:21	
 audit-skill-by-derailment/scripts/launch-derailment.sh.md#Usage	2	5	mapped	skills/derail/references/runners/headless.md:25	
 audit-skill-by-derailment/scripts/launch-derailment.sh.md#Examples	2	26	mapped	skills/derail/references/runners/headless.md:29	
@@ -943,7 +943,7 @@ audit-skill-by-derailment/scripts/parse-derailment-trace.sh.md#Usage	2	5	mapped	
 audit-skill-by-derailment/scripts/parse-derailment-trace.sh.md#Output	2	21	mapped	skills/derail/references/runners/headless.md:57	
 audit-skill-by-derailment/scripts/parse-derailment-trace.sh.md#Examples	2	30	mapped	skills/derail/references/runners/headless.md:61	
 audit-skill-by-derailment/scripts/parse-derailment-trace.sh.md#Exit codes	2	37	mapped	skills/derail/references/runners/headless.md:68	
-audit-skill-by-derailment/scripts/read-herdr-panes.sh.md#`read-herdr-panes.sh`	1	1	mapped	skills/derail/references/runners/existing.md:69	
-audit-skill-by-derailment/scripts/read-herdr-panes.sh.md#Usage	2	5	mapped	skills/derail/references/runners/existing.md:73	
-audit-skill-by-derailment/scripts/read-herdr-panes.sh.md#Options	2	11	mapped	skills/derail/references/runners/existing.md:77	
-audit-skill-by-derailment/scripts/read-herdr-panes.sh.md#Examples	2	19	mapped	skills/derail/references/runners/existing.md:81	
+audit-skill-by-derailment/scripts/read-herdr-panes.sh.md#`read-herdr-panes.sh`	1	1	mapped	skills/derail/references/runners/existing.md:72	
+audit-skill-by-derailment/scripts/read-herdr-panes.sh.md#Usage	2	5	mapped	skills/derail/references/runners/existing.md:76	
+audit-skill-by-derailment/scripts/read-herdr-panes.sh.md#Options	2	11	mapped	skills/derail/references/runners/existing.md:80	
+audit-skill-by-derailment/scripts/read-herdr-panes.sh.md#Examples	2	19	mapped	skills/derail/references/runners/existing.md:84	
