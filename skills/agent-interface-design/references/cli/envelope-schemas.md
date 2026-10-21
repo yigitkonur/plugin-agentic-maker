@@ -7,7 +7,7 @@
 
 Formal schemas enable compile-time validation and IDE support for agent integrations. A validation example for a Node integration is in `../frameworks/node/output-contracts.md`. The pagination schema is in `pagination.md`; the JSONL event schema is in `jsonl-event-schema.md`.
 
-> Unresolved: the sources disagree on `schema_version` (the minimal envelope uses `"v1"`, the full envelope and schema use `"1.0"` matching `^\d+\.\d+$`), and on whether a failure carries `"result": null, "error": null` fields (minimal) or omits them (full). Pick one form per CLI and document it. Also, both schemas below set top-level `additionalProperties: false`, yet other examples add top-level fields (`dry_run`, `changes`, `status`, `partial_result`, `recovery`, `retry`, `guidance`); widen the top level or nest those fields in `result`/`meta`.
+> Note: `schema_version` is the string `"1.0"` (pattern `^\d+\.\d+$`); a success omits `error`, a failure omits `result`; and the top level is open (`additionalProperties: true`) so extension fields such as `status`, `next_actions`, `dry_run`, `changes`, `partial_result`, `recovery`, `retry` and `warnings` may appear beside the core fields.
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Success Response Schema -->
 ## Success response schema
@@ -46,7 +46,7 @@ Formal schemas enable compile-time validation and IDE support for agent integrat
       "additionalProperties": true
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }
 ```
 
@@ -108,6 +108,6 @@ The `class` enum below is the reconciled list from `error-classes.md` (it adds `
       "additionalProperties": true
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }
 ```

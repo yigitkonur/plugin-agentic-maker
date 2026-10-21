@@ -1,17 +1,17 @@
 ---
-as_of: unknown
+as_of: 2026-07-04
 verify_before_citing: true
 ---
 # MCP testing tools, model identifiers and cross-model reports
 
-> Read when: you need the concrete Inspector launch command, an eval framework config, model identifiers used in the source examples, or reports of how different models behave in tool selection.
+> Read when: you need the concrete Inspector launch command, an eval framework config, model identifiers used in the examples, or reports of how different models behave in tool selection.
 
-The source gives no date for these items; verify every command, package name, model identifier and behaviour report before citing.
+No date is given for these items; verify every command, package name, model identifier and behaviour report before citing.
 
 <!-- src: audit-agentic-mcp/references/patterns/testing.md#2. Test Tools with MCP Inspector Before Involving an LLM -->
 ## MCP Inspector
 
-Launch command and default address from the source:
+Launch command and default address:
 
 ```bash
 npx @modelcontextprotocol/inspector@latest
@@ -75,7 +75,7 @@ Documentation: https://www.promptfoo.dev/docs/integrations/mcp/
 - Smaller models (Llama, Mistral) struggle with more than 10 tools.
 - A tweak that helps Claude can break Llama, so run evals in CI.
 
-> Reconciled: the sources gave a "more than 10 tools" report for small models here and the brief's tool-count cues (up to 20 comfortable, about 30 warning, 40 or more needs progressive discovery); this file keeps the 10-tool figure as a model-specific report only and `../mcp/ops-tool-selection-evals.md` states the general cues.
+> Note: the 10-tool figure is a model-specific report for small models. The general tool-count cues are in `../mcp/ops-tool-selection-evals.md`: up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute).
 
 ## Source threads
 

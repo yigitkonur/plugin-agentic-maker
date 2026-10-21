@@ -19,6 +19,6 @@ What to eval:
 3. Ambiguity handling (two tools could apply).
 4. Refusal (tools that should not be selected).
 
-Run the evals in CI. A tweak that helps one model can break another, so run the same suite across every model you target. Cross-model behaviour reports (conservative asking before calling, hallucinated parameter values, small models and tool count) are in `../fresh/mcp-testing-tools.md`. Tool count affects selection: up to 20 active tools is the default comfortable range, about 30 is a warning, and 40 or more needs progressive discovery (diagnostic cues, not verdicts; per-model caps live in `fresh/`). Include a high-tool-count run in the suite.
+Run the evals in CI. A tweak that helps one model can break another, so run the same suite across every model you target. Cross-model behaviour reports (conservative asking before calling, hallucinated parameter values, small models and tool count) are in `../fresh/mcp-testing-tools.md`. Tool count affects selection: up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs; about 30 is a warning; 40 or more needs meta-tools (diagnostic cues, not verdicts; the ladder is in `../decisions/tool-count.md`, per-model caps in `fresh/`). Include a high-tool-count run in the suite.
 
 Sources: Anthropic (writing effective tools for AI agents), PromptFoo MCP integration documentation, r/mcp community discussion.

@@ -40,7 +40,7 @@ def _flat(content):
                 elif b.get("type") == "image":
                     parts.append("[image]")
                 else:
-                    parts.append(json.dumps(b, ensure_ascii=False))
+                    parts.append(json.dumps(b, ensure_ascii=False, separators=(",", ":")))
             else:
                 parts.append(str(b))
         return "\n".join(parts)
@@ -57,6 +57,7 @@ class _Builder(object):
         self.src = src
         self.recs = []
         self.tool_names = {}
+        self.agy_pending = []          # agy numbers no tool calls: a result belongs to the oldest call still waiting
 
     def add(self, line, role, kind, name=None, tool_use_id=None, args=None, text=None, is_error=None, t=None, exit_code=None):
         truncated = False
@@ -88,7 +89,8 @@ def _codex(b, line, ev, t, ignored):
               text="codex session %s cwd=%s" % (p.get("id"), p.get("cwd")))
     elif ty == "response_item":
         if pt == "message":
-            b.add(line, p.get("role") or "assistant", "text", text=_codex_text(p.get("content")), t=t)
+            b.add(line, p.get("role") or "assistant", "text", name=("commentary" if p.get("phase") == "commentary" else None),
+                  text=_codex_text(p.get("content")), t=t)
         elif pt in ("function_call", "custom_tool_call", "local_shell_call"):
             args = p.get("arguments") if p.get("arguments") is not None else p.get("input", p.get("action"))
             if isinstance(args, str):
@@ -110,10 +112,46 @@ def _codex(b, line, ev, t, ignored):
     elif ty == "event_msg":
         if pt in ("task_started", "task_complete"):
             b.add(line, "system", "system", name=pt, t=t, text=json.dumps({k: p.get(k) for k in ("turn_id", "duration_ms", "time_to_first_token_ms") if p.get(k) is not None}))
+        elif pt == "item_completed" and (p.get("item") or {}).get("type") == "CommandExecution":
+            it = p["item"]                    # the one place a Codex rollout records a command's exit code
+            cmd = it.get("command")
+            b.add(line, "tool", "tool_result", name="CommandExecution", args={"command": cmd}, text=it.get("aggregated_output") or "",
+                  is_error=(it.get("exit_code") not in (0, None)), exit_code=it.get("exit_code"), t=t)
         else:
             ignored["event_msg/%s" % pt] += 1
     else:
         ignored[ty] += 1
+
+
+AGY_TYPES = {"USER_INPUT", "USER_MESSAGE", "PLANNER_RESPONSE", "ASSISTANT_STEP", "GENERIC", "TOOL_STEP", "SYSTEM_MESSAGE",
+             "ERROR_MESSAGE", "ERROR", "TASK_NOTIFICATION", "CHECKPOINT"}
+
+
+def _agy(b, line, ev):
+    """Antigravity CLI transcript (~/.gemini/antigravity-cli/brain/<id>/.system_generated/logs/transcript_full.jsonl). Text is kept exactly as written."""
+    ty, t = ev.get("type"), ev.get("created_at")
+    if ty in ("USER_INPUT", "USER_MESSAGE"):
+        b.agy_pending = []
+        b.add(line, "user", "text", text=ev.get("content") or "", t=t)
+    elif ty in ("PLANNER_RESPONSE", "ASSISTANT_STEP"):
+        if (ev.get("thinking") or "").strip():
+            b.add(line, "assistant", "thinking", text=ev["thinking"], t=t)
+        if (ev.get("content") or "").strip():
+            b.add(line, "assistant", "text", text=ev["content"], t=t)
+        for i, call in enumerate(ev.get("tool_calls") or []):
+            cid = "agy-%s-%d" % (ev.get("step_index"), i)
+            b.agy_pending.append((cid, call.get("name")))
+            b.tool_names[cid] = call.get("name")
+            b.add(line, "assistant", "tool_use", name=call.get("name"), tool_use_id=cid, args=call.get("args"), t=t)
+    elif ty in ("GENERIC", "TOOL_STEP"):
+        cid, name = b.agy_pending.pop(0) if b.agy_pending else (None, None)
+        text = ev.get("content") or ""
+        m = re.search(r"exited with code (-?\d+)", text)
+        code = int(m.group(1)) if m else None
+        bad = ev.get("status") in ("ERROR", "INVALID") or bool(ev.get("error")) or (code not in (None, 0)) or text.startswith("Error:")
+        b.add(line, "tool", "tool_result", name=name, tool_use_id=cid, text=text, is_error=bad, exit_code=code, t=t)
+    else:
+        b.add(line, "system", "system", name=ty.lower(), t=t, text=ev.get("content") or ev.get("error") or "")
 
 
 def _message(b, line, ev, t):
@@ -151,6 +189,7 @@ def normalize_file(src):
     ignored, unknown = Counter(), Counter()
     unparsed = 0
     results = []
+    costs = []
     with f:
         for line_no, raw in enumerate(f, 1):
             raw = raw.strip()
@@ -189,6 +228,10 @@ def normalize_file(src):
                     b.add(line_no, "system", "system", name=sub, t=t, text=json.dumps({k: v for k, v in ev.items() if k not in ("type", "subtype", "uuid", "session_id")}, ensure_ascii=False)[:400])
             elif ty in ("session_meta", "response_item", "event_msg", "turn_context", "world_state", "token_usage_record"):
                 _codex(b, line_no, ev, t, ignored)
+            elif ty in AGY_TYPES:
+                _agy(b, line_no, ev)
+            elif ty == "cost-state":
+                costs.append(ev.get("totalCostUSD") or 0)       # Claude session transcripts keep the running cost here
             elif ty in ("assistant", "user"):
                 _message(b, line_no, ev, t)
             elif ty == "attachment":
@@ -218,7 +261,7 @@ def normalize_file(src):
     stats = {
         "format": fmt, "events": len(b.recs), "unparsed": unparsed, "ignored": dict(ignored), "unknown": dict(unknown),
         "results": len(results),
-        "cost_usd": round(max([r.get("total_cost_usd") or 0 for r in results] or [0]), 6),
+        "cost_usd": round(max([r.get("total_cost_usd") or 0 for r in results] + costs or [0]), 6),
         "turns": sum((r.get("num_turns") or 0) for r in results),
         "permission_denials": sum(len(r.get("permission_denials") or []) for r in results),
         "tool_calls": sum(1 for r in b.recs if r["kind"] == "tool_use"),

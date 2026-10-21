@@ -71,11 +71,12 @@ class TestCLIOutput:
     ])
     def test_short_flags_work(self, flag, short):
         """Ensure short flag aliases work identically."""
-        _, data1 = run_cli("list", flag)
-        _, data2 = run_cli("list", short)
+        code1, data1 = run_cli("list", flag)
+        code2, data2 = run_cli("list", short)
 
-        # Results should be structurally identical
+        # Both spellings are accepted (not usage exit 2) and agree
+        assert code1 == code2 != 2
         assert data1.get("ok") == data2.get("ok")
 ```
 
-> Reconciled: the source read `stdout or stderr`; the envelope is always on stdout, so the helper reads stdout only.
+> Note: the envelope is always on stdout, so the helper reads stdout only.

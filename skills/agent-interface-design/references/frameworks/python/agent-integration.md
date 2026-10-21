@@ -39,14 +39,15 @@ def invoke_cli(cmd: list[str], timeout: int = 30) -> CLIResult:
             "ok": False,
             "result": None,
             "error": {
+                "class": "internal",
                 "code": f"exit_{result.returncode}",
                 "message": result.stderr.strip() or "Unknown error"
             }
         }
     except subprocess.TimeoutExpired:
-        return {"ok": False, "result": None, "error": {"code": "timeout", "retryable": True}}
+        return {"ok": False, "result": None, "error": {"class": "timeout", "code": "timeout", "retryable": True}}
     except json.JSONDecodeError as e:
-        return {"ok": False, "result": None, "error": {"code": "invalid_json", "message": str(e)}}
+        return {"ok": False, "result": None, "error": {"class": "internal", "code": "invalid_json", "message": str(e)}}
 ```
 
 ## Exit-code routing
@@ -62,6 +63,8 @@ EXIT_CODE_ACTIONS = {
     6: "validation",   # Fix input data
     7: "transient",    # Retry with backoff
     8: "partial",      # Read per-item results
+    130: "interrupted",  # SIGINT stop: do not retry
+    143: "terminated",   # SIGTERM stop: do not retry
 }
 
 def route_exit_code(code: int) -> str:
@@ -135,7 +138,7 @@ def handle_cli_error(result: CLIResult, context: dict) -> str:
     return RECOVERY_ACTIONS.get(error_class, f"Unknown error: {error.get('message')}")
 ```
 
-> Reconciled: the source keyed this dict by `authentication` and `transient`; this file uses the class `auth` and lists the exit-7 classes (`timeout`, `network`, `dependency_failed`) instead of the group name `transient`. `EXIT_CODE_ACTIONS` gains `8: "partial"`.
+> Note: the dict is keyed by class `auth` and lists the exit-7 classes (`timeout`, `network`, `dependency_failed`) individually; `EXIT_CODE_ACTIONS` includes `8: "partial"`.
 
 ## Batch with partial failure
 

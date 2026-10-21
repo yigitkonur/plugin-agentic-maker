@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# clean-cli: the same inventory CLI done right. The audit must report no High or Critical finding here.
+# clean-cli: the same inventory CLI done right. It is the false-positive control: the default probe reports nothing,
+# and a full audit (which adds its own read-only probe commands) should find no High or Critical finding.
+VERSION=1.0.0
+json=0; yes=0; dry=0; help=0; pos=()
+
 usage() {
   cat <<USAGE
 clean-cli - manage items
@@ -17,7 +21,7 @@ Options:
   --dry-run         show what would change
   --token-file F    read the API token from a file
   --version         print the version
-  -h, --help        this text
+  -h, --help        this text (also: clean-cli <command> --help)
 
 Examples:
   clean-cli list --json
@@ -28,19 +32,86 @@ Exit codes:
   0 success, 2 usage error, 3 not found, 6 validation, 7 transient
 USAGE
 }
-fail() { # class exit-code message
-  if [ "${json:-0}" = 1 ]; then printf '{"ok":false,"error":{"class":"%s","message":"%s"},"schema_version":1}\n' "$1" "$3"; fi
-  echo "error: $3" >&2; exit "$2"
+
+cmd_usage() {
+  case "$1" in
+    list) cat <<U
+clean-cli list - show all items
+
+Usage: clean-cli list [--json]
+Output (--json): {"ok":true,"command":"list","result":{"items":[{"id":1,"name":"widget"}]},"meta":{"total_count":2}}
+Example: clean-cli list --json
+Exit codes: 0 success, 2 usage error
+U
+    ;;
+    get) cat <<U
+clean-cli get - show one item
+
+Usage: clean-cli get <id> [--json]
+Output (--json): {"ok":true,"command":"get","result":{"id":1,"name":"widget"}}
+Example: clean-cli get 1 --json
+Exit codes: 0 success, 2 usage error, 3 not found
+U
+    ;;
+    delete) cat <<U
+clean-cli delete - remove an item
+
+Usage: clean-cli delete <id> (--yes | --force | --dry-run) [--json]
+Example: clean-cli delete 1 --dry-run
+Exit codes: 0 success, 2 usage error (no --yes and no terminal)
+U
+    ;;
+  esac
 }
-args=("$@"); json=0; for a in "${args[@]}"; do [ "$a" = "--json" ] && json=1; done
-case "${1:-}" in
-  -h|--help) usage; exit 0 ;;
-  --version) echo "clean-cli 1.0.0"; exit 0 ;;
-  list) if [ $json = 1 ]; then echo '{"ok":true,"result":{"items":[{"id":1,"name":"widget"},{"id":2,"name":"gadget"}]},"schema_version":1}'; else echo "1  widget"; echo "2  gadget"; fi ;;
-  get) case "${2:-}" in 1|2) echo "{\"ok\":true,\"result\":{\"id\":$2},\"schema_version\":1}" ;; *) fail not_found 3 "item '${2:-}' does not exist" ;; esac ;;
+
+fail() { # class code exit-code message suggestion
+  if [ "$json" = 1 ]; then
+    printf '{"ok":false,"error":{"class":"%s","code":"%s","message":"%s","retryable":false,"suggestion":"%s"},"schema_version":1}\n' "$1" "$2" "$4" "$5"
+  fi
+  echo "error: $4" >&2
+  exit "$3"
+}
+
+name_of() { case "$1" in 1) echo widget ;; 2) echo gadget ;; *) return 1 ;; esac; }
+
+for a in "$@"; do [ "$a" = "--json" ] && json=1; done   # errors found while parsing must already be JSON
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --json) json=1 ;;
+    --yes|--force) yes=1 ;;
+    --dry-run) dry=1 ;;
+    -h|--help) help=1 ;;
+    --version) echo "clean-cli $VERSION"; exit 0 ;;
+    --token-file) shift; [ $# -gt 0 ] || fail usage missing_value 2 "--token-file needs a path" "run: clean-cli --help" ;;
+    -*) fail usage unknown_option 2 "unknown option '$1'" "run: clean-cli --help" ;;
+    *) pos+=("$1") ;;
+  esac
+  shift
+done
+
+cmd="${pos[0]:-}"; id="${pos[1]:-}"
+if [ "$help" = 1 ]; then
+  if [ -n "$cmd" ] && cmd_usage "$cmd" | grep -q .; then cmd_usage "$cmd"; else usage; fi
+  exit 0
+fi
+
+case "$cmd" in
+  list)
+    if [ "$json" = 1 ]; then echo '{"ok":true,"command":"list","result":{"items":[{"id":1,"name":"widget"},{"id":2,"name":"gadget"}]},"meta":{"total_count":2},"schema_version":1}'
+    else echo "1  widget"; echo "2  gadget"; fi ;;
+  get)
+    [ -n "$id" ] || fail usage missing_argument 2 "get requires <id>" "run: clean-cli get 1 --json"
+    n=$(name_of "$id") || fail not_found item_not_found 3 "item '$id' does not exist" "run: clean-cli list --json"
+    if [ "$json" = 1 ]; then echo "{\"ok\":true,\"command\":\"get\",\"result\":{\"id\":$id,\"name\":\"$n\"},\"schema_version\":1}"; else echo "$id  $n"; fi ;;
   delete)
-    if [ "$*" != "${*/--dry-run/}" ]; then echo "would delete ${2:-}"; exit 0; fi
-    if [ "$*" = "${*/--yes/}" ] && [ "$*" = "${*/--force/}" ]; then fail usage 2 "refusing to delete without --yes (no terminal to ask)"; fi
-    echo "deleted ${2:-}" ;;
-  *) json=0; fail usage 2 "unknown command '${1:-}'; run clean-cli --help" ;;
+    [ -n "$id" ] || fail usage missing_argument 2 "delete requires <id>" "run: clean-cli delete 1 --dry-run"
+    if [ "$dry" = 1 ]; then
+      if [ "$json" = 1 ]; then echo "{\"ok\":true,\"command\":\"delete\",\"result\":{\"would_delete\":\"$id\"},\"schema_version\":1}"; else echo "would delete $id"; fi
+      exit 0
+    fi
+    [ "$yes" = 1 ] || fail usage confirmation_required 2 "refusing to delete without --yes (no terminal to ask)" "rerun with --yes, or --dry-run to preview"
+    if [ "$json" = 1 ]; then echo "{\"ok\":true,\"command\":\"delete\",\"result\":{\"deleted\":\"$id\"},\"schema_version\":1}"; else echo "deleted $id"; fi ;;
+  "") usage >&2; exit 2 ;;
+  *) fail usage unknown_command 2 "unknown command '$cmd'" "run: clean-cli --help" ;;
 esac

@@ -16,7 +16,8 @@ set -euo pipefail
 # ============================================================================
 
 usage() {
-    cat <<EOF
+    local fd=1; [[ "${1:-0}" -ne 0 ]] && fd=2  # help text goes to stderr on errors
+    cat >&"$fd" <<EOF
 Usage: $(basename "$0") [OPTIONS] COMMAND [ARGS]
 
 Options:
@@ -40,6 +41,16 @@ Examples:
     $(basename "$0") list --quiet
 EOF
     exit "${1:-0}"
+}
+
+# Usage error: one envelope on stdout in --json mode, text on stderr otherwise
+usage_error() {
+    if [[ "$JSON_OUTPUT" == true ]]; then
+        jq -n --arg m "$1" '{ok: false, error: {class: "usage", code: "usage_error", message: $m, retryable: false, suggestion: "Run with --help"}}'
+    else
+        echo "Error: $1" >&2
+    fi
+    exit 2
 }
 
 # Parse flags
@@ -73,6 +84,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --timeout)
+            [[ $# -ge 2 ]] || usage_error "--timeout needs a value"
             TIMEOUT="$2"
             shift 2
             ;;
@@ -88,8 +100,7 @@ while [[ $# -gt 0 ]]; do
             break
             ;;
         -*)
-            echo "Unknown option: $1" >&2
-            usage 2
+            usage_error "Unknown option: $1"
             ;;
         *)
             break
@@ -104,7 +115,7 @@ shift || true
 case "$COMMAND" in
     create)
         NAME="${1:-}"
-        [[ -z "$NAME" ]] && { echo "Error: NAME required" >&2; exit 2; }
+        [[ -z "$NAME" ]] && usage_error "NAME required"
         # ... create logic
         ;;
     list)
@@ -112,16 +123,14 @@ case "$COMMAND" in
         ;;
     get|delete)
         ID="${1:-}"
-        [[ -z "$ID" ]] && { echo "Error: ID required" >&2; exit 2; }
+        [[ -z "$ID" ]] && usage_error "ID required"
         # ... get/delete logic
         ;;
     "")
-        echo "Error: COMMAND required" >&2
-        usage 2
+        usage_error "COMMAND required"
         ;;
     *)
-        echo "Unknown command: $COMMAND" >&2
-        usage 2
+        usage_error "Unknown command: $COMMAND"
         ;;
 esac
 ```

@@ -53,7 +53,7 @@ Or flat fields with a `_source` suffix:
 }
 ```
 
-> Unresolved: the two shapes and their source labels (`flag`/`env`/`project`/`user`/`system`/`default` versus `environment_variable`/`config_file`) differ. Pick one shape and one label set per CLI and keep it stable; the per-value object with `source` and `sources_checked` carries more information.
+> Note: use the per-value object (`value`, `source`, `sources_checked`) with the labels `flag`, `env`, `project`, `user`, `system`, `default`; it carries more information than a flat `*_source` field.
 
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#Profile Support | audit-agentic-cli/references/discovery-and-auth.md#Config File Example -->
 ## Profiles
@@ -157,5 +157,3 @@ Derive the output configuration once, at the start of the command:
 | Prompts | terminal, not CI, and not `--no-input` |
 
 If prompts are off and the command needs input, fail instead of waiting: exit 2 naming the flag that would supply it (`--yes` to auto-confirm, or the missing required flags).
-
-> Reconciled: the reference implementation returned a generic error here; this file uses exit 2 naming the flag, as in `discovery-and-help.md`.

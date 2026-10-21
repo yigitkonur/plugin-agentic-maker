@@ -26,30 +26,30 @@ Do not use it for:
 <!-- src: audit-agentic-cli/SKILL.md#Audit Workflow -->
 ## Steps
 
-Before recommending changes:
+Before recommending changes, run the checks through the probe, in this order (the target is never run by hand; `agentic-maker probe cli --help` lists the flags):
 
-1. Inspect top-level help and each relevant subcommand. Use the help probe (see Probe commands below) to capture standard flags, examples and missing affordances.
-2. Look for machine-readable output flags: `--json`, `--output json`, `--quiet`, `--fields`, `--jq`.
-3. Test stdout/stderr separation on safe read-only commands.
-4. Classify exit codes across success, usage, auth, not-found, validation, conflict and transient paths (`skills/agent-interface-design/references/cli/exit-codes.md`).
-5. Probe non-interactive behaviour on prompt-prone commands.
-6. Inspect destructive flow safety: `--dry-run`, `--yes`, `--force`, explicit confirmation semantics.
-7. Verify help documents realistic examples, output fields and exit codes.
-8. If auditing a CLI you have snapshotted before, diff the snapshots to spot command and flag drift.
+1. **Help and discoverability.** `agentic-maker probe cli <binary>` captures top-level help and `--version`, runs one invalid command, and reports standard flags, examples and exit-code documentation. Add `--sub "<subcommand>"` for each subcommand that matters.
+2. **Machine-readable output.** Read the probe's flag coverage (`--json`, `--output`, `--quiet`, `--fields`, `--jq`).
+3. **stdout/stderr separation.** Declare read-only commands with `--safe "<args> --json"`; the probe parses stdout as JSON and reports JSON on stderr.
+4. **Exit codes.** Add known failure cases as `--safe "<args> # expect-exit N"` and judge them against `skills/agent-interface-design/references/cli/exit-codes.md`.
+5. **Non-interactive behaviour.** Every probe run has stdin closed and a timeout; a command that waits is a Critical finding.
+6. **Destructive-flow safety.** Destructive-looking commands are never run: judge them from the help (`--dry-run`, `--yes`, `--force`, confirmation semantics) through the `destructive.*` findings. Name one with `--sub` to read its own `--help`.
+7. **Examples, output fields and exit codes in help.** The probe's `help.*` findings.
+8. **Drift.** For a CLI you snapshotted before, `agentic-maker probe cli-diff old.txt new.txt`.
 
 Judge every result against `skills/agent-interface-design/references/cli/checks.md` (five core checks, severity, finish criteria). Fix the CLI before blaming the architecture.
 
 <!-- src: audit-agentic-cli/SKILL.md#Bundled Scripts -->
 ## Probe commands
 
-The two former shell scripts are replaced by plugin probes:
+Two probes do the work:
 
 | Probe | Use for |
 |---|---|
 | `bin/agentic-maker probe cli` | Inspect top-level and subcommand help for standard flags, examples, exit-code docs and missing affordances; also runs checks on declared commands. |
 | `bin/agentic-maker probe cli-diff` | Compare captured help snapshots for command/flag additions, removals and likely breaking changes. |
 
-Read-only discovery support. Do not treat a probe as an agent-readiness proof: it covers discoverability and drift. It does not replace the stdout/stderr, exit-code, non-interactive and destructive-flow checks (steps 3 to 6); run those by hand with safe commands.
+A probe is a black box over read-only commands, not an agent-readiness proof: it sees only the commands you declared with `--safe` and `--sub`. Whatever it did not run (destructive commands, anything behind auth) goes under "Not run" in the report; do not run it yourself to fill the gap.
 
 ## Report shape
 

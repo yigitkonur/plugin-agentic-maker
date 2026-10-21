@@ -1,11 +1,11 @@
 # The MCP probes
 
-> Read when: you run, or have to explain, `agentic-maker probe mcp` or `scan mcp`, including what replaced the old budget and static-audit scripts. CLI probes: [probes-cli](probes-cli.md).
+> Read when: you run, or have to explain, `agentic-maker probe mcp` or `scan mcp`, what each one sends, measures and cannot see. CLI probes: [probes-cli](probes-cli.md).
 
 <!-- src: audit-agentic-mcp/scripts/measure-context-budget.sh.md#measure-context-budget.sh -->
-## `probe mcp` (replaces `measure-context-budget.sh`)
+## `probe mcp`
 
-The old script estimated the context cost of an MCP server by grepping source for tool registrations, descriptions, schema blocks and response examples. `probe mcp` connects to the server and measures the real thing: the `tools/list` response a client receives. Budget numbers are `chars / 4` over the JSON of each definition (a labelled heuristic, not a tokenizer), so they match a hand count of the raw response exactly.
+`probe mcp` connects to the server and measures the real thing: the `tools/list` response a client receives, not a guess from source. Budget numbers are `chars / 4` over the JSON of each definition (a labelled heuristic, not a tokenizer), so they match a hand count of the raw response exactly.
 
 <!-- src: audit-agentic-mcp/scripts/measure-context-budget.sh.md#Usage -->
 ### Usage
@@ -45,7 +45,7 @@ It sends only `initialize`, `tools/list` (paged), `prompts/list` and `resources/
 During context and cost audits; before and after trimming descriptions or splitting a large tool surface; before enabling prompt caching where tool-list stability matters.
 
 <!-- src: audit-agentic-mcp/scripts/audit-mcp-server.sh.md#audit-mcp-server.sh -->
-## `scan mcp` (replaces `audit-mcp-server.sh`)
+## `scan mcp`
 
 A read-only static triage: where the MCP code is and which risky patterns occur. It locates; it does not decide. Confirm every candidate in the source, and measure the running server with `probe mcp`.
 

@@ -14,7 +14,7 @@ Every registered tool injects its full definition (name, description, input sche
 
 The math compounds: each definition costs 50-150 tokens depending on schema complexity. Twenty tools at 100 tokens is 2,000 tokens per message; across a 30-turn conversation that is 60,000 tokens spent on definitions alone. Client tools to inspect the breakdown: `../fresh/mcp-client-and-sdk-quirks.md`.
 
-Example: a 140+ token description of `search_documents` ("Searches through all documents in the repository using full-text search. Supports boolean operators, phrase matching, and field-specific queries. Returns paginated results with relevance scores and highlighted snippets.") becomes "Full-text search across repo docs. Supports boolean, phrase, field queries. Returns paginated results." (under 100 tokens, same capability). Budget audit rule: estimate each tool's serialized size as chars / 4 and warn when one exceeds 100 tokens. Length guidance: `descriptions-structure-and-length.md`.
+Example: a description of `search_documents` of about 55 tokens (219 characters) ("Searches through all documents in the repository using full-text search. Supports boolean operators, phrase matching, and field-specific queries. Returns paginated results with relevance scores and highlighted snippets.") becomes "Full-text search across repo docs. Supports boolean, phrase, field queries. Returns paginated results." (about 25 tokens, 102 characters, same capability). Budget audit rule: estimate tokens as characters / 4 and flag a description above about 100 tokens (Low) and above 200 (Medium), which is what `probe mcp` does (`--description-chars`, default 400 characters); the whole definition, schema included, typically costs 50-150 tokens. Length guidance: `descriptions-structure-and-length.md`.
 
 Trimming descriptions is one of the highest-ROI context optimizations: no architecture change, and it compounds over the whole conversation.
 
@@ -30,7 +30,7 @@ Production caveat: this works cleanly with stdio-based local servers, but most p
 
 Registering more tools does not make a model more capable; past a model-specific threshold it makes it less capable, and degradation looks like a cliff, not a slope. Per-model profiles (sweet spot, hard degradation, observed behaviour) are model-specific reports and live in `../fresh/mcp-model-behavior.md`. One vendor recommends at most 20 tools; community consensus: "There is no standard solution. Disable the ones you don't need."
 
-> Reconciled: the sources quote ceilings of 10, 20, 30 and 40 per model. Use them as diagnostic cues, not verdicts: up to 20 active tools is the default comfortable range, about 30 is a warning, 40 or more needs progressive discovery. Per-model caps live in `../fresh/mcp-model-behavior.md`; decision tree in `../decisions/tool-count.md`.
+> Note: treat tool-count ceilings as diagnostic cues, not verdicts. Up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute). Per-model caps live in `../fresh/mcp-model-behavior.md`; decision tree in `../decisions/tool-count.md`.
 
 Tactics:
 - **Tool groups:** keep a registry mapping a task type to its tools (`code-review`: `read_file`, `search_code`, `get_diff`, `add_comment`; `deployment`: `run_pipeline`, `get_logs`, `rollback`, `set_env`; `data-analysis`: `query_db`, `export_csv`, `run_notebook`, `plot_chart`) and expose only the relevant group; fall back to a safe universal cap of 20.

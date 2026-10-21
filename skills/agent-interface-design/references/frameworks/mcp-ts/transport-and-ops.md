@@ -28,7 +28,7 @@ Wrong, connection at startup blocks everything:
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
 await db.connect(); // Throws -> server never registers tools
 
-const server = new McpServer({ name: "analytics" });
+const server = new McpServer({ name: "analytics", version: "1.0.0" });
 server.tool("query_metrics", schema, async (params) => {
   const result = await db.query(params.sql);
   return { content: [{ type: "text", text: JSON.stringify(result.rows) }] };
@@ -38,7 +38,7 @@ server.tool("query_metrics", schema, async (params) => {
 Right, connect per tool call:
 
 ```typescript
-const server = new McpServer({ name: "analytics" });
+const server = new McpServer({ name: "analytics", version: "1.0.0" });
 
 server.tool("query_metrics", schema, async (params) => {
   let db;
@@ -48,7 +48,7 @@ server.tool("query_metrics", schema, async (params) => {
     return { content: [{ type: "text", text: JSON.stringify(result.rows) }] };
   } catch (err) {
     return {
-      content: [{ type: "text", text: `Database error: ${err.message}. Check DATABASE_URL.` }],
+      content: [{ type: "text", text: `Database error: ${err instanceof Error ? err.message : String(err)}. Check DATABASE_URL.` }],
       isError: true,
     };
   } finally {
@@ -78,6 +78,6 @@ Graceful shutdown, handle SIGTERM to complete in-flight tool calls:
 process.on("SIGTERM", async () => {
   await server.close();   // Stop accepting new connections
   await drainInflight();  // Wait for active tool calls to complete
-  process.exit(0);
+  process.exit(143); // 128 + SIGTERM; use 0 only if your supervisor treats a drained stop as success
 });
 ```

@@ -36,11 +36,11 @@ All examples follow the same standards. Each of these flags is implemented in Go
 
 Each exit code `0` success, `1` crash, `2` usage, `3` not_found, `4` auth, `5` conflict, `6` validation, `7` transient and `8` partial is implemented in all five stacks, and the same JSON envelope is produced by all of them.
 
-> Reconciled: the examples were written for a 0-7 table, an `ExitAuthDenied`/`AuthDenied` name in two stacks, a `transient` error class, and error JSON on stderr in the Rust and Bash code. The code in `frameworks/` uses the 0-8 table, `ExitAuth`/`Auth`, the class `network` for the exit-7 example (`transient` is the exit-7 group, not a class), and writes the envelope for success and failure to stdout; the tests read stdout only. Lists use `result.items` and `result.total`.
+> Note: the code in `frameworks/` uses the 0-8 exit table, `ExitAuth`/`Auth`, the class `network` for the exit-7 example (`transient` is the exit-7 group, not a class), and writes the envelope for success and failure to stdout; the tests read stdout only. Lists use `result.items` and `result.total`.
 
 <!-- src: audit-agentic-cli/references/examples.md#Standard JSON Envelope | audit-agentic-cli/references/examples.md#JSON Envelope -->
 ## Envelope used by the examples
 
 Every example emits the envelope `ok`, `command`, `result`, `error` (`class`, `code`, `message`, `retryable`, `suggestion`) and `meta` (`truncated`, `total_count`, `duration_ms`), defined in `envelope-and-errors.md`. Success sets `error: null`; failure sets `result: null` and, for example, `"class": "not_found"`, `"code": "RESOURCE_NOT_FOUND"`, `"suggestion": "Try 'mycli resource list' first"`.
 
-> Reconciled: the source listed the classes as `not_found|auth|conflict|validation|transient`; the class list is in `error-classes.md` (`usage, not_found, auth, conflict, validation, rate_limit, timeout, network, dependency_failed, internal, partial_success`).
+> Note: the class list is in `error-classes.md` (`usage, not_found, auth, conflict, validation, rate_limit, timeout, network, dependency_failed, internal, partial_success`).

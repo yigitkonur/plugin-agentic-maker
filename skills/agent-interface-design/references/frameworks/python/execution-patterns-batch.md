@@ -10,7 +10,6 @@ Contract: `../../cli/batch-and-partial.md`. Exit 8 when `status` is `partial_fai
 import asyncio
 from dataclasses import dataclass, field
 from typing import List, Any
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 @dataclass
 class BulkResult:
@@ -55,9 +54,6 @@ async def bulk_create(
             else:
                 failed.append({"id": result[1], "error": result[2]})
 
-                if not continue_on_error:
-                    break
-
         if not continue_on_error and failed:
             break
 
@@ -91,10 +87,10 @@ Contract: `../../cli/batch-limits.md`.
 
 ```python
 import asyncio
+import sys
 import click
 from dataclasses import dataclass
-from typing import Callable, TypeVar
-import aiofiles
+from typing import Callable, Optional, TypeVar
 
 T = TypeVar('T')
 R = TypeVar('R')
@@ -104,7 +100,7 @@ class BatchOptions:
     batch_size: int = 100
     max_concurrent: int = 5
     delay_between_batches: float = 0.0
-    max_items: int | None = None
+    max_items: Optional[int] = None
     continue_on_error: bool = True
     fail_threshold: float = 1.0
     retry_failed: int = 0
@@ -126,12 +122,12 @@ async def process_batch(
             for attempt in range(options.retry_failed + 1):
                 try:
                     result = await processor(item)
-                    succeeded.append({"id": item.id, "result": result})
+                    succeeded.append({"id": item["id"], "result": result})
                     return
                 except Exception as e:
                     if attempt == options.retry_failed or not is_retryable(e):
                         failed.append({
-                            "id": item.id,
+                            "id": item["id"],
                             "batch_index": batch_idx,
                             "item_index": item_idx,
                             "error": error_to_dict(e)
@@ -159,11 +155,18 @@ async def process_batch(
         ]
         await asyncio.gather(*tasks)
 
+    if not failed:
+        status = "success"
+    elif succeeded:
+        status = "partial_failure"
+    else:
+        status = "failed"
+
     return {
-        "ok": len(failed) == 0,
-        "status": "success" if len(failed) == 0 else "partial_failure",
+        "ok": not failed,
+        "status": status,
         "summary": {
-            "total_input": len(items),
+            "total": len(items),
             "succeeded": len(succeeded),
             "failed": len(failed)
         },
@@ -176,7 +179,7 @@ async def process_batch(
 @click.option('--input', 'input_file', required=True)
 @click.option('--batch-size', default=100)
 @click.option('--max-concurrent', default=5)
-@click.option('--delay-between-batches', default='0s')
+@click.option('--delay-between-batches', type=float, default=0.0, help='seconds')
 @click.option('--max-items', type=int)
 @click.option('--continue-on-error', is_flag=True)
 @click.option('--fail-threshold', default=1.0)
@@ -186,5 +189,8 @@ def bulk_create(input_file, **kwargs):
     options = BatchOptions(**kwargs)
 
     result = asyncio.run(process_batch(items, create_item, options))
-    output_json(result)
+    output_json({"ok": result["ok"], "command": "bulk-create", "schema_version": "1.0",
+                 "result": result, "meta": {}})
+    # 0 success, 8 partial; all failed: use the failure's own class code (1 here)
+    sys.exit({"success": 0, "partial_failure": 8}.get(result["status"], 1))
 ```

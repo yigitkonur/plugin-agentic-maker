@@ -65,6 +65,6 @@ $ mycli deploy --stream
 {"type": "completed", "status": "succeeded", "result": {"url": "https://app.example.com"}}
 ```
 
-> Reconciled: the source printed every event on one stream. Per `streams-and-jsonl.md`, `started` and `progress` lines are progress and go to stderr; the final `completed` line (a result) goes to stdout, so stdout holds exactly one terminal JSON line. The stream loop ends at `completed` or `failed`.
+> Note: per `streams-and-jsonl.md`, `started` and `progress` lines are progress and go to stderr; the final `completed` line (a result) goes to stdout, so stdout holds exactly one terminal JSON line. The stream loop ends at `completed` or `failed`.
 
 Event types, schema and heartbeat rules: `streams-and-jsonl.md`, `jsonl-event-schema.md`, `jsonl-progress-patterns.md`. Go implementation: `../frameworks/go/execution-patterns-async.md`.

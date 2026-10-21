@@ -44,7 +44,7 @@ server.tool("read_log", "Read shared coordination log, optionally filtered", {
   since: z.string().optional().describe("ISO timestamp -- only return entries after this time"),
   agent_id: z.string().optional().describe("Filter to a specific agent's entries"),
   type: z.string().optional().describe("Filter to a specific event type"),
-  limit: z.number().default(50),
+  limit: z.number().int().min(1).default(50),
 }, async ({ since, agent_id, type, limit }) => {
   let entries = eventLog;
   if (since) entries = entries.filter(e => e.timestamp > since);
@@ -78,7 +78,7 @@ function assertStage(sessionId: string, required: WorkflowStage, allowedPrevious
       message: `Stage gate: current stage is "${current}". Must complete "${next}" before calling this tool.`,
       current_stage: current,
       required_stage: required,
-      next_required_tool: stageToTool[next],
+      next_required_tool: stageToTool[current],
     };
   }
 }
@@ -102,7 +102,7 @@ server.tool("commit_changes", "Commit validated changes. Requires validation sta
   }
 
   const result = await commitChanges(session_id, dry_run);
-  sessions.set(session_id, "committed");
+  if (!dry_run) sessions.set(session_id, "committed"); // a dry run must not consume the stage
   return { content: [{ type: "text", text: `Changes committed. ${result.summary}` }] };
 });
 ```

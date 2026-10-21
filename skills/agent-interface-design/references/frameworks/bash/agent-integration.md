@@ -7,7 +7,7 @@ The rules are in `../../cli/caller-integration.md` and `../../cli/caller-resilie
 <!-- src: audit-agentic-cli/references/agent-integration.md#8. Integration Test Script -->
 ## Integration test script
 
-Four checks: `version --json` carries `ok`; an unknown resource exits 3; a failing command's envelope has `error.code` and a non-null `error.retryable`; a confirming command with `--yes` and empty stdin does not hang (exit code other than 124 from `timeout 5`).
+Four checks: `version --json` carries `ok`; `get` on a nonexistent resource exits 3; a failing command's envelope has `error.code` and a non-null `error.retryable`; a confirming command with `--yes` and empty stdin does not hang (exit code other than 124 from `timeout 5`).
 
 ```bash
 #!/bin/bash
@@ -32,7 +32,7 @@ test_json_output() {
 
 test_exit_codes() {
     echo "Test: Exit codes..."
-    $CLI nonexistent-resource --json >/dev/null 2>&1
+    $CLI get nonexistent --json >/dev/null 2>&1
     if [ $? -eq 3 ]; then
         pass "Not-found returns 3"
     else
@@ -51,6 +51,7 @@ test_error_structure() {
 
 test_non_interactive() {
     echo "Test: Non-interactive mode..."
+    command -v timeout >/dev/null || { fail "timeout not installed"; return; }
     echo "" | timeout 5 $CLI dangerous-cmd --yes --json > /dev/null 2>&1
     if [ $? -ne 124 ]; then
         pass "Non-interactive works"
@@ -71,4 +72,4 @@ echo "Results: $PASS passed, $FAIL failed"
 [ $FAIL -eq 0 ] && exit 0 || exit 1
 ```
 
-> Reconciled: the source wrote each check as `[ ... ] && ((PASS++)) && echo ok || ((FAIL++)) && echo bad`. `((PASS++))` returns status 1 when the old value is 0, so the first pass fell through to the `||` branch and was also counted as a failure. This file uses `PASS=$((PASS + 1))` inside an `if`/`else`. The script has no `set -e`, so a failing check does not abort the run.
+> Note: each check uses `PASS=$((PASS + 1))` inside an `if`/`else`, because `((PASS++))` returns status 1 when the old value is 0. The script has no `set -e`, so a failing check does not abort the run.

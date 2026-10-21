@@ -7,13 +7,13 @@
 
 | You want to... | Start here |
 |---|---|
-| Architect a brand-new MCP | `skills/design/references/interview.md`, then `decisions/companion-routing.md` |
+| Architect a brand-new MCP | `skills/design/references/interview-mcp.md`, then `decisions/companion-routing.md` |
 | Decide MCP vs CLI vs agent skill | `decisions/mcp-vs-cli-evidence.md` |
 | Evaluate tool interface quality | `mcp/design-*`, then `mcp/descriptions-*` |
 | Fix schema parse failures | `mcp/schemas-*`, then `decisions/design-phase.md` |
 | Improve error recovery | `decisions/error-strategy.md`, then `mcp/errors-*` |
 | Harden security posture | `decisions/security-posture.md`, then `mcp/security/*` (generic defenses, then auth and identity) |
-| Reduce context / token usage | `bin/agentic-maker probe mcp --budget`, then `mcp/budget-*` |
+| Reduce context / token usage | `agentic-maker probe mcp "<command>"`, then `mcp/budget-*` |
 | Manage 20+ tools | `decisions/tool-count.md`, then `mcp/budget-*` (progressive discovery) |
 | Add sampling, elicitation, or roots | `mcp/protocol-*` |
 | Pick deployment platform | `mcp/ops-*` |
@@ -28,7 +28,7 @@
 What aspect of the MCP server is in scope?
 |
 +-- Brand new server, no code yet
-|   +-- skills/design/references/interview.md
+|   +-- skills/design/references/interview-mcp.md
 |   +-- decisions/companion-routing.md
 |
 +-- Architecture decision: should this even be an MCP server?

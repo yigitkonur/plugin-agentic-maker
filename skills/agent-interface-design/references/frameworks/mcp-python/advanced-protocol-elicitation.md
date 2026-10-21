@@ -8,7 +8,10 @@ Core rules: `../../mcp/protocol-elicitation.md`. Gating and fallbacks: `advanced
 ## Form mode with a flat model
 
 ```python
+from mcp.server.fastmcp import Context, FastMCP
 from pydantic import BaseModel, Field
+
+mcp = FastMCP("booking")
 
 class BookingPreferences(BaseModel):
     checkAlternative: bool = Field(description="Would you like to check another date?")
@@ -21,7 +24,7 @@ async def book_table(date: str, time: str, party_size: int, ctx: Context) -> str
             message=f"No tables for {party_size} on {date}. Another date?",
             schema=BookingPreferences,
         )
-        if result.action == "accept" and result.data:
+        if result.action == "accept" and result.data and result.data.checkAlternative:
             return f"[SUCCESS] Booked for {result.data.alternativeDate}"
         return "[CANCELLED] Booking cancelled"
     return f"[SUCCESS] Booked for {date} at {time}"
@@ -31,7 +34,9 @@ async def book_table(date: str, time: str, party_size: int, ctx: Context) -> str
 ## URL mode with identity-bound state
 
 ```python
-# FastMCP-style; raw SDKs use raise UrlElicitationRequiredError
+# FastMCP-style; raw SDKs use raise UrlElicitationRequiredError. ctx.elicit_url and ctx.user_sub are
+# illustrative: confirm the method names against your SDK version
+import asyncio
 import uuid
 
 @mcp.tool()
@@ -43,8 +48,10 @@ async def connect_stripe(ctx: Context) -> str:
         url=f"https://auth.example.com/stripe/start?state={eid}",
         elicitation_id=eid,
     )
-    # Backend completes out-of-band; poll or wait
-    if state_store.get(eid)["status"] == "granted":
-        return "Stripe connected."
+    # The call above returns when the user answers the prompt; the backend finishes out-of-band, so poll
+    for _ in range(30):
+        if state_store.get(eid, {}).get("status") == "granted":
+            return "Stripe connected."
+        await asyncio.sleep(2)
     return "Connection not completed."
 ```

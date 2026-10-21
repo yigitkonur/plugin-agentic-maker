@@ -23,8 +23,8 @@ class AuthRecoveryCLI {
     let result = await this.cli.invoke(cmd);
 
     // Exit code 4 = auth error
-    if (!result.ok && result.error?.code === 'exit_4') {
-      console.log('Auth expired, refreshing token...');
+    if (!result.ok && result.exit_code === 4) {
+      console.warn('Auth expired, refreshing token...');
 
       try {
         await this.tokens.refreshToken();
@@ -55,8 +55,8 @@ async function invokeWithConflictResolution(
   const result = await invokeCLI(cmd);
 
   // Exit code 5 = conflict
-  if (!result.ok && result.error?.code === 'exit_5') {
-    const conflictData = result.error as { base_version?: string; current_version?: string };
+  if (!result.ok && result.exit_code === 5) {
+    const conflictData = (result.error?.details ?? {}) as { base_version?: string; current_version?: string };
 
     switch (strategy) {
       case 'force':
@@ -65,10 +65,10 @@ async function invokeWithConflictResolution(
 
       case 'merge':
         // Attempt three-way merge
-        const mergeCmd = [
+        const mergeCmd: string[] = [
           'mycli', 'resource', 'merge',
-          '--base', conflictData.base_version,
-          '--current', conflictData.current_version,
+          '--base', conflictData.base_version ?? '',
+          '--current', conflictData.current_version ?? '',
           '--json', '--yes'
         ];
         const mergeResult = await invokeCLI(mergeCmd);
@@ -85,10 +85,11 @@ async function invokeWithConflictResolution(
         return {
           ok: false,
           error: {
-            code: 'human_required',
-            message: `Conflict requires human resolution: ${result.error.message}`,
+            ...result.error!, // keep the conflict class and code
+            message: `Conflict requires human resolution: ${result.error!.message}`,
             retryable: false,
           },
+          exit_code: 5,
         };
     }
   }
@@ -158,14 +159,24 @@ class CircuitBreaker {
 // Usage with CLI
 const breaker = new CircuitBreaker({ threshold: 3, resetTimeoutMs: 30000 });
 
+class BreakerFailure extends Error {
+  constructor(public result: CLIResult) { super(result.error?.message); }
+}
+
 async function resilientInvoke(cmd: string[]): Promise<CLIResult> {
-  return breaker.execute(async () => {
-    const result = await invokeCLI(cmd);
-    if (!result.ok && !result.error?.retryable) {
-      throw new Error(result.error?.message);
-    }
-    return result;
-  });
+  try {
+    return await breaker.execute(async () => {
+      const result = await invokeCLI(cmd);
+      // only outages (transient 7 incl. timeouts, crash 1) trip the breaker; usage, auth, conflict do not
+      if (!result.ok && (result.exit_code === 7 || result.exit_code === 1)) {
+        throw new BreakerFailure(result);
+      }
+      return result;
+    });
+  } catch (error) {
+    if (error instanceof BreakerFailure) return error.result;
+    return { ok: false, error: { class: 'dependency_failed', code: 'CIRCUIT_OPEN', message: (error as Error).message, retryable: true }, exit_code: 7 };
+  }
 }
 ```
 
@@ -193,6 +204,6 @@ async function withFallback(options: FallbackOptions): Promise<CLIResult> {
 const result = await withFallback({
   primary: () => invokeCLI(['mycli', 'resource', 'get', 'id', '--json']),
   fallback: () => invokeCLI(['mycli', 'cache', 'get', 'id', '--json']),
-  shouldFallback: (r) => !r.ok && r.error?.code === 'exit_7', // Transient error
+  shouldFallback: (r) => !r.ok && r.exit_code === 7, // Transient error
 });
 ```

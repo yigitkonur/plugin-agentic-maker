@@ -7,6 +7,11 @@ Types (`ExitStatus`, `Response`, `AppError`) are in `examples.md`. Rules: `../..
 ## CLI argument parsing with Clap (standard flags)
 
 ```rust
+use clap::{Parser, Subcommand};
+use serde::Serialize;
+use std::process::ExitCode;
+// Response, Meta and AppError are defined in examples.md; import them from where you put them.
+
 #[derive(Parser)]
 #[command(name = "mycli")]
 #[command(about = "Agent-friendly CLI example")]
@@ -75,18 +80,29 @@ pub enum Commands {
 ## Output helpers
 
 ```rust
+fn command_name(cli: &Cli) -> String {
+    match &cli.command {
+        Commands::Create { .. } => "create",
+        Commands::List { .. } => "list",
+        Commands::Get { .. } => "get",
+        Commands::Delete { .. } => "delete",
+    }
+    .to_string()
+}
+
 pub fn output_success<T: Serialize>(cli: &Cli, result: T) -> ExitCode {
     if cli.json {
         let response: Response<T> = Response {
             ok: true,
-            command: None,
+            schema_version: "1.0",
+            command: Some(command_name(cli)),
             result: Some(result),
             error: None,
-            meta: None,
+            meta: Some(Meta::default()),
         };
         println!("{}", serde_json::to_string_pretty(&response).unwrap());
     } else if cli.quiet {
-        // Minimal output - just the ID or primary field
+        // Minimal output: compact one-line JSON
         println!("{}", serde_json::to_string(&result).unwrap());
     } else {
         println!("{}", serde_json::to_string_pretty(&result).unwrap());
@@ -94,10 +110,11 @@ pub fn output_success<T: Serialize>(cli: &Cli, result: T) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-pub fn output_error(cli: &Cli, err: AppError) -> ExitCode {
-    if cli.json {
+pub fn output_error(json: bool, err: AppError) -> ExitCode {
+    if json {
         let response: Response<()> = Response {
             ok: false,
+            schema_version: "1.0",
             command: None,
             result: None,
             error: Some(err.to_error_info()),
@@ -116,11 +133,20 @@ pub fn output_error(cli: &Cli, err: AppError) -> ExitCode {
 
 ```rust
 fn main() -> ExitCode {
-    let cli = Cli::parse();
+    // try_parse: with --json a usage error must still produce the envelope on stdout
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(e) if e.use_stderr() && std::env::args().any(|a| a == "--json") => {
+            return output_error(true, AppError::Usage(e.to_string()));
+        }
+        Err(e) => e.exit(), // --help / --version (exit 0) or plain-text usage error (exit 2)
+    };
 
-    match run(&cli) {
-        Ok(result) => output_success(&cli, result),
-        Err(err) => output_error(&cli, err),
+    // a panic is a crash: exit 1, not Rust's default 101
+    match std::panic::catch_unwind(|| run(&cli)) {
+        Ok(Ok(result)) => output_success(&cli, result),
+        Ok(Err(err)) => output_error(cli.json, err),
+        Err(_) => output_error(cli.json, AppError::Internal("unexpected panic".to_string())),
     }
 }
 
@@ -165,4 +191,4 @@ fn run(cli: &Cli) -> Result<serde_json::Value, AppError> {
 }
 ```
 
-> Reconciled: the source's `output_error` wrote the JSON envelope to stderr; this file writes it to stdout and keeps `eprintln!` for the human line. The list result uses `items` and `total` (was `resources`/`total`).
+> Note: `output_error` writes the JSON envelope to stdout and keeps `eprintln!` for the human line. The list result uses `items` and `total`.

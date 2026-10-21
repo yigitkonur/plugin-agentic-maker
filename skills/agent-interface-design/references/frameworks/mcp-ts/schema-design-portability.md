@@ -29,16 +29,18 @@ const goodNames = [
 Lint rule:
 
 ```typescript
+import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
+
 const SAFE_TOOL_NAME = /^[a-z][a-z0-9_]{0,63}$/;
 
-function registerTool(name: string, ...rest: any[]) {
+function registerTool(name: string, config: { description?: string; inputSchema?: z.ZodRawShape }, cb: ToolCallback<z.ZodRawShape>) {
   if (!SAFE_TOOL_NAME.test(name)) {
     throw new Error(
       `Invalid tool name "${name}". Use only lowercase letters, digits, and underscores. ` +
       `Must start with a letter. Max 64 characters.`
     );
   }
-  server.tool(name, ...rest);
+  server.registerTool(name, config, cb);
 }
 ```
 
@@ -51,9 +53,9 @@ The 7 rules as code comments:
 ```typescript
 // Rule 1: No oneOf / anyOf / allOf -- Gemini ignores tools with these
 // Bad
-{ oneOf: [{ type: "string" }, { type: "number" }] }
+const bad = { oneOf: [{ type: "string" }, { type: "number" }] };
 // Good -- pick the most permissive type, coerce server-side
-{ type: "string", description: "Can also be a number (will be converted)" }
+const good = { type: "string", description: "Can also be a number (will be converted)" };
 
 // Rule 2: Max 3 levels of nesting -- GPT-4 degrades beyond this
 
@@ -76,12 +78,15 @@ The 7 rules as code comments:
 Quick cross-model schema validator:
 
 ```typescript
+type JsonSchema = Record<string, any>;
+declare function countNestingDepth(schema: JsonSchema): number; // walk properties/items, return max depth
+
 function validatePortability(schema: JsonSchema): string[] {
   const issues: string[] = [];
-  if (schema.oneOf || schema.anyOf) issues.push("Remove oneOf/anyOf for Gemini compatibility");
+  if (schema.oneOf || schema.anyOf || schema.allOf) issues.push("Remove oneOf/anyOf/allOf for Gemini compatibility");
   if (schema.$ref) issues.push("Inline $ref for cross-client compatibility");
   if (countNestingDepth(schema) > 3) issues.push("Nesting too deep (>3) for GPT-4 reliability");
-  if (Array.isArray(schema.enum) && schema.enum.length > 10) issues.push("Large enum (>10) degrades accuracy");
+  if (Array.isArray(schema.enum) && schema.enum.length >= 10) issues.push("Large enum (10+) degrades accuracy");
   return issues;
 }
 ```

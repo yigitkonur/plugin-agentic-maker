@@ -1,12 +1,14 @@
 ---
-as_of: unknown
+as_of: 2026-04
 verify_before_citing: true
 ---
 # Token and cost benchmarks quoted for MCP context design
 
 > Read when: you need the measured numbers behind the MCP context-budget rules (tool-definition share, discovery strategies, code execution, response format, ANSI stripping); verify before citing.
 
-The source gives no dates for these measurements. Core files linking here: `../mcp/budget-tool-definitions.md`, `../mcp/budget-response-size.md`, `../mcp/patterns-progressive-discovery.md`, `../mcp/responses-curated-and-semantic.md`.
+> `as_of` is inferred from an April 2026 refresh: the figures below carry no date of their own, so re-check them before citing.
+
+No dates are given for these measurements. Core files linking here: `../mcp/budget-tool-definitions.md`, `../mcp/budget-response-size.md`, `../mcp/patterns-progressive-discovery.md`, `../mcp/responses-curated-and-semantic.md`.
 
 ## Tool definitions as a share of input tokens
 

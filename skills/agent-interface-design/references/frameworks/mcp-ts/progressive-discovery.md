@@ -9,14 +9,19 @@ Explanation and rules: ../../mcp/patterns-dynamic-tool-lists.md
 ## Pattern 5: Dynamic Tool List Changes Nuke the KV/Prefix Cache
 
 ```typescript
-// Good: change tools once at session boundaries
-server.onRequest("set_mode", (params) => {
-  if (params.mode === "admin") enableAdminTools(); // one invalidation
+// Good: change tools once, at a session boundary, from a tool the agent calls on purpose
+server.registerTool("set_mode", {
+  description: "Switch the session mode.",
+  inputSchema: { mode: z.enum(["standard", "admin"]) },
+}, async ({ mode }) => {
+  if (mode === "admin") adminTools.forEach((t) => t.enable()); // one list_changed, one cache invalidation
+  return { content: [{ type: "text", text: `Mode: ${mode}` }] };
 });
 
-// Bad: change tools on every request
-server.onRequest("tools/call", (params) => {
-  pruneIrrelevantTools(params.context); // cache miss every time
+// Bad: change the list while serving ordinary calls
+server.registerTool("search", { description: "Search.", inputSchema: { query: z.string() } }, async (args) => {
+  pruneIrrelevantTools(args); // a list_changed and a cache miss on every call
+  return runSearch(args);
 });
 ```
 
@@ -42,47 +47,39 @@ tool.remove();   // permanently removes
 Manual notification:
 
 ```typescript
-await server.notification({
-  method: "notifications/tools/list_changed",
-});
+await server.sendToolListChanged(); // McpServer; low-level: server.server.notification({ method: "notifications/tools/list_changed" })
 ```
 
 ## Pattern 8: Graceful Fallback for Hidden Tools
 
-Detection and recovery:
+Detection and recovery. The SDK has no "tool not found" hook: a call to a hidden or unknown tool fails with a protocol error the agent cannot act on. So keep one always-visible tool that explains, name it in the server `instructions`, and hide tools with `disable()` rather than by not registering them:
 
 ```typescript
-// Registry of all tools (including currently hidden ones)
-const allTools = new Map<string, ToolDefinition>();
-const visibleTools = new Set<string>();
+import type { RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-// Override the default "tool not found" behavior
-server.setToolNotFoundHandler(async (toolName: string, params: unknown) => {
-  if (allTools.has(toolName)) {
-    // Tool exists but is hidden -- explain and offer the path to unlock it
-    const tool = allTools.get(toolName)!;
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          error: "TOOL_NOT_CURRENTLY_VISIBLE",
-          tool_name: toolName,
-          message: `"${toolName}" exists but is not active in your current session mode.`,
-          how_to_unlock: tool.unlockVia
-            ? `Call ${tool.unlockVia} first to activate this tool.`
-            : "Contact your administrator to enable this capability.",
-          current_alternatives: visibleTools.has("search_tools")
-            ? [`Call search_tools to discover available alternatives to ${toolName}.`]
-            : [],
-        })
-      }],
-      isError: true,
-    };
+// Every tool is registered once; hidden ones are disabled (not listed, calls rejected)
+const registered = new Map<string, RegisteredTool>();
+const hidden = new Map<string, { unlockVia?: string }>(); // name -> how to unlock it
+registered.get("export_all")?.disable();
+hidden.set("export_all", { unlockVia: "restore_tool" });
+
+server.registerTool("explain_tool", {
+  description: "Explain why a tool is unavailable and how to unlock it.",
+  inputSchema: { tool_name: z.string() },
+}, async ({ tool_name }) => {
+  const info = hidden.get(tool_name);
+  if (!info) {
+    return { content: [{ type: "text", text: `Unknown tool: "${tool_name}". Call tools/list to see the available tools.` }], isError: true };
   }
-
-  // Truly unknown tool
   return {
-    content: [{ type: "text", text: `Unknown tool: "${toolName}". Call list_tools to see available tools.` }],
+    content: [{ type: "text", text: JSON.stringify({
+      error: "TOOL_NOT_CURRENTLY_VISIBLE",
+      tool_name,
+      message: `"${tool_name}" exists but is not active in your current session mode.`,
+      how_to_unlock: info.unlockVia
+        ? `Call ${info.unlockVia} first to activate this tool.`
+        : "Ask an administrator to enable this capability.",
+    }) }],
     isError: true,
   };
 });
@@ -91,15 +88,16 @@ server.setToolNotFoundHandler(async (toolName: string, params: unknown) => {
 On-demand restoration:
 
 ```typescript
-server.tool("restore_tool", "Restore a temporarily hidden tool for this session", {
-  tool_name: z.string(),
-  reason: z.string().describe("Why this tool is needed now"),
+server.registerTool("restore_tool", {
+  description: "Restore a temporarily hidden tool for this session.",
+  inputSchema: { tool_name: z.string(), reason: z.string().describe("Why this tool is needed now") },
 }, async ({ tool_name, reason }) => {
-  if (!allTools.has(tool_name)) {
+  const tool = registered.get(tool_name);
+  if (!tool) {
     return { content: [{ type: "text", text: `"${tool_name}" does not exist.` }], isError: true };
   }
-  visibleTools.add(tool_name);
-  await server.notifyToolsChanged();
+  tool.enable(); // the SDK sends notifications/tools/list_changed itself
+  hidden.delete(tool_name);
   return { content: [{ type: "text", text: `"${tool_name}" restored for this session.` }] };
 });
 ```

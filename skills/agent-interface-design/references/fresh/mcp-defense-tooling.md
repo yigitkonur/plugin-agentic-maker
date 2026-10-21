@@ -9,7 +9,7 @@ verify_before_citing: true
 <!-- src: audit-agentic-mcp/references/patterns/threat-catalog.md#4. Defense Tooling Ecosystem (≥8 named tools) -->
 ## Defense tooling ecosystem
 
-Names, URLs and "first seen" dates are as the source reported them (latest: 2026-02). Check that each project still exists and is maintained.
+Names, URLs and "first seen" dates are as reported (latest: 2026-02). Check that each project still exists and is maintained.
 
 | Tool | URL | What it detects | Maintainer | First seen |
 |---|---|---|---|---|

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SubagentStop": [
+      {
+        "matcher": "agentic-maker:trace-reader",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker\" ledger reader-done"
+          }
+        ]
+      }
+    ]
+  }
+}

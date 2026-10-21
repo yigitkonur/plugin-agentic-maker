@@ -31,7 +31,7 @@ Rules:
 - Audience is the MCP server's canonical URI, byte-for-byte.
 - If `aud` is an array, at least one element must equal the canonical URI **and** no other element may be treated as proof.
 - Never re-use a received token as `Authorization` on an outbound call; use OBO (the options above).
-- Reject tokens whose `typ` or `alg` is weaker than expected (`typ != "JWT"` or unsigned `alg=none`).
+- Reject tokens whose `typ` or `alg` is weaker than expected (a `typ` other than `at+jwt` / `application/at+jwt` for RFC 9068 access tokens, or unsigned `alg=none`).
 
 <!-- src: audit-agentic-mcp/references/patterns/auth-identity.md#8. Attack Primitive — Token Audience Confusion And Passthrough -->
 ## Attack: token audience confusion and passthrough

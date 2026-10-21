@@ -5,7 +5,7 @@
 <!-- src: audit-agentic-mcp/references/patterns/auth-identity.md#17. Audit Checklist Before Shipping -->
 Run every item. Failing any single item is a spec violation or a known attack vector. The list is the composite of the current authorization profile and the attack primitives in [auth-client-identity.md](auth-client-identity.md), [auth-obo-and-token-passthrough.md](auth-obo-and-token-passthrough.md) and [auth-attack-primitives.md](auth-attack-primitives.md); the binary checks that cross over to the threat model are in [threat-audit-checklist.md](threat-audit-checklist.md).
 
-- [ ] PRM served at `/.well-known/oauth-protected-resource` with `resource`, `authorization_servers[]`, `scopes_supported`, `bearer_methods_supported`.
+- [ ] PRM served at `/.well-known/oauth-protected-resource` with `resource` and `authorization_servers[]` (required); `scopes_supported` and `bearer_methods_supported` are optional but useful.
 - [ ] `WWW-Authenticate` challenge on 401 includes `resource_metadata=` and `scope=`.
 - [ ] AS advertises either RFC 8414 or OIDC Discovery metadata; `code_challenge_methods_supported` includes `S256`.
 - [ ] Client uses PKCE `S256` and aborts if the AS does not advertise it.
@@ -20,6 +20,6 @@ Run every item. Failing any single item is a spec violation or a known attack ve
 - [ ] Tool schemas signed and verified on load (see [tool-schema-integrity.md](tool-schema-integrity.md)).
 - [ ] Streamable HTTP returns `403` for invalid `Origin`.
 
-> Reconciled: the sources split CIMD and DCR across files (CIMD "recommended", DCR "baseline"); the two conditional items above stay as written and are evaluated per deployment: decide by the rule in [auth-client-identity.md](auth-client-identity.md), not by assuming either.
+> Note: the two conditional items above are evaluated per deployment: decide by the rule in [auth-client-identity.md](auth-client-identity.md), not by assuming either CIMD or DCR.
 
 Sources: composite of the current MCP authorization spec and the attack primitives; OWASP MCP Top 10.

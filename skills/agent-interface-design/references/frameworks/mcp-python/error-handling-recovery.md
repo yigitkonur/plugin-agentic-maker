@@ -41,10 +41,12 @@ loop_breaker = LoopBreaker()
 Wire it into the tool handler:
 
 ```python
+from mcp.server.fastmcp.exceptions import ToolError  # fastmcp package: from fastmcp.exceptions import ToolError
+
 def handle_tool_call(tool_name: str, params: dict):
     loop_msg = loop_breaker.check(tool_name, params)
     if loop_msg:
-        return {"content": [{"type": "text", "text": loop_msg}], "isError": True}
+        raise ToolError(loop_msg)  # error result, not a returned dict
 
     return execute_tool(tool_name, params)
 ```
@@ -53,18 +55,17 @@ def handle_tool_call(tool_name: str, params: dict):
 
 ```python
 from datetime import datetime, timedelta
+import dateparser  # pip install dateparser
 
 def get_events(date: str):
     resolved = resolve_date(date)
     events = db.query_events(resolved)
     return {
-        "content": [{"type": "text", "text": json.dumps({
-            "events": events,
-            "normalized_inputs": {
-                "date": resolved.strftime("%Y-%m-%d"),
-                "note": f"Interpreted '{date}' as {resolved.strftime('%Y-%m-%d')}"
-            }
-        })}]
+        "events": events,
+        "normalized_inputs": {
+            "date": resolved.strftime("%Y-%m-%d"),
+            "note": f"Interpreted '{date}' as {resolved.strftime('%Y-%m-%d')}"
+        }
     }
 
 def resolve_date(raw: str) -> datetime:

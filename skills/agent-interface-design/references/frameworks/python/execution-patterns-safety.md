@@ -56,7 +56,7 @@ def apply_resources(
 
 Contract: `../../cli/non-interactive.md`.
 
-> Reconciled: the source `confirm` returned `default` (False) when non-interactive, then `delete` exited 1 with "Aborted". Here a confirmation that cannot be asked fails with exit 2 naming `--yes` / `--force`, and prompts go to stderr.
+> Note: a confirmation that cannot be asked (non-interactive) fails with exit 2 naming `--yes` / `--force`, and prompts go to stderr.
 
 ```python
 import sys
@@ -73,9 +73,10 @@ def is_interactive() -> bool:
     return sys.stdin.isatty() and sys.stdout.isatty()
 
 def prompt(message: str, *, non_interactive: bool = False) -> str:
-    """Prompt for input, fail in non-interactive mode."""
+    """Prompt for input; exit 2 in non-interactive mode, like confirm()."""
     if non_interactive or not is_interactive():
-        raise RuntimeError(f"Prompt required in non-interactive mode: {message}")
+        print(f"Input required: {message}. Pass it as a flag.", file=sys.stderr)
+        sys.exit(2)
 
     print(message, end="", file=sys.stderr)
     return input()
@@ -108,7 +109,7 @@ def delete(non_interactive: bool, yes: bool, force: bool):
         if not confirm("This will delete all data. Continue?",
                       non_interactive=non_interactive, auto_yes=yes):
             click.echo("Aborted", err=True)
-            sys.exit(1)  # source value; unresolved (1 = crash): see ../../cli/non-interactive.md
+            sys.exit(2)  # confirmation not given: same code as the non-interactive refusal (../../cli/non-interactive.md)
 
     # Proceed with deletion
 ```

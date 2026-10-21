@@ -40,8 +40,8 @@ function toTSV(rows: Record<string, unknown>[]): string {
 }
 
 server.registerTool("query_users", {
-  inputSchema: { filter: z.string().optional() },
-}, async ({ filter }) => {
+  inputSchema: {},
+}, async () => {
   const users = await db.query(`SELECT name, age, city, role FROM users`);
   return {
     content: [{

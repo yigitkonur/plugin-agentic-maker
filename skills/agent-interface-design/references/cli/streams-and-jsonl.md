@@ -34,13 +34,14 @@ Use `--verbose` / `-v` to increase stderr detail, never stdout.
 
 For long-running operations, use JSON Lines (newline-delimited JSON). Each line is one typed event; see `jsonl-progress-patterns.md` for sequences and `jsonl-event-schema.md` for the schema.
 
-> Reconciled: the sources put JSONL progress events on stdout in one file and on stderr in another. This file uses one rule. A command that streams results emits typed JSONL on stdout, and its last line is `type: summary` or `type: result`. Progress that is not a result (`progress`, `phase`, `heartbeat`, `log` events) goes to stderr, also one JSON object per line. Never mix the two on one stream. The source name `completed` for the terminal event is the same role as `result`; a CLI that already emits `completed` keeps working but documents it.
+> Note: a command that streams results emits typed JSONL on stdout, and its last line is `type: summary` or `type: result`. Progress that is not a result (`progress`, `phase`, `heartbeat`, `log` events) goes to stderr, also one JSON object per line. Never mix the two on one stream. `completed` as the terminal event has the same role as `result`; a CLI that already emits `completed` keeps working but documents it.
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Event Types -->
 ## Event types
 
 | Type | Description | Required Fields | Stream |
 |------|-------------|-----------------|--------|
+| `started` | The operation was accepted and is running | `type`, `operation_id` | stderr |
 | `progress` | Incremental progress update | `type`, `phase` | stderr |
 | `log` | Log message | `type`, `level`, `message` | stderr |
 | `completed` | Operation finished (terminal; also called `result` or `summary`) | `type`, `status`, `result` | stdout, last line |

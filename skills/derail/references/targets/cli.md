@@ -2,7 +2,7 @@
 
 > Read when: the target is an executable an agent will drive through a shell.
 
-**Exposure:** the binary is put on the worker's `PATH` under `bin_name` and the matching `Bash(<name> *)` patterns are allowed; the worker gets only `--help` (cold) or `--help` plus a skill (assisted). Give the scenario a built binary: a crate or package name is not a path (`bin:`, and `build:` to say how it is produced).
+**Exposure:** the binary is put on the worker's `PATH` under `bin_name` and the matching `Bash(<name> *)` patterns are allowed; the worker gets only `--help` (cold). Give the scenario a built binary: a crate or package name is not a path (`bin:`, and `build:` to say how it is produced).
 
 **Lens:**
 1. **Discovery from help:** did it find the right subcommand and flag from `--help` alone?

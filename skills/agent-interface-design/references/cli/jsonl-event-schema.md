@@ -16,6 +16,7 @@ Base schema for streaming JSONL events. Which stream each event type belongs to 
   "type": "object",
   "required": ["type"],
   "oneOf": [
+    { "$ref": "#/definitions/StartedEvent" },
     { "$ref": "#/definitions/ProgressEvent" },
     { "$ref": "#/definitions/LogEvent" },
     { "$ref": "#/definitions/CompletedEvent" },
@@ -24,6 +25,15 @@ Base schema for streaming JSONL events. Which stream each event type belongs to 
     { "$ref": "#/definitions/PhaseEvent" }
   ],
   "definitions": {
+    "StartedEvent": {
+      "type": "object",
+      "required": ["type", "operation_id"],
+      "properties": {
+        "type": { "const": "started" },
+        "operation_id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
     "ProgressEvent": {
       "type": "object",
       "required": ["type", "phase"],
@@ -53,7 +63,7 @@ Base schema for streaming JSONL events. Which stream each event type belongs to 
       "type": "object",
       "required": ["type", "status", "result"],
       "properties": {
-        "type": { "const": "completed" },
+        "type": { "enum": ["completed", "result", "summary"] },
         "status": { "enum": ["succeeded", "failed", "cancelled"] },
         "result": { "description": "Operation result payload" },
         "duration_ms": { "type": "integer", "minimum": 0 }

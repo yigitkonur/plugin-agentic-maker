@@ -54,8 +54,11 @@ def parse(path):
         k, v = ln.split(":", 1)
         meta[k.strip()] = _value(v, path, k.strip())
     for req in ("name", "kind", "target"):
-        if not meta.get(req):
+        if meta.get(req) in (None, ""):
             raise CliError("validation", "scenario_missing", "%s: front matter needs `%s`" % (path, req))
+    for k in ("name", "target", "wrapper_name", "bin", "bin_name", "model", "kind"):
+        if k in meta and not isinstance(meta[k], str):
+            meta[k] = str(meta[k])      # `name: 12` is a name, not a number
     if meta["kind"] not in KINDS:
         raise CliError("validation", "scenario_kind", "%s: kind must be one of %s, got %r" % (path, "|".join(KINDS), meta["kind"]))
     sections = {}
@@ -73,9 +76,38 @@ def parse(path):
     return {"meta": meta, "sections": sec, "path": os.path.abspath(path)}
 
 
-def target_name_warnings(sc):
-    """A prompt that names the target hides the trigger layer (T1-T3). Warn, do not block."""
+def user_only_skill(sc, root):
+    """(wrapper, skill name) when the target is a loose skill whose frontmatter says `disable-model-invocation: true`: a worker cannot
+    choose such a skill, only a slash command in the prompt starts it. Otherwise None."""
+    meta = sc["meta"]
+    if meta["kind"] != "skill" or not root:
+        return None
+    t = str(meta["target"])
+    d = t if os.path.isabs(t) else os.path.join(root, t)
+    f = os.path.join(d, "SKILL.md")
+    if not os.path.isfile(f) or os.path.exists(os.path.join(d, ".claude-plugin", "plugin.json")):
+        return None
+    head = open(f, encoding="utf-8", errors="replace").read(4000)
+    m = re.match(r"^---\s*\n(.*?)\n---", head, re.S)
+    fm = m.group(1) if m else ""
+    if not re.search(r"(?m)^disable-model-invocation:\s*true\s*$", fm):
+        return None
+    nm = re.search(r"(?m)^name:\s*(\S+)", fm)
+    return str(meta.get("wrapper_name") or "target"), (nm.group(1).strip("'\"") if nm else os.path.basename(d.rstrip("/")))
+
+
+def target_name_warnings(sc, root=None):
+    """A prompt that names the target hides the trigger layer (T1-T3). Warn, do not block.
+    A skill only the user can start is the exception: its prompt has to start it, and T1 cannot be observed for it."""
     meta, prompt = sc["meta"], sc["sections"]["prompt"].lower()
+    user_only = user_only_skill(sc, root)
+    if user_only:
+        slash = "/%s:%s" % user_only
+        if prompt.lstrip().startswith(slash.lower()):
+            return ["the skill has `disable-model-invocation: true`, so the prompt starts it with %s; the run tests what happens after it starts, "
+                    "and T1 (was it chosen?) cannot be observed for this skill" % slash]
+        return ["the skill has `disable-model-invocation: true`: a worker cannot choose it, so a run would never use it. "
+                "Start the prompt with %s, then the task in a user's words" % slash]
     t = str(meta["target"])
     names = {os.path.basename(t.rstrip("/")).lower(), str(meta["name"]).lower()}
     names |= {n for n in re.split(r"[:/]", t.lower()) if len(n) > 3}
@@ -98,6 +130,27 @@ def fixture_steps(sc):
             copies.append((m.group(1).strip(), (m.group(2) or "").strip()))
     sh = re.search(r"```(?:sh|bash)\n(.*?)```", text, re.S)
     return copies, (sh.group(1) if sh else "")
+
+
+def writability_warnings(sc, allowed, tools):
+    """A worker that cannot write files cannot satisfy a receipt that expects one: the run ends in permission denials the reader
+    would report as drift (O6, a defect of the run). Say so before the spend."""
+    can_write = {"Write", "Edit", "NotebookEdit", "Bash"}
+    # a tool must both exist (`tools`, the --tools list) and run without a prompt (`allowed_tools`)
+    if {t.split("(")[0] for t in allowed} & {t.split("(")[0] for t in tools} & can_write:
+        return []
+    copies, _ = fixture_steps(sc)
+    seeded = {(d or os.path.basename(s.rstrip("/"))) for s, d in copies}
+    need = []
+    for r in receipt_specs(sc):
+        if r["kind"] in ("exists", "nonempty", "regex", "type", "json"):
+            p = r["spec"].split()[0] if r["spec"].split() else ""
+            if p and p not in seeded:
+                need.append(p)
+    if not need:
+        return []
+    return ["no tool that writes files is both in `tools` and in `allowed_tools` (Write, Edit or Bash), so the worker cannot create %s which the receipts expect; "
+            "list the tools the task needs in both, or the run ends in permission denials that look like drift" % ", ".join(sorted(set(need)))]
 
 
 def receipt_specs(sc):

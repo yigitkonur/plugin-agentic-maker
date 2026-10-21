@@ -1,5 +1,5 @@
 ---
-as_of: unknown
+as_of: 2026-07-04
 verify_before_citing: true
 ---
 
@@ -52,7 +52,7 @@ Catalog, live inspector, and request-mediating gateway in one.
 - **Gates:** no LICENSE = not installable; `glama.json` required; server must be inspectable; no known vulnerabilities; author verified.
 - **Audience:** authors who want a public quality ranking; consumers who want a reproducible quality signal.
 
-> Unresolved: the source says "B+ is passing" and "B+ (Overall ≥3.0) is passing" but defines tiers A to F with B at ≥3.0 and no "B+" tier. Read as: an overall score of 3.0 or higher passes; confirm against Glama's current page.
+> Unresolved: the page says "B+ is passing" and "B+ (Overall ≥3.0) is passing" but defines tiers A to F with B at ≥3.0 and no "B+" tier. Read as: an overall score of 3.0 or higher passes; confirm against Glama's current page.
 
 <!-- src: audit-agentic-mcp/references/patterns/registry-and-distribution.md#OpenTools -->
 ## OpenTools

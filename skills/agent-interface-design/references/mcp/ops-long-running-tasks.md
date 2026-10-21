@@ -32,5 +32,3 @@ For work that outlives any request limit (a platform that caps duration, or a jo
 4. Optionally the worker also reports completion by webhook.
 
 The MCP session never blocks on the long job. Platform limits that force this: [ops-hosting-constraints.md](ops-hosting-constraints.md).
-
-> Reconciled: the platform source pointed to a polling-tool pattern in a file that does not exist; this section is that pattern and the pointer now targets it.

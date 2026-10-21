@@ -16,7 +16,7 @@ Durable lesson: choose by the dominant axis of the workload (state, duration, GP
 | Platform | Session primitive | Streamable HTTP | Max duration | Response cap | Auth | Best for |
 |---|---|---|---|---|---|---|
 | **Cloudflare Workers + McpAgent** | Durable Object per session + SQLite + hibernation | Native via `MyMCP.serve()` | 5 min CPU opt-in; no wall-clock limit | 100 MB (Free/Pro), 500 MB (Ent) | `workers-oauth-provider` (OAuth 2.1 + DCR) | Multi-tenant SaaS, personal CLI |
-| **Vercel Fluid Compute** | BYO (Redis for resumability) | Native via `@vercel/mcp-adapter` | 300s Hobby / 800s Pro+Ent (Fluid on) | **4.5 MB hard** | BYO middleware | Team B2B, serverless-first |
+| **Vercel Fluid Compute** | BYO (Redis for resumability) | Native via `mcp-handler` | 300s Hobby / 800s Pro+Ent (Fluid on) | **4.5 MB hard** | BYO middleware | Team B2B, serverless-first |
 | **Smithery.ai** | Managed per-server | Native when `type: http` | Container runtime limits | Container runtime limits | `configSchema` + Smithery Connect | Marketplace / public servers |
 | **Modal** | None (stateless only) | Via FastMCP `streamable_http_app()` + FastAPI | Function `timeout` param | Function memory | BYO | Python/ML, GPU workloads |
 | **Fly.io Machines** | Machine-local volumes | Native; machine-level | No enforced HTTP timeout | No enforced cap | `fly mcp launch` bearer token | Stateful team-internal |

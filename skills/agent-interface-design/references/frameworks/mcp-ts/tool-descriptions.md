@@ -7,9 +7,7 @@ Explanation and rules: ../../mcp/descriptions-structure-and-length.md and ../../
 ## Pattern 9: Use the `instructions` Field as Your Server's skills.md
 
 ```typescript
-const server = new McpServer({
-  name: "acme-crm",
-  version: "1.0.0",
+const server = new McpServer({ name: "acme-crm", version: "1.0.0" }, {
   instructions: `
 # Acme CRM MCP Server
 
@@ -27,7 +25,7 @@ const server = new McpServer({
 - All write operations require a valid session (call authenticate first)
 - Invoice sends are irreversible and trigger customer emails
 - Rate limit: 60 requests/min across all tools
-  `.trim()
+  `.trim(),
 });
 ```
 
@@ -36,12 +34,16 @@ const server = new McpServer({
 The 200-token rule: measure description cost before registering.
 
 ```typescript
-function registerWithLengthCheck(name: string, description: string, schema: z.ZodObject<any>, handler: Function) {
+import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
+
+const estimateTokens = (text: string) => Math.ceil(text.length / 4); // rough: ~4 chars per token
+
+function registerWithLengthCheck(name: string, description: string, inputSchema: z.ZodRawShape, handler: ToolCallback<z.ZodRawShape>) {
   const tokens = estimateTokens(description);
   if (tokens > 200) {
     console.warn(`Tool "${name}" description is ${tokens} tokens (limit: 200). Consider trimming.`);
   }
-  server.tool(name, description, schema, handler);
+  server.registerTool(name, { description, inputSchema }, handler);
 }
 ```
 
@@ -63,8 +65,8 @@ directory with optional params."
 What belongs in the schema, not the description: put parameter-level guidance in each parameter's `describe()`.
 
 ```typescript
-{
+const searchParams = {
   query: z.string().describe("Search term. Supports regex if prefixed with 're:'"),
   file_type: z.string().optional().describe("Filter by extension, e.g. '.ts' or '.py'"),
-}
+};
 ```

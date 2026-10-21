@@ -7,7 +7,7 @@
 
 Contract: `../../cli/pagination.md`.
 
-> Reconciled: the source returned `Data` and a `PageInfo` with `TotalCount`, `HasNext`, `PageSize`. The names below follow `result.items`, `result.next_cursor`, `result.has_more`, optional `result.total`.
+> Note: field names follow `result.items`, `result.next_cursor`, `result.has_more`, optional `result.total`.
 
 ```go
 type PaginationOptions struct {
@@ -39,7 +39,7 @@ func (s *Server) ListItems(ctx context.Context, opts PaginationOptions) (*Pagina
     if opts.Cursor != "" {
         decoded, err := decodeCursor(opts.Cursor)
         if err != nil {
-            return nil, fmt.Errorf("invalid cursor: %w", err)
+            return nil, fmt.Errorf("invalid cursor: %w: %w", ErrValidation, err) // exit 6
         }
         startAfter = decoded
     }
@@ -58,7 +58,7 @@ func (s *Server) ListItems(ctx context.Context, opts PaginationOptions) (*Pagina
 
     var nextCursor string
     if hasMore && len(items) > 0 {
-        nextCursor = encodeCursor(items[len(items)-1])
+        nextCursor = encodeCursor(&items[len(items)-1])
     }
 
     return &PaginatedResponse[Item]{
@@ -123,13 +123,13 @@ type RateLimiter struct {
 }
 
 func NewRateLimiter(opts RateLimitOptions) (*RateLimiter, error) {
-    limit, err := parseRateLimit(opts.RateLimit) // e.g., "100/minute" -> rate.Limit
+    limit, burst, err := parseRateLimit(opts.RateLimit) // "100/minute" -> rate.Limit(100.0/60), burst 100
     if err != nil {
         return nil, err
     }
 
     return &RateLimiter{
-        limiter: rate.NewLimiter(limit, int(limit)), // burst = limit
+        limiter: rate.NewLimiter(limit, burst),
         opts:    opts,
     }, nil
 }
@@ -162,8 +162,14 @@ func (r *RateLimiter) Do(ctx context.Context, fn func() (*http.Response, error))
     for attempt := 0; attempt <= r.opts.MaxRetries; attempt++ {
         resp, err := fn()
         if err != nil {
-            lastErr = err
+            lastErr = fmt.Errorf("%w: %w", ErrUnavailable, err) // exit 7
             r.recordFailure()
+            select { // back off before the next attempt
+            case <-ctx.Done():
+                return nil, ctx.Err()
+            case <-time.After(backoff):
+            }
+            backoff = min(time.Duration(float64(backoff)*r.opts.BackoffMultiplier), r.opts.BackoffMax)
             continue
         }
 
@@ -174,6 +180,7 @@ func (r *RateLimiter) Do(ctx context.Context, fn func() (*http.Response, error))
             if !r.opts.RetryOnRateLimit {
                 return resp, nil
             }
+            defer resp.Body.Close() // this response is abandoned; the retry gets a new one
 
             // Determine wait time
             waitTime := backoff
@@ -205,7 +212,7 @@ func (r *RateLimiter) Do(ctx context.Context, fn func() (*http.Response, error))
                 backoff = r.opts.BackoffMax
             }
 
-            lastErr = &RateLimitError{RetryAfter: waitTime}
+            lastErr = fmt.Errorf("%w: %w", ErrRateLimit, &RateLimitError{RetryAfter: waitTime}) // exit 7
             continue
         }
 

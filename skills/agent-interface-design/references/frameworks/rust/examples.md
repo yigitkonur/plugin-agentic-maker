@@ -46,6 +46,7 @@ impl From<ExitStatus> for ExitCode {
 #[derive(Debug, Serialize)]
 pub struct Response<T: Serialize> {
     pub ok: bool,
+    pub schema_version: &'static str, // "1.0"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub command: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -101,6 +102,9 @@ pub enum AppError {
 
     #[error("Usage error: {0}")]
     Usage(String),
+
+    #[error("Internal error: {0}")]
+    Internal(String),
 }
 
 impl AppError {
@@ -112,6 +116,7 @@ impl AppError {
             AppError::ValidationFailed(_) => ExitStatus::ValidationError,
             AppError::Transient(_) => ExitStatus::TransientError,
             AppError::Usage(_) => ExitStatus::UsageError,
+            AppError::Internal(_) => ExitStatus::Crash,
         }
     }
 
@@ -123,6 +128,7 @@ impl AppError {
             AppError::ValidationFailed(_) => "validation",
             AppError::Transient(_) => "network",
             AppError::Usage(_) => "usage",
+            AppError::Internal(_) => "internal",
         }
     }
 
@@ -134,6 +140,7 @@ impl AppError {
             AppError::ValidationFailed(_) => "VALIDATION_FAILED",
             AppError::Transient(_) => "NETWORK_ERROR",
             AppError::Usage(_) => "USAGE_ERROR",
+            AppError::Internal(_) => "INTERNAL_ERROR",
         }
     }
 
@@ -166,4 +173,4 @@ thiserror = "1"
 uuid = { version = "1", features = ["v4"] }
 ```
 
-> Reconciled: the source's enum used `GeneralError` for 1 and `AuthDenied` for 4, mapped the network error to class `transient`, and stopped at 7. This file uses `Crash`, `Auth`, the class `network` with code `NETWORK_ERROR` (`transient` is the exit-7 group, not a class), and adds `Partial = 8`. Versions in `Cargo.toml` are the source's; check them before use.
+> Note: the enum uses `Crash` for 1, `Auth` for 4 and `Partial = 8`. The network error has class `network` with code `NETWORK_ERROR` (`transient` is the exit-7 group, not a class). Check the versions in `Cargo.toml` before use.

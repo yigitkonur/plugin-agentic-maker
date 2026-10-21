@@ -94,7 +94,7 @@ async function invokeCLIWithMetrics(cmd: string[]): Promise<CLIResult> {
     cliInvocations.inc({
       command,
       status: result.ok ? 'success' : 'failure',
-      exit_code: result.error?.code || '0',
+      exit_code: String(result.exit_code ?? 0), // numeric code from the exit-code table
     });
 
     return result;
@@ -121,8 +121,10 @@ import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 
 // Initialize tracer
-const provider = new NodeTracerProvider();
-provider.addSpanProcessor(new SimpleSpanProcessor(new OTLPTraceExporter()));
+// spanProcessors in the constructor works on sdk-trace-node 2.x; 1.x used provider.addSpanProcessor(...)
+const provider = new NodeTracerProvider({
+  spanProcessors: [new SimpleSpanProcessor(new OTLPTraceExporter())],
+});
 provider.register();
 
 const tracer = trace.getTracer('cli-agent');

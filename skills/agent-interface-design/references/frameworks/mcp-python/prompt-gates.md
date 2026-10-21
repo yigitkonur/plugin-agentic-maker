@@ -7,6 +7,8 @@ Explanation, the steering-versus-injection tension and the `allowed_next_tools` 
 ## Separate instructions from data
 
 ```python
+import json
+
 def format_tool_response(data: dict, instructions: str, next_action: str = None) -> str:
     parts = [f"<instructions>\n{instructions}\n</instructions>",
              f"<data>\n{json.dumps(data, indent=2)}\n</data>"]

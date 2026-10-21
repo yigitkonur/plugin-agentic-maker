@@ -5,6 +5,7 @@ findings  are the reader's findings real? every quote must appear verbatim in th
 diff      did the applied edit fix the cause, or only bolt a rule next to the unchanged cause?
 nice      did an edit remove text a [NICE] behaviour depended on?
 """
+import difflib
 import fnmatch
 import json
 import os
@@ -75,6 +76,8 @@ def _one_receipt(r, ws, run):
             ok = os.path.isfile(p) and os.path.getsize(p) > 0
             return ok, ("%d bytes" % os.path.getsize(p)) if ok else "missing or empty: %s" % spec
         if kind == "type":
+            if len(spec.split()) < 2:
+                return False, "malformed receipt: expected `type: <path> json|utf8`"
             path, want = spec.rsplit(None, 1)
             p = _rel(ws, path)
             raw = open(p, "rb").read()
@@ -87,6 +90,8 @@ def _one_receipt(r, ws, run):
             return True, "parses as %s" % want
         if kind == "json":
             m = re.match(r"^(\S+)\s+(\S+)\s*(==|!=|exists)?\s*(.*)$", spec)
+            if not m:
+                return False, "malformed receipt: expected `json: <path> <dotted.key> [== value | != value | exists]`"
             path, key, op, val = m.group(1), m.group(2), m.group(3) or "exists", m.group(4)
             data = json.load(open(_rel(ws, path), encoding="utf-8"))
             got = _dotted(data, key)
@@ -100,6 +105,8 @@ def _one_receipt(r, ws, run):
             return ok, "%s = %r" % (key, got)
         if kind == "regex":
             m = re.match(r"^(\S+)\s+/(.*)/([imsx]*)$", spec)
+            if not m:
+                return False, "malformed receipt: expected `regex: <path> /pattern/flags` (flags i m s x)"
             flags = sum({"i": re.I, "m": re.M, "s": re.S, "x": re.X}[c] for c in m.group(3))
             text = open(_rel(ws, m.group(1)), encoding="utf-8", errors="replace").read()
             ok = re.search(m.group(2), text, flags) is not None
@@ -180,20 +187,46 @@ def _event_text(rec):
     return norm_ws(" ".join(parts))
 
 
-def _in_events(quote, refs, norm):
-    q = norm_ws(quote)
-    if not q:
-        return False
-    return any(q in _event_text(norm[r]) for r in refs if r in norm)
+# What `trace.md` puts in front of an event's text: "[12] tool tool_result: " and, for results, "(Bash, ERROR exit=1) ".
+# A reader copying from trace.md quotes the label too; the label is not the event's text.
+_LINE_LABEL = re.compile(r"^(?:\[\d+\]\s+)?(?:user|assistant|tool|system)\s+[a-z_]+(?:\s+\S+)?:\s+")
+_RESULT_LABEL = re.compile(r"^\([^()]*\)\s+")
+
+
+def _quote_variants(q):
+    """The quote as written, then with the trace.md labels taken off the front. Whatever remains must still be verbatim."""
+    out = [q]
+    a = _LINE_LABEL.sub("", q, count=1)
+    if a != q:
+        out.append(a)
+    for base in list(out):
+        b = _RESULT_LABEL.sub("", base, count=1)
+        if b != base:
+            out.append(b)
+    return out
+
+
+def _in_events(quote, refs, norm, notes=None):
+    texts = [_event_text(norm[r]) for r in refs if r in norm]
+    for i, v in enumerate(_quote_variants(quote)):
+        q = norm_ws(v)
+        if q and any(q in t for t in texts):
+            if i and notes is not None:
+                notes.append("the quote began with a trace.md label; the label was ignored and the rest matched verbatim")
+            return True
+    return False
 
 
 def _predicate_problems(p):
     if not isinstance(p, dict) or p.get("type") not in PREDICATE_FIELDS:
         return ["rerun_predicate.type must be one of %s" % "|".join(sorted(PREDICATE_FIELDS))]
-    return ["rerun_predicate.%s missing" % f for f in PREDICATE_FIELDS[p["type"]] if p.get(f) in (None, "")]
+    probs = ["rerun_predicate.%s missing" % f for f in PREDICATE_FIELDS[p["type"]] if p.get(f) in (None, "")]
+    if p["type"] == "order" and not probs and p.get("before") == p.get("after"):
+        probs.append("rerun_predicate order: `before` and `after` are the same call, so it can never be true; name two different calls (e.g. Read, then Write)")
+    return probs
 
 
-def verify_finding(f, norm, root):
+def verify_finding(f, norm, root, notes=None):
     probs = []
     if not isinstance(f, dict):
         return ["finding is not an object"]
@@ -212,12 +245,13 @@ def verify_finding(f, norm, root):
         probs.append("belief_source must be observed|inferred")
     refs = f.get("trace_refs")
     if not (isinstance(refs, list) and refs and all(isinstance(r, int) for r in refs)):
-        probs.append("trace_refs must be a non-empty list of event numbers")
+        probs.append("trace_refs must be a non-empty list of event numbers: the [n] in front of each trace.md line the quote comes from "
+                     "(for something that never happened, cite the init event [1] and the event where the worker went another way)")
         refs = []
     missing = [r for r in refs if r not in norm]
     if missing:
         probs.append("trace_refs %s do not exist in the trace" % missing)
-    elif refs and isinstance(f.get("quote"), str) and f["quote"].strip() and not _in_events(f["quote"], refs, norm):
+    elif refs and isinstance(f.get("quote"), str) and f["quote"].strip() and not _in_events(f["quote"], refs, norm, notes):
         probs.append("quote does not appear verbatim in the cited events %s" % refs)
     if f.get("belief_source") == "observed" and refs:
         if not any(norm[r]["kind"] == "thinking" and (norm[r].get("text") or "").strip() for r in refs if r in norm):
@@ -247,12 +281,16 @@ def check_findings(findings_path, trace_norm, root):
     norm = trace_mod.load_norm(trace_norm)
     seen, out = set(), []
     for f in items:
-        probs = verify_finding(f, norm, root)
+        notes = []
+        probs = verify_finding(f, norm, root, notes)
         fid = f.get("id") if isinstance(f, dict) else None
         if fid in seen:
             probs.append("duplicate id %r" % fid)
         seen.add(fid)
-        out.append({"id": fid, "verified": not probs, "problems": probs})
+        row = {"id": fid, "verified": not probs, "problems": probs}
+        if notes and not probs:
+            row["notes"] = notes
+        out.append(row)
     nice_out = []
     for n in nice:
         refs = n.get("trace_refs") if isinstance(n, dict) else None
@@ -277,8 +315,12 @@ def _git(root, *args):
 
 def _hunks(diff_text):
     added, removed = [], []
+    in_hunk = False          # headers (--- a/x, +++ b/x) come before the first @@; after it every +/- line is content
     for ln in diff_text.splitlines():
-        if ln.startswith("+++") or ln.startswith("---"):
+        if ln.startswith("@@"):
+            in_hunk = True
+            continue
+        if not in_hunk:
             continue
         if ln.startswith("+"):
             added.append(ln[1:])
@@ -296,17 +338,35 @@ def _finding(findings_path, fid):
     raise CliError("not_found", "finding_not_found", "no finding %r in %s" % (fid, findings_path))
 
 
-def check_diff(findings_path, fid, root, base="HEAD", justify=None):
+def _snapshot_lines(snap_path, cur_path):
+    a = open(snap_path, encoding="utf-8", errors="replace").read().splitlines()
+    b = open(cur_path, encoding="utf-8", errors="replace").read().splitlines()
+    added, removed = [], []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if tag in ("replace", "delete"):
+            removed += a[i1:i2]
+        if tag in ("replace", "insert"):
+            added += b[j1:j2]
+    return added, removed
+
+
+def check_diff(findings_path, fid, root, base="HEAD", justify=None, snapshot=None):
+    """snapshot: the controlling file as `ledger fix` kept it (judges this fix only, no git needed). Without it, a git diff against `base`."""
     f = _finding(findings_path, fid)
     ct = f.get("controlling_text") or {}
     rel = ct.get("file")
     if not rel:
         raise CliError("validation", "no_controlling_file", "finding %s has no controlling_text.file" % fid)
-    diff = _git(root, "diff", "-U0", base, "--", rel)
-    if not diff.strip():
-        return {"verdict": "no_change", "finding": fid, "file": rel, "reason": "no change to %s since %s" % (rel, base)}
-    added, removed = _hunks(diff)
     path = rel if os.path.isabs(rel) else os.path.join(root, rel)
+    if snapshot:
+        added, removed = _snapshot_lines(snapshot, path)
+        if not (added or removed):
+            return {"verdict": "no_change", "finding": fid, "file": rel, "reason": "no change to %s since `ledger fix` kept it" % rel}
+    else:
+        diff = _git(root, "diff", "-U0", base, "--", rel)
+        if not diff.strip():
+            return {"verdict": "no_change", "finding": fid, "file": rel, "reason": "no change to %s since %s" % (rel, base)}
+        added, removed = _hunks(diff)
     now = norm_ws(open(path, encoding="utf-8", errors="replace").read())
     if ct.get("quote") == "ABSENT":
         return {"verdict": "ok", "finding": fid, "file": rel, "reason": "the cause was an absence; an addition is the fix",
@@ -316,9 +376,9 @@ def check_diff(findings_path, fid, root, base="HEAD", justify=None):
     if not still:
         return {"verdict": "ok", "finding": fid, "file": rel, "reason": "the quoted controlling text was rewritten or deleted",
                 "added_lines": len(added), "removed_lines": len(removed)}
-    if imperative and not removed:
+    if imperative:        # the cause is still there verbatim and rule text was added: removals elsewhere do not make it a rewrite
         res = {"verdict": "flag", "finding": fid, "file": rel, "rule": "patch-by-rule",
-               "reason": "the controlling text is unchanged and the edit only adds imperative text (%d line(s)): the agent will still read the misleading text first" % len(imperative),
+               "reason": "the controlling text is unchanged and the edit adds imperative text (%d line(s)): the agent will still read the misleading text first" % len(imperative),
                "evidence": imperative[:3], "added_lines": len(added), "removed_lines": len(removed)}
         if justify:
             res["verdict"], res["justification"] = "ok", justify
@@ -366,16 +426,21 @@ def eval_predicate(pred, norm):
     """Judge one rerun_predicate against a new trace. Returns {passed: True|False|None, detail}."""
     t = pred.get("type")
     recs = sorted(norm.values(), key=lambda r: r["n"])
-    blob = "\n".join("%s %s" % (r.get("text") or "", json.dumps(r.get("args"), ensure_ascii=False) if r.get("args") else "") for r in recs)
+
+    def _hit(pattern):
+        """A regex is matched against each event on its own (tool name, text, tool arguments); ^ and $ anchor lines inside it."""
+        rx = re.compile(pattern, re.M | re.S)
+        return [r["n"] for r in recs if rx.search("%s\n%s\n%s" % (r.get("name") or "", r.get("text") or "",
+                                                              json.dumps(r.get("args"), ensure_ascii=False) if r.get("args") else ""))]
     if t == "tool_used":
         n = sum(1 for r in _calls(norm) if _call_matches(r, pred))
         return {"passed": n >= 1, "detail": "%d matching call(s)" % n}
     if t == "regex":
-        ok = re.search(pred["pattern"], blob, re.S) is not None
-        return {"passed": ok, "detail": "pattern %s" % ("found" if ok else "not found")}
+        hits = _hit(pred["pattern"])
+        return {"passed": bool(hits), "detail": "pattern found in event(s) %s" % hits[:6] if hits else "pattern not found in any event"}
     if t == "not_regex":
-        ok = re.search(pred["pattern"], blob, re.S) is None
-        return {"passed": ok, "detail": "pattern %s" % ("absent" if ok else "present")}
+        hits = _hit(pred["pattern"])
+        return {"passed": not hits, "detail": "pattern present in event(s) %s" % hits[:6] if hits else "pattern absent from every event"}
     if t == "order":
         idx = {}
         for key in ("before", "after"):

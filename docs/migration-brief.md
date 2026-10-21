@@ -1,5 +1,7 @@
 # Migration brief — moving the three source skills' reference content into this plugin
 
+> A record: the brief given to the migration subagents. It is not loaded by any skill.
+
 This is the contract for anyone (human or subagent) who moves content from `audit-agentic-cli`, `audit-agentic-mcp` and `audit-skill-by-derailment` into this plugin. The sources are read from a scratch clone; nothing is edited there. Read the whole of each source file you migrate, in full, before writing.
 
 ## What you are doing

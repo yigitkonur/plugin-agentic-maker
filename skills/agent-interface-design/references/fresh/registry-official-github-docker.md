@@ -1,5 +1,5 @@
 ---
-as_of: unknown
+as_of: 2026-07-04
 verify_before_citing: true
 ---
 
@@ -37,7 +37,7 @@ Curated discovery portal, launched 2025-09-16 (github.blog changelog 2025-09-16)
 <!-- src: audit-agentic-mcp/references/patterns/registry-and-distribution.md#Docker MCP Catalog + Registry -->
 ## Docker MCP Catalog and Registry
 
-Curated catalog of signed, containerized MCP servers. The only platform in the source shipping cryptographic signatures, SBOMs, and provenance by default.
+Curated catalog of signed, containerized MCP servers. The only platform on this page shipping cryptographic signatures, SBOMs, and provenance by default.
 
 - **Trust model:** Docker-built images include cosign signatures, SBOM, build provenance. Container isolation is the default runtime. Non-compliant servers can be reviewed or removed (docs.docker.com/ai/mcp-catalog-and-toolkit/catalog/, 2025).
 - **Manifest:** OCI reference; submission is a PR to `github.com/docker/mcp-registry` (2025).

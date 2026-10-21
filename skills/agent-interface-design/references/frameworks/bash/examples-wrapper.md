@@ -43,7 +43,7 @@ MYCLI_TIMEOUT="${MYCLI_TIMEOUT:-30}"
 json_success() {
     local result="$1"
     if [[ "$MYCLI_JSON" == "true" ]]; then
-        jq -n --argjson result "$result" '{ok: true, result: $result}'
+        jq -n --argjson result "$result" '{ok: true, command: "mycli", schema_version: "1.0", result: $result, meta: {}}'
     else
         echo "$result" | jq -r '.'
     fi
@@ -54,7 +54,19 @@ json_error() {
     local code="$2"
     local message="$3"
     local retryable="${4:-false}"
-    local exit_code="${5:-1}"
+    local exit_code="${5:-}"
+    local suggestion="${6:-}"
+    if [[ -z "$exit_code" ]]; then  # default: the exit code that matches the class
+        case "$class" in
+            usage) exit_code=$EXIT_USAGE ;;
+            not_found) exit_code=$EXIT_NOT_FOUND ;;
+            auth) exit_code=$EXIT_AUTH ;;
+            conflict) exit_code=$EXIT_CONFLICT ;;
+            validation) exit_code=$EXIT_VALIDATION ;;
+            rate_limit|timeout|network|dependency_failed) exit_code=$EXIT_TRANSIENT ;;
+            *) exit_code=$EXIT_CRASH ;;
+        esac
+    fi
 
     if [[ "$MYCLI_JSON" == "true" ]]; then
         # The envelope goes to stdout; stderr is for human text only.
@@ -62,8 +74,9 @@ json_error() {
             --arg class "$class" \
             --arg code "$code" \
             --arg message "$message" \
+            --arg suggestion "$suggestion" \
             --argjson retryable "$retryable" \
-            '{ok: false, error: {class: $class, code: $code, message: $message, retryable: $retryable}}'
+            '{ok: false, error: {class: $class, code: $code, message: $message, retryable: $retryable, suggestion: $suggestion}}'
     else
         echo "Error: $message" >&2
     fi
@@ -151,8 +164,7 @@ delete_resource() {
     if [[ "$MYCLI_YES" != "true" && "$MYCLI_FORCE" != "true" ]]; then
         # No TTY and no --yes/--force: fail with exit 2 naming the flag; never hang
         if [[ ! -t 0 ]]; then
-            echo "Error: confirmation required: pass --yes or --force" >&2
-            exit "$EXIT_USAGE"
+            json_error usage confirmation_required "confirmation required: pass --yes or --force" false "$EXIT_USAGE" "Pass --yes or --force"
         fi
         read -r -p "Delete resource '$id'? [y/N] " response
         if [[ ! "$response" =~ ^[Yy]$ ]]; then
@@ -165,4 +177,4 @@ delete_resource() {
 }
 ```
 
-> Reconciled: the source labelled 1 `EXIT_ERROR` and stopped at 7; this file uses `EXIT_CRASH` and adds `EXIT_PARTIAL=8`. `json_error` wrote the envelope to stderr; it now writes to stdout. The source's `retry_with_backoff` read `$?` after the `if`, which is always 0, so it never retried and reported failures as success; it now captures the status of the command itself. `delete_resource` now exits 2 naming the flag when there is no TTY instead of blocking on `read`.
+> Note: `EXIT_ERROR` is not used; 1 is `EXIT_CRASH`, and `EXIT_PARTIAL=8` follows 7. `json_error` writes the envelope to stdout. `retry_with_backoff` captures the status of the command itself, because `$?` after an `if` is always 0. `delete_resource` exits 2 naming the flag when there is no TTY instead of blocking on `read`.

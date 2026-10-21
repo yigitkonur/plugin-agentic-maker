@@ -9,7 +9,7 @@ Paths below are relative to `skills/agent-interface-design/references/` unless t
 
 This workflow diagnoses, prescribes and routes; it does not write SDK code.
 
-1. Run the interview in `skills/design/references/interview.md`.
+1. Run the interview in `skills/design/references/interview-mcp.md`.
 2. Choose framework and companion via `fresh/mcp-framework-picker.md` and `decisions/companion-routing.md`.
 3. Cross-check the sketch with `decisions/design-phase.md` for schema portability and architecture gotchas.
 4. If MCP is the wrong primitive, route to `decisions/mcp-vs-cli-evidence.md` and recommend a CLI, an agent skill, or a smaller script instead.

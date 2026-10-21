@@ -6,7 +6,7 @@
 
 Contract: `../../cli/non-interactive.md`.
 
-> Reconciled: the source `confirm` returned `false` when non-interactive. Here a confirmation that cannot be asked fails with exit 2 naming `--yes` / `--force`, and prompts go to stderr.
+> Note: a confirmation that cannot be asked (non-interactive) fails with exit 2 naming `--yes` / `--force`, and prompts go to stderr.
 
 ```typescript
 import * as readline from 'readline';
@@ -15,7 +15,7 @@ function isInteractive(): boolean {
   if (process.env.MYCLI_NON_INTERACTIVE) {
     return false;
   }
-  return process.stdin.isTTY && process.stdout.isTTY;
+  return Boolean(process.stdin.isTTY) && !process.env.CI; // same rule as examples.md
 }
 
 async function prompt(
@@ -23,7 +23,8 @@ async function prompt(
   options: { nonInteractive?: boolean } = {}
 ): Promise<string> {
   if (options.nonInteractive || !isInteractive()) {
-    throw new Error(`Prompt required in non-interactive mode: ${message}`);
+    console.error(`Prompt required in non-interactive mode: ${message}`);
+    process.exit(2); // usage: a prompt that cannot be asked
   }
 
   const rl = readline.createInterface({
@@ -31,8 +32,12 @@ async function prompt(
     output: process.stderr, // prompts go to stderr
   });
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    let answered = false;
+    rl.on('SIGINT', () => { rl.close(); process.exit(130); }); // Ctrl-C at the prompt is a signal exit
+    rl.on('close', () => { if (!answered) reject(new Error('Input ended before an answer')); });
     rl.question(message, (answer) => {
+      answered = true;
       rl.close();
       resolve(answer);
     });
@@ -41,9 +46,9 @@ async function prompt(
 
 async function confirm(
   message: string,
-  options: { nonInteractive?: boolean; autoYes?: boolean } = {}
+  options: { nonInteractive?: boolean; yes?: boolean } = {}
 ): Promise<boolean> {
-  if (options.autoYes) {
+  if (options.yes) {
     return true;
   }
 

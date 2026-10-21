@@ -17,4 +17,4 @@ verify_before_citing: true
 
 The auth-specific revision table is in `mcp-spec-revision-auth-diff.md`. Controls that depend on a revision (checklist items 24 and 25): `../mcp/security/threat-audit-checklist.md`.
 
-> Reconciled: the sources variously recommended CIMD over DCR or treated DCR as the baseline; this file prefers Client ID Metadata Documents where the client supports them, keeps Dynamic Client Registration for clients without them, and never assumes either: detect support from the authorization-server metadata (see ../mcp/security/auth-client-identity.md).
+> Note: prefer Client ID Metadata Documents (CIMD) where the client supports them, keep Dynamic Client Registration (DCR) for clients without them, and never assume either: detect support from the authorization-server metadata (see ../mcp/security/auth-client-identity.md).

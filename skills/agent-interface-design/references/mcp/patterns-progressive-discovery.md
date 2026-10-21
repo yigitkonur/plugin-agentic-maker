@@ -1,9 +1,9 @@
 # Progressive discovery for large tool catalogs
 
-> Read when: an MCP server exposes about 40 or more tools (or its tools/list is too large) and you need meta-tools, semantic search or staged disclosure.
+> Read when: an MCP server exposes more than about 20 tools (groups, unlocking) or 40 or more (or its tools/list is too large) and you need meta-tools, semantic search or staged disclosure.
 
 <!-- src: audit-agentic-mcp/references/patterns/progressive-discovery.md#Progressive Discovery Patterns -->
-Patterns for managing large catalogs and reducing context pressure. Cue: up to 20 active tools is the comfortable default, about 30 a warning, 40 or more needs progressive discovery (`../decisions/tool-count.md`). Hiding and revealing tools at runtime, with its cache cost: `patterns-dynamic-tool-lists.md`. Code: `../frameworks/mcp-python/progressive-discovery.md`. Measured token tables: `../fresh/mcp-token-benchmarks.md`.
+Patterns for managing large catalogs and reducing context pressure. Cue: up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute) (`../decisions/tool-count.md`). Hiding and revealing tools at runtime, with its cache cost: `patterns-dynamic-tool-lists.md`. Code: `../frameworks/mcp-python/progressive-discovery.md`. Measured token tables: `../fresh/mcp-token-benchmarks.md`.
 
 <!-- src: audit-agentic-mcp/references/patterns/progressive-discovery.md#1. Use Meta-Tools for Large Tool Catalogs (list/describe/execute) -->
 ## Meta-tools: list, describe, execute

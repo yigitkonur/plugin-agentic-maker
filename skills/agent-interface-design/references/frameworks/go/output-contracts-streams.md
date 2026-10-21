@@ -42,14 +42,14 @@ func emitProgress(phase string, percent int, message string) {
     }
     data, _ := json.Marshal(event)
     fmt.Fprintln(os.Stderr, string(data))
-    os.Stderr.Sync() // Flush immediately
 }
 
 // The terminal event is a result: it goes to stdout, as the last line.
-func emitCompleted(result interface{}) {
+// status is "succeeded", "failed" or "cancelled"; a failed run puts its error object in result.
+func emitCompleted(status string, result interface{}) {
     event := CompletedEvent{
         Type:   "completed",
-        Status: "succeeded",
+        Status: status,
         Result: result,
     }
     data, _ := json.Marshal(event)
@@ -57,7 +57,7 @@ func emitCompleted(result interface{}) {
 }
 ```
 
-> Reconciled: the source wrote `emitProgress` to `os.Stdout`; progress events go to stderr per the stream rule.
+> Note: progress events (`emitProgress`) go to stderr, per the stream rule.
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Never Do This -->
 ## Never do this
@@ -86,7 +86,7 @@ Verbose output goes to stderr only.
 ```go
 var verboseLevel int
 
-func log(level int, msg string) {
+func logf(level int, msg string) {
     if level <= verboseLevel {
         fmt.Fprintln(os.Stderr, msg)
     }
@@ -120,21 +120,23 @@ func main() {
     if err != nil {
         // Error JSON to stdout (for --json mode)
         response := map[string]interface{}{
-            "ok": false,
+            "ok": false, "command": "connect", "schema_version": "1.0",
             "error": map[string]interface{}{
-                "class":   "network",
-                "code":    "CONNECTION_FAILED",
-                "message": err.Error(),
+                "class":      "network",
+                "code":       "CONNECTION_FAILED",
+                "message":    err.Error(),
+                "retryable":  true,
+                "suggestion": "Retry with exponential backoff",
             },
         }
         json.NewEncoder(os.Stdout).Encode(response)
-        os.Exit(7) // TRANSIENT
+        os.Exit(7) // ExitTransient (constants: output-contracts.md)
     }
 
     // Success JSON to stdout
     response := map[string]interface{}{
-        "ok":     true,
-        "result": result,
+        "ok": true, "command": "connect", "schema_version": "1.0",
+        "result": result, "meta": map[string]interface{}{},
     }
     json.NewEncoder(os.Stdout).Encode(response)
     os.Exit(0)

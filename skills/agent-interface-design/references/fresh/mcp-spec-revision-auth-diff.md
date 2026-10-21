@@ -35,7 +35,7 @@ If your server or client was written against `2025-06-18` or earlier, assume it 
 
 Only one requirement was **relaxed**: DCR dropped from SHOULD to MAY. Everything else is additive hardening.
 
-> Reconciled: the sources called CIMD the "recommended default" in this table while other sections treated DCR as the baseline; this corpus prefers CIMD where the client supports it and keeps DCR as the fallback, deciding from the AS metadata.
+> Note: prefer CIMD where the client supports it and keep DCR as the fallback, deciding from the authorization-server metadata.
 
 ## Vendor notes tied to a revision
 

@@ -17,7 +17,7 @@ const cliTool = new DynamicStructuredTool({
   schema: z.object({
     command: z.string().describe('CLI command (e.g., "mycli task start")'),
     args: z.array(z.string()).optional().describe('Positional arguments'),
-    flags: z.record(z.string()).optional().describe('Named flags as key-value pairs'),
+    flags: z.record(z.string(), z.string()).optional().describe('Named flags as key-value pairs'),
     timeout: z.number().optional().default(30).describe('Timeout in seconds'),
     dryRun: z.boolean().optional().describe('If true, adds --dry-run flag'),
   }),
@@ -44,8 +44,11 @@ const cliTool = new DynamicStructuredTool({
 // LangChain agent usage
 import { ChatOpenAI } from '@langchain/openai';
 import { AgentExecutor, createOpenAIToolsAgent } from 'langchain/agents';
+import { pull } from 'langchain/hub';
+import type { ChatPromptTemplate } from '@langchain/core/prompts';
 
 const llm = new ChatOpenAI({ model: '<model-id>' });
+const prompt = await pull<ChatPromptTemplate>('hwchase17/openai-tools-agent');
 const agent = await createOpenAIToolsAgent({ llm, tools: [cliTool], prompt });
 const executor = new AgentExecutor({ agent, tools: [cliTool] });
 
@@ -75,9 +78,9 @@ Available commands:
 Flags (always include):
 --json: Structured JSON output
 --quiet: Suppress non-essential output
---yes: Auto-approve confirmations
 --timeout <secs>: Set timeout
---dry-run: Preview without executing`,
+--dry-run: Preview without executing
+Add --yes only after the user approved the action; without it a confirmation fails with exit 2.`,
     input_schema: {
       type: 'object',
       properties: {
@@ -115,7 +118,7 @@ async function handleClaudeToolCall(
 }
 ```
 
-> Reconciled: the tool description above runs past the length guidance. Target at most about 100 tokens and never above 200, start with Verb + Resource ("Execute CLI commands"), and move the command list and flag examples into the `command` parameter description of the input schema.
+> Note: keep a tool description to about 100 tokens and never above 200. Start with Verb + Resource ("Execute CLI commands") and put the command list and flag examples in the `command` parameter description of the input schema.
 
 <!-- src: audit-agentic-cli/references/agent-integration.md#OpenAI Function Calling -->
 ## OpenAI function calling
@@ -227,7 +230,10 @@ async function runAgentLoop(userMessage: string): Promise<string> {
           content: result,
         });
       }
+      continue;
     }
+
+    throw new Error(`Unexpected finish_reason: ${choice.finish_reason}`); // length, content_filter
   }
 }
 ```

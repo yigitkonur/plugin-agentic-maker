@@ -4,15 +4,16 @@
 
 ## Decision rule
 
-Prefer Client ID Metadata Documents (CIMD, SEP-991) where the client supports them; Dynamic Client Registration (DCR, RFC 7591) remains for clients without them. Never assume either: read the authorization-server metadata and branch.
+A client follows the 2025-11-25 spec order: pre-registered client information if it has any, then Client ID Metadata Documents (CIMD, SEP-991), then Dynamic Client Registration (DCR, RFC 7591), then ask the user. Never assume which exist: read the authorization-server metadata and branch. An authorization server that wants public clients should advertise CIMD and may keep a `registration_endpoint` as the compatibility path.
 
 ```
-AS metadata advertises CIMD support (client_id_metadata_document_supported)  -> client_id is the HTTPS URL of its manifest
-else AS has a registration_endpoint (DCR enabled)                            -> register at /register, constrained and rate-limited
-else                                                                         -> pre-registered static client_id
+client has pre-registered information for this server                       -> use it
+else AS metadata has client_id_metadata_document_supported: true             -> client_id is the HTTPS URL of its manifest (CIMD)
+else AS metadata has a registration_endpoint                                 -> POST to that URL, constrained and rate-limited (DCR)
+else                                                                         -> ask the user for the client details
 ```
 
-> Reconciled: the sources variously recommended CIMD over DCR, treated DCR as a last resort, or described DCR as the baseline for MCP clients; this file prefers CIMD where supported, keeps DCR for clients without it, and says to detect support from the AS metadata.
+> Note: the order is pre-registered, CIMD where the AS advertises it, DCR as the fallback, then ask the user. Detect support from the AS metadata.
 
 Why CIMD: it anchors client identity to a public HTTPS URL, so the `redirect_uris` are tied to DNS and an attacker cannot forge them. The AS fetches the manifest (`client_id`, `client_name`, `redirect_uris`, optional `jwks` / `jwks_uri` for `private_key_jwt`) and MUST exact-match every `redirect_uri` against it on each authorize request. DCR is a free-for-all endpoint unless you constrain it (below). Revision history of this stance: [fresh/mcp-spec-revision-auth-diff.md](../../fresh/mcp-spec-revision-auth-diff.md).
 

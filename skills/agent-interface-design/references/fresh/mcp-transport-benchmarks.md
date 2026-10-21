@@ -1,12 +1,12 @@
 ---
-as_of: unknown
+as_of: 2026-07-04
 verify_before_citing: true
 ---
 # MCP transport and session-pool benchmarks (Kubernetes load tests)
 
 > Read when: you need the measured numbers behind the advice to use Streamable HTTP with a shared session pool, or you are about to quote them.
 
-The source gives no measurement date. It attributes both tables to Stacklok's performance testing of MCP servers in Kubernetes and cites the MCP specification revision 2025-11-25 for the transport definitions. Treat the figures as one team's test setup, not a guarantee. Rules derived from them: [ops-transport-selection.md](../mcp/ops-transport-selection.md), [ops-session-state.md](../mcp/ops-session-state.md).
+No measurement date is given. Both tables are attributed to Stacklok's performance testing of MCP servers in Kubernetes, and the page cites the MCP specification revision 2025-11-25 for the transport definitions. Treat the figures as one team's test setup, not a guarantee. Rules derived from them: [ops-transport-selection.md](../mcp/ops-transport-selection.md), [ops-session-state.md](../mcp/ops-session-state.md).
 
 <!-- src: audit-agentic-mcp/references/patterns/transport-and-ops.md#8. Transport Choice Makes or Breaks Performance -->
 ## Transport comparison
@@ -29,4 +29,4 @@ Reading: stdio serializes every request through one process, so at concurrency 2
 | Shared pool (10) | 290-300 | 5ms |
 | stdio (single) | 0.64 | 20s |
 
-The source headline says a shared pool of 10 sessions gives "~10x" throughput over a unique session per request. From the rows above it is about 8 to 10x (290-300 divided by 30-36). The bottleneck is connection setup overhead (TLS handshake, protocol negotiation, state initialization); pooling amortizes it.
+The Stacklok headline says a shared pool of 10 sessions gives "~10x" throughput over a unique session per request. From the rows above it is about 8 to 10x (290-300 divided by 30-36). The bottleneck is connection setup overhead (TLS handshake, protocol negotiation, state initialization); pooling amortizes it.

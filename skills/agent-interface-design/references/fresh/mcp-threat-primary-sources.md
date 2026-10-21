@@ -9,7 +9,7 @@ verify_before_citing: true
 <!-- src: audit-agentic-mcp/references/patterns/threat-catalog.md#10. Key Primary Sources (YYYY-MM) -->
 ## Key primary sources
 
-Chronological list as the source gave it (latest 2026-04-10). Links may have moved; verify before citing.
+Chronological list (latest 2026-04-10). Links may have moved; verify before citing.
 
 - invariantlabs.ai/blog/mcp-security-notification-tool-poisoning-attacks (2025-04-01)
 - invariantlabs.ai/blog/whatsapp-mcp-exploited (2025-04-07)

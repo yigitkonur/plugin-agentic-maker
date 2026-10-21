@@ -16,12 +16,12 @@ Most clients silently fail advanced calls (for example by returning "Method not 
 
 Fallback behaviour: the tool returns a clearly marked text result (for example a `SAMPLING_UNAVAILABLE:` prefix) that tells the orchestrating agent what to do itself, such as "summarize this document yourself and call `save_summary` with the result", and includes the payload to work on. Code: `../frameworks/mcp-python/advanced-protocol.md`.
 
-When to use: always, for every one of `sampling`, `elicitation`, `roots` and `completions`.
+When to use: always, for every client capability you depend on (`sampling`, `elicitation`, `roots`). `completions` is the exception: the server declares it, and clients simply call it or not.
 
 <!-- src: audit-agentic-mcp/references/patterns/advanced-protocol.md#Pattern 12: Detect Stateless HTTP Mode Early — Advanced Features Silently Break Without A Session -->
 ## Detect stateless HTTP mode at startup
 
-Rule: sampling, elicitation, progress and cancellation all require a persistent server-to-client channel. In stateless HTTP mode (no session ID, no SSE stream) none of them work. Detect stateless mode at server startup and either (a) disable the advanced-feature tools, or (b) raise a structured error when the client attempts to call one.
+Rule: sampling and elicitation need the server to send a request and receive the client's reply on the same session, and progress needs an open response stream; stateless HTTP mode (no session ID) offers neither reliably. Cancellation is a client-to-server notification that only reaches the instance still running the request. Detect stateless mode at server startup and either (a) disable the advanced-feature tools, or (b) raise a structured error when the client attempts to call one.
 
 The failure mode is silent. The server issues a `sampling/createMessage` request, the client never receives it (no open SSE stream), and the tool blocks forever or times out. Teams hit this when moving to serverless deployments without realising that Streamable HTTP with sessions is required for bidirectional calls (a known FastMCP issue; see the fresh file). The error text the tool returns should say the server runs in stateless HTTP mode, cannot use sampling, and name the setting that enables sessions (`stateless_http=False`).
 

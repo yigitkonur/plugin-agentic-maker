@@ -36,4 +36,4 @@ Match the code, then apply the pattern **to the text that caused the miss** ([fi
 | `T2` | Collision *(added)* | **Trigger Differentiation:** state what this target does that its neighbour does not; remove the overlapping phrases. |
 | `T3` | Over-triggered *(added)* | **Trigger Narrowing:** add the negative case ("not for ...") and tighten the verbs. |
 
-> Reconciled: the original `C4` fix named a delimiter pair from one specific skill (a result-JSON start/end marker). The pattern is kept as a generic checkable marker or receipt; no delimiter string is built in.
+> Note: the `C4` fix is a generic checkable marker or receipt; no delimiter string is built in.

@@ -28,9 +28,9 @@ credential found?
            no  -> exit 4
 ```
 
-> Reconciled: the sources gave three orders (flag, env, config file, keychain, OIDC, interactive; a flowchart with a credential helper after config; and stdin, file, flag, env, config, keychain, OIDC). This file uses flag (never a secret value on argv: use `--token-file` or stdin), then environment variable, project config, user config, OS credential store; workload identity and interactive login come after those.
+> Note: credential order is flag (never a secret value on argv: use `--token-file` or stdin), then environment variable, project config, user config, OS credential store; workload identity and interactive login come after those.
 
-> Unresolved: the sources list "config file has token" as a credential source and also forbid secrets in plaintext config files. Both claims are kept: treat a config layer as a legitimate source, but a CLI that stores a raw secret there in plaintext is the finding.
+> Note: a config layer is a legitimate source of references to a secret (a path, an env var name, a keychain item); a CLI that stores the raw secret in a plaintext config file is the finding.
 
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#Authentication Flow Diagrams | audit-agentic-cli/references/discovery-and-auth.md#Token-Based Authentication -->
 ## Token login flow

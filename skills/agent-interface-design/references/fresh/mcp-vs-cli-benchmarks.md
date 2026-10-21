@@ -7,7 +7,7 @@ verify_before_citing: true
 
 > Read when: you need numbers or practitioner themes for the MCP-vs-CLI decision, or the primary doc links behind `decisions/mcp-vs-cli-evidence.md`. All items are dated; re-check before citing.
 
-The source stated "Status: refreshed on April 15, 2026."
+Status: refreshed on April 15, 2026.
 
 <!-- src: audit-agentic-mcp/references/patterns/mcp-vs-cli.md#10. Current Evidence And Caveats -->
 ## Current evidence and caveats
@@ -15,7 +15,7 @@ The source stated "Status: refreshed on April 15, 2026."
 <!-- src: audit-agentic-mcp/references/patterns/mcp-vs-cli.md#10.1 Benchmark signal -->
 ### Benchmark signal
 
-The strongest public benchmark the source found: Scalekit's March 11, 2026 comparison of GitHub tasks using Claude Sonnet 4 (https://www.scalekit.com/blog/mcp-vs-cli-use).
+The strongest public benchmark found: Scalekit's March 11, 2026 comparison of GitHub tasks using Claude Sonnet 4 (https://www.scalekit.com/blog/mcp-vs-cli-use).
 
 - 75 total benchmark runs; same tasks and prompts, only the tool interface changed.
 - CLI medians ranged from 1,365 to 8,750 tokens.

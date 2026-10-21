@@ -25,7 +25,7 @@ HIGH TRUST (isolated context):     LOW TRUST (sandboxed):
 
 The attack surface is context pollution, not code execution. Audit your active tool set the way you audit dependencies.
 
-> Reconciled: security.md suggested a phrase deny-list for tool descriptions; the threat catalog says string signals are not sufficient on their own; this file keeps the deny-list as one layer and requires full-description display, hashing and re-approval on change.
+> Note: a phrase deny-list for tool descriptions is one layer only, since string signals are not sufficient on their own; also require full-description display, hashing and re-approval on change.
 
 Named attacks (tool shadowing, line jumping, rug pull): `threat-deep-dives.md`. Code: `../../frameworks/mcp-python/security.md`.
 

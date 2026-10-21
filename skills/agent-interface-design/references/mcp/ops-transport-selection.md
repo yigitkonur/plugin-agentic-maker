@@ -47,8 +47,6 @@ Why Streamable HTTP wins:
 - Standard infrastructure (reverse proxies, Kubernetes ingress, health checks) works out of the box.
 - It scales well: about 300 req/s at concurrency 200 with sub-second response times.
 
-> Reconciled: the source says Streamable HTTP "scales linearly" but its own rows (48.4 req/s at concurrency 20, 299.85 at 200) are about 6.2x for 10x concurrency, i.e. sublinear; this file says scales well, not linearly.
-
 Recommendation:
 
 ```

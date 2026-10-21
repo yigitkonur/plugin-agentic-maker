@@ -9,14 +9,14 @@
 import { spawn } from 'child_process';
 import { describe, it, expect } from 'vitest';
 
-interface CLIResult {
+interface RunResult {
   exitCode: number;
   stdout: string;
   stderr: string;
   json: any;
 }
 
-async function runCLI(...args: string[]): Promise<CLIResult> {
+async function runCLI(...args: string[]): Promise<RunResult> {
   return new Promise((resolve) => {
     const proc = spawn('./mycli', [...args, '--json']);
     let stdout = '';
@@ -25,14 +25,16 @@ async function runCLI(...args: string[]): Promise<CLIResult> {
     proc.stdout.on('data', (data) => { stdout += data; });
     proc.stderr.on('data', (data) => { stderr += data; });
 
-    proc.on('close', (exitCode) => {
+    proc.on('close', (code, signal) => {
+      // a signal-killed child has code null: 130 (SIGINT) or 143 (SIGTERM), else 1 (crash)
+      const exitCode = code ?? (signal === 'SIGINT' ? 130 : signal === 'SIGTERM' ? 143 : 1);
       let json: any;
       try {
         json = JSON.parse(stdout); // the envelope is always on stdout
       } catch {
         json = { raw: stdout, stderr };
       }
-      resolve({ exitCode: exitCode ?? 1, stdout, stderr, json });
+      resolve({ exitCode, stdout, stderr, json });
     });
   });
 }
@@ -85,11 +87,13 @@ describe('CLI JSON Output', () => {
         const r1 = await runCLI('list', long);
         const r2 = await runCLI('list', short);
 
+        expect(r2.json.error?.class).not.toBe('usage'); // the short form is accepted
         expect(r1.json.ok).toBe(r2.json.ok);
+        expect(r1.exitCode).toBe(r2.exitCode);
       });
     }
   });
 });
 ```
 
-> Reconciled: the source parsed `stdout || stderr`; the envelope is always on stdout, so this test parses stdout only.
+> Note: the envelope is always on stdout, so the test parses stdout only.

@@ -19,14 +19,12 @@ The batch controls (`--batch-size`, `--max-concurrent`, thresholds, delays) are 
 
 ## Stop or continue
 
-> Reconciled: the sources gave `--stop-on-error` as "default: continue" in one table and implied stop-by-default elsewhere. This file states it once. Read-only and idempotent batches default to continue and report partial (exit 8). Destructive batches default to stop at the first error. `--stop-on-error` and `--continue-on-error` override either default.
+> Note: read-only and idempotent batches default to continue and report partial (exit 8). Destructive batches default to stop at the first error. `--stop-on-error` and `--continue-on-error` override either default.
 
 <!-- src: audit-agentic-cli/references/execution-patterns.md#Partial Failure Handling -->
 ## Partial failure handling
 
 A batch with mixed results exits 8 (`partial`), never 3, and reports every item.
-
-> Reconciled: one source batch example reported partial failure as exit 3; this file uses 8 everywhere (`exit-codes.md`).
 
 Response structure for a batch command:
 
@@ -60,10 +58,10 @@ Response structure for a batch command:
 |-----------|------|----------|------|
 | No failures | `true` | `success` | 0 |
 | Some succeeded, some failed | `false` | `partial_failure` | 8 |
-| Nothing succeeded | `false` | `failed` | not stated by the sources; document it |
+| Nothing succeeded | `false` | `failed` | the failure's own class code (6 validation, 3 not_found, ...); 8 is for mixed results only |
 
 Always write the failed items to `failed_items_file` and give a `retry_command` that consumes it, so the agent can retry only what failed.
 
-> Unresolved: the sources describe partial results two ways: this batch response (`status: partial_failure`, top-level `succeeded`/`failed` arrays) and the error-envelope form with `error.class: partial_success`, `succeeded_operations`, `failed_operations` (`error-classes.md`). Both use exit 8; pick one shape per CLI and document it.
+> Note: use this batch response (`status: partial_failure`, top-level `succeeded`/`failed` arrays) for commands that act on many items; use the error form (`error.class: partial_success`, `succeeded_operations`, `failed_operations`, in `error-classes.md`) only when one operation partly completed and cannot list items. Both exit 8. `ok` answers "did the command do what was asked?": a batch asked for 100 creations and made 95, so `false`. A check whose job is to report problems (this plugin's `probe` and `check` commands) ran as asked, so it sets `ok: true` with `status: partial` and the same exit 8.
 
 Implementations: `../frameworks/go/execution-patterns-batch.md`, `../frameworks/python/execution-patterns-batch.md`.

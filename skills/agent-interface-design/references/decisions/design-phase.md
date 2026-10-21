@@ -12,7 +12,7 @@ START: How many API endpoints does this server wrap?
 |
 +-- 1-3 endpoints
 |   +-- Map each to one tool (1:1 is fine at small scale)
-|   +-- Keep schemas flat, under 6 params --> mcp/schemas-*
+|   +-- Keep schemas flat, at most about 6 required params --> mcp/schemas-*
 |
 +-- 4-10 endpoints
 |   +-- Do 3+ endpoints always get called together for one user task?
@@ -33,13 +33,13 @@ START: How many API endpoints does this server wrap?
 |   +-- See decisions/tool-count.md for progressive discovery if still >20
 |
 +-- For ALL tools, apply these design checks:
-    +-- Schema shape: Flat, 3-6 params, no nesting >1 level --> mcp/schemas-*
+    +-- Schema shape: Flat, at most about 6 required params, no nesting beyond one level --> mcp/schemas-*
     +-- Description: First 5 words = verb + resource --> mcp/descriptions-*
     +-- Description length: aim at most ~100 tokens, never above 200 --> mcp/descriptions-*
     +-- Parameter names: Unambiguous, self-documenting --> mcp/schemas-*
 ```
 
-> Reconciled: the sources gave "under 100 tokens total" here and other length limits elsewhere; this file uses a target of at most about 100 tokens, never above 200, the first five words Verb + Resource, and long examples in the parameter descriptions of the input schema.
+> Note: a description targets at most about 100 tokens, never above 200, the first five words Verb + Resource, and long examples go in the parameter descriptions of the input schema.
 
 <!-- src: audit-agentic-mcp/references/decision-trees/design-phase.md#Key Decision Factors -->
 ## Key decision factors

@@ -9,12 +9,16 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
 use serde_json::Value;
+use std::os::unix::process::ExitStatusExt; // Unix: signal()
 
 fn run_cli(args: &[&str]) -> (i32, Value) {
     let mut cmd = Command::cargo_bin("mycli").unwrap();
     let output = cmd.args(args).arg("--json").output().unwrap();
 
-    let exit_code = output.status.code().unwrap_or(1);
+    // code() is None when a signal killed the child: 128 + signal (130 SIGINT, 143 SIGTERM)
+    let exit_code = output.status.code()
+        .or_else(|| output.status.signal().map(|s| 128 + s))
+        .unwrap_or(1);
     // The envelope, success or failure, is on stdout.
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -100,4 +104,4 @@ fn test_invalid_command_exits_usage() {
 }
 ```
 
-> Reconciled: the source fell back to stderr when stdout was empty; the envelope is always on stdout, so the helper parses stdout only.
+> Note: the envelope is always on stdout, so the helper parses stdout only.

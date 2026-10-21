@@ -20,36 +20,15 @@ interface HealthStatus {
 async function checkCLIHealth(): Promise<HealthStatus> {
   const checks: HealthStatus['checks'] = {};
 
-  // Check CLI is accessible
-  const start = Date.now();
-  try {
-    const result = await invokeCLI(['mycli', 'version', '--json'], { timeout: 5000 });
-    checks.cli_accessible = {
-      status: result.ok ? 'pass' : 'fail',
-      latency_ms: Date.now() - start,
-    };
-  } catch {
-    checks.cli_accessible = { status: 'fail', message: 'CLI not accessible' };
-  }
-
-  // Check daemon is running
-  try {
-    const result = await invokeCLI(['mycli', 'daemon', 'status', '--json'], { timeout: 5000 });
-    checks.daemon_running = {
-      status: result.ok ? 'pass' : 'fail',
-      latency_ms: Date.now() - start,
-    };
-  } catch {
-    checks.daemon_running = { status: 'fail', message: 'Daemon not responding' };
-  }
-
-  // Check auth is valid
-  try {
-    const result = await invokeCLI(['mycli', 'account', 'whoami', '--json'], { timeout: 5000 });
-    checks.auth_valid = { status: result.ok ? 'pass' : 'fail' };
-  } catch {
-    checks.auth_valid = { status: 'fail', message: 'Auth check failed' };
-  }
+  // invokeCLI never rejects: a failure comes back as ok: false
+  const probe = async (cmd: string[], failMessage: string): Promise<HealthStatus['checks'][string]> => {
+    const start = Date.now();
+    const result = await invokeCLI(cmd, { timeout: 5000 });
+    return { status: result.ok ? 'pass' : 'fail', latency_ms: Date.now() - start, ...(result.ok ? {} : { message: failMessage }) };
+  };
+  checks.cli_accessible = await probe(['mycli', 'version', '--json'], 'CLI not accessible');
+  checks.daemon_running = await probe(['mycli', 'daemon', 'status', '--json'], 'Daemon not responding');
+  checks.auth_valid = await probe(['mycli', 'account', 'whoami', '--json'], 'Auth check failed');
 
   // Determine overall status
   const failedChecks = Object.values(checks).filter((c) => c.status === 'fail').length;
@@ -116,8 +95,13 @@ class AlertManager {
     }
   }
 
-  private async sendAlert(type: string, data: Record<string, unknown>): Promise<void> {
-    await fetch(this.config.webhook_url, {
+  private lastAlert: Record<string, number> = {};
+
+  private sendAlert(type: string, data: Record<string, unknown>): void {
+    const now = Date.now();
+    if (now - (this.lastAlert[type] ?? 0) < this.windowMs) return; // one alert per type per window
+    this.lastAlert[type] = now;
+    fetch(this.config.webhook_url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -125,7 +109,7 @@ class AlertManager {
         timestamp: new Date().toISOString(),
         data,
       }),
-    });
+    }).catch((err) => console.error('Alert webhook failed:', (err as Error).message)); // never an unhandled rejection
   }
 }
 ```

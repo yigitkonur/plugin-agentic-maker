@@ -54,6 +54,8 @@ func (r *BatchResult) addError(id, errClass, errMsg string) {
 
 func BatchProcess(ctx context.Context, items []Item, cfg BatchConfig, process func(Item) error) *BatchResult {
     result := &BatchResult{Total: len(items)}
+    ctx, cancel := context.WithCancel(ctx)
+    defer cancel()
 
     sem := make(chan struct{}, cfg.Concurrency)
     var wg sync.WaitGroup
@@ -73,7 +75,7 @@ func BatchProcess(ctx context.Context, items []Item, cfg BatchConfig, process fu
             if err := process(item); err != nil {
                 result.addError(item.ID, classifyError(err), err.Error())
                 if !cfg.ContinueOnError {
-                    // Signal to stop (via context cancellation in real impl)
+                    cancel() // stop dispatching further items
                 }
             } else {
                 result.addSuccess()
@@ -86,7 +88,7 @@ func BatchProcess(ctx context.Context, items []Item, cfg BatchConfig, process fu
 }
 ```
 
-> Reconciled: the source did not say what `ContinueOnError` defaults to. Read-only and idempotent batches default to continue and report partial (exit 8, never 3); destructive batches default to stop at the first error. `--stop-on-error` / `--continue-on-error` override either. When `Succeeded > 0` and `Failed > 0`, exit with `ExitPartial`.
+> Note: read-only and idempotent batches default to continue and report partial (exit 8, never 3); destructive batches default to stop at the first error. `--stop-on-error` / `--continue-on-error` override either. When `Succeeded > 0` and `Failed > 0`, exit with `ExitPartial`.
 
 <!-- src: audit-agentic-cli/references/examples.md#9. Long-Running Task with Progress (Go) -->
 ## Long-running task with progress
@@ -135,7 +137,8 @@ func runWithProgress(ctx context.Context, opID string, work func(progress chan<-
         select {
         case p, ok := <-progressCh:
             if !ok {
-                return
+                progressCh = nil // closed: keep waiting for the result so the terminal event is never dropped
+                continue
             }
             progressEnc.Encode(map[string]any{
                 "type":         "progress",
@@ -148,9 +151,13 @@ func runWithProgress(ctx context.Context, opID string, work func(progress chan<-
         case err := <-resultCh:
             if err != nil {
                 resultEnc.Encode(map[string]any{
-                    "type":         "error",
+                    "type":         "completed", // same terminal type as execution-patterns-async.md
                     "operation_id": opID,
-                    "error":        err.Error(),
+                    "status":       "failed",
+                    "error": map[string]any{
+                        "class": classifyError(err), "code": "TASK_FAILED", "message": err.Error(),
+                        "retryable": false,
+                    },
                 })
             } else {
                 resultEnc.Encode(map[string]any{
@@ -172,4 +179,4 @@ func runWithProgress(ctx context.Context, opID string, work func(progress chan<-
 }
 ```
 
-> Reconciled: the source wrote every event, including `error`, `completed` and `cancelled`, to stderr. This file writes progress to stderr and the terminal events (results) to stdout; never mix them on one stream.
+> Note: read-only and idempotent batches default to continue and report partial (exit 8, never 3); destructive batches default to stop at the first error. `--stop-on-error` / `--continue-on-error` override either. When `Succeeded > 0` and `Failed > 0`, exit with `ExitPartial`.

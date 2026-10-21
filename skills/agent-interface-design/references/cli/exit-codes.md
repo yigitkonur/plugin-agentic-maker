@@ -21,7 +21,7 @@ Exit codes let an agent make retry decisions without parsing output.
 
 > Critical: exit codes must be documented explicitly in `--help` output and man pages.
 
-> Reconciled: the sources gave a 0-7 taxonomy in one place and 0-8 in another, labelled 1 differently, and one batch example reported partial as exit 3. This file uses 0-8 with 1 = crash (unexpected/internal), and partial is 8, never 3. Name `transient` is the exit-7 group, not an error class.
+> Note: the table is 0-8 with 1 = crash (unexpected/internal), and partial is 8, never 3. `transient` is the name of the exit-7 group, not an error class.
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Exit Code Decision Tree -->
 ## Decision tree

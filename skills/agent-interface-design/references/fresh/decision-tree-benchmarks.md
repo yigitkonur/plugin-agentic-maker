@@ -1,5 +1,5 @@
 ---
-as_of: unknown
+as_of: 2026-04
 verify_before_citing: true
 ---
 
@@ -7,7 +7,9 @@ verify_before_citing: true
 
 > Read when: you need the token and throughput figures the decision trees quoted (concise vs detailed responses, session pooling, initial-context size under progressive discovery) and want to know they are undated.
 
-The decision trees in `decisions/` quote these figures without a date or a method. Treat each as a source-reported estimate, re-measure on your own server (`bin/agentic-maker probe mcp --budget` for tool-catalog size), and do not cite as a benchmark.
+> `as_of` is inferred from an April 2026 refresh: the figures below carry no date of their own, so re-check them before citing.
+
+The decision trees in `decisions/` quote these figures without a date or a method. Treat each as a source-reported estimate, re-measure on your own server (`agentic-maker probe mcp "<command>"` for tool-catalog size), and do not cite as a benchmark.
 
 ## Response format (`decisions/response-format.md`)
 

@@ -42,7 +42,7 @@ date: z.union([
 
 // Good: higher accuracy, let the LLM express naturally
 date: z.string().describe(
-  "Date in any format: ISO 8601, Unix timestamp, or relative ('yesterday', 'last week')"
+  "Date in any format: ISO 8601 or relative ('yesterday', 'last week')"
 )
 ```
 
@@ -54,7 +54,7 @@ import { parseDate } from "chrono-node"; // or your preferred parser
 async function handler({ date }: { date: string }) {
   const parsed = parseDate(date) ?? new Date(date);
   if (!parsed || isNaN(parsed.getTime())) {
-    return { content: [{ type: "text", text: "Could not parse date. Try ISO 8601 like '2024-01-15'." }] };
+    return { content: [{ type: "text", text: "Could not parse date. Try ISO 8601 like '2024-01-15'." }], isError: true };
   }
   // Use `parsed` -- it's always a valid Date
 }
@@ -91,8 +91,8 @@ format: z.enum(["json", "csv", "markdown"]).describe(
 Strategy 1: split by workflow stage.
 
 ```typescript
-// One tool with 30+ params
-server.tool("deploy", { env, region, scaling, healthCheck, rollback, ... })
+// One tool with 40+ params
+server.tool("deploy", { env, region, scaling, healthCheck, rollback /* ...35 more */ });
 
 // Three focused tools
 server.tool("deploy_configure", {

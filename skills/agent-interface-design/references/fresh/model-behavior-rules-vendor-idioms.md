@@ -14,7 +14,7 @@ Code (Claude cache block): `frameworks/mcp-model-portability-snippets.md`. Index
 
 The single-user-message-for-parallel-results rule is a hard requirement; violating it breaks Claude's tracking of parallel tool state. Route the whole tool-definitions block (typically the biggest repeating payload in an MCP session) through the 1h prompt cache. A 5,000-token tool block priced at $3/1M input costs $0.015 uncached per request; with 1h caching it costs $0.03 once on write, then $0.0015 per hit, "roughly 83% input-cost reduction" over a multi-turn session.
 
-> Reconciled: from the source's own prices the saving is about 71% over 10 requests ($0.15 uncached vs $0.0435 cached) and reaches 83% only near 30 requests; the 83% figure is kept as the source's multi-turn claim.
+> Note: from the listed prices the saving is about 71% over 10 requests ($0.15 uncached vs $0.0435 cached) and reaches 83% only near 30 requests; 83% is the multi-turn figure.
 
 Put the tool definitions in one cached block at the top of the system/tools payload with `cache_control` `{"type": "ephemeral", "ttl": "1h"}`.
 

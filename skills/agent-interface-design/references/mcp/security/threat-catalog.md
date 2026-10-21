@@ -22,7 +22,7 @@ Every row cites a primary source with YYYY-MM in `../../fresh/mcp-threat-attack-
 | 8 | Covert Tool Invocation via Sampling | Server's sampling request smuggles hidden instructions to call other tools | Sampling enabled | Sampling request appends `also writeFile(tmp.txt, ...)` | Per-request user approval; isolate sampling from sensitive tools |
 | 9 | Conversation Hijacking via Sampling | Persistent prompt injection in sampling response survives across turns | Sampling enabled | "Speak like a pirate" -> escalates into exfil | Strip instruction-like patterns; response filtering; context isolation |
 | 10 | Resource Theft / Token Consumption | Server forces the LLM to generate hidden extra content, burning user tokens | Sampling enabled | Hidden prompt appends `generate 10k tokens of fiction` | Per-operation token limits; rate limits; anomaly detection |
-| 11 | Elicitation Abuse | Server uses `elicitation/create` to phish sensitive info | Elicitation enabled | "Please re-enter your password" | Spec MUST-NOT (passwords/SSN); client deny list; clear server identity on dialogs |
+| 11 | Elicitation Abuse | Server uses `elicitation/create` to phish sensitive info | Elicitation enabled | "Please re-enter your password" | Spec: servers MUST NOT ask for secrets in form mode (URL mode instead); client deny list; clear server identity on dialogs |
 | 12 | Confused Deputy (OAuth) *[auth]* | MCP proxy reuses a shared `client_id` upstream; cookies bypass consent | Shared client_id at a trusted IdP | CSRF-style: attacker completes OAuth via victim's pre-consented cookie | Consent layer at MCP server; `state` + session binding; `__Host-` prefix |
 | 13 | DCR Client Impersonation *[auth]* | Attacker registers via unauthenticated DCR, claims to be "Claude Desktop" | DCR endpoint, no domain allowlist | Register malicious `redirect_uri`; impersonate a trusted client | CIMD (SEP-991); software statements; rate-limit DCR |
 | 14 | Token Passthrough / Audience Confusion *[auth]* | MCP forwards bearer token to upstream; replayed across resources | Token lacks `resource`/audience binding | Replay token on a different resource | RFC 8707 `resource=` parameter; audience validation |
@@ -35,6 +35,6 @@ Every row cites a primary source with YYYY-MM in `../../fresh/mcp-threat-attack-
 
 Rows 8-11 are detailed against the capability that enables them in `../protocol-sampling.md` and `../protocol-elicitation.md`.
 
-> Reconciled: the sources variously recommended CIMD over DCR or treated DCR as the baseline; this file prefers Client ID Metadata Documents where the client supports them, keeps Dynamic Client Registration for clients without them, and never assumes either: detect support from the authorization-server metadata (see auth-client-identity.md).
+> Note: prefer Client ID Metadata Documents (CIMD) where the client supports them; keep Dynamic Client Registration (DCR) for clients without them; never assume either. Detect support from the authorization-server metadata (see auth-client-identity.md).
 
 Scanner and wrapper-proxy product names: `../../fresh/mcp-defense-tooling.md`.

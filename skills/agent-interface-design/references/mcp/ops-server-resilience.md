@@ -15,7 +15,7 @@ Agent -> retry? Server is gone. No tool listing available.
 Agent -> "I'm unable to reach the MCP server."
 ```
 
-The principle: if a tool cannot do its job, return `isError: true` with actionable guidance (for an invalid config: say the path is invalid or missing and what is expected, for example "Expected YAML with keys: host, port, db_name"). Keep the server alive so other tools remain available. Also wrap handlers so an unhandled exception becomes `Internal error: <type>: <message>` as a tool result rather than a crash. Code: [python](../frameworks/mcp-python/transport-and-ops.md).
+The principle: if a tool cannot do its job, return `isError: true` with actionable guidance (for an invalid config: say the path is invalid or missing and what is expected, for example "Expected YAML with keys: host, port, db_name"). Keep the server alive so other tools remain available. Also wrap handlers so an unhandled exception becomes `Internal error: <type>` plus a next step as a tool result rather than a crash; log the exception message, do not return it (see `security/untrusted-content-and-pii.md`). Code: [python](../frameworks/mcp-python/transport-and-ops.md).
 
 Sources: Stainless, practitioner reports on software-architecture forums.
 

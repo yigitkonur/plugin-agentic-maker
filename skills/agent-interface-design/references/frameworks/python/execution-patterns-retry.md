@@ -56,6 +56,7 @@ def create(idempotency_key: Optional[str], name: str):
 Contract and defaults: `../../cli/retry.md`.
 
 ```python
+import sys
 import time
 import random
 from functools import wraps
@@ -104,7 +105,7 @@ def with_retry(config: RetryConfig = None):
                     retry_after = e.response.headers.get("Retry-After")
                     if retry_after:
                         try:
-                            backoff = float(retry_after)
+                            backoff = min(float(retry_after), config.max_backoff)
                             time.sleep(backoff)
                             continue
                         except ValueError:
@@ -126,10 +127,19 @@ def with_retry(config: RetryConfig = None):
         return wrapper
     return decorator
 
-# Usage
+# Usage: a retried create carries the same Idempotency-Key on every attempt
 @with_retry(RetryConfig(max_attempts=3))
-def create_resource(name: str) -> dict:
-    response = httpx.post(f"{API_URL}/resources", json={"name": name})
+def create_resource(name: str, idempotency_key: str) -> dict:
+    response = httpx.post(f"{API_URL}/resources", json={"name": name},
+                          headers={"Idempotency-Key": idempotency_key})
     response.raise_for_status()
     return response.json()
+
+try:
+    output_json(create_resource("demo", idempotency_key))
+except RetryExhausted as e:
+    # retryable failure with the budget spent: envelope on stdout, exit 7 (transient)
+    output_json({"ok": False, "error": {"class": "network", "code": "RETRY_EXHAUSTED",
+                 "message": str(e), "retryable": True, "suggestion": "Retry later"}})
+    sys.exit(7)
 ```

@@ -9,15 +9,17 @@ Rules: [ops-session-state.md](../../mcp/ops-session-state.md), [ops-success-log-
 
 ```typescript
 import { createPool } from "generic-pool";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 const sessionPool = createPool({
   create: async () => {
-    const session = await mcpClient.connect(serverUrl);
-    await session.initialize();
+    const session = new Client({ name: "pool-client", version: "1.0.0" });
+    await session.connect(new StreamableHTTPClientTransport(new URL(serverUrl))); // connect() runs initialize
     return session;
   },
   destroy: async (session) => await session.close(),
-}, { min: 2, max: 10, idleTimeoutMs: 60_000 });
+}, { min: 2, max: 10, idleTimeoutMillis: 60_000 });
 
 async function callTool(name: string, args: Record<string, unknown>) {
   const session = await sessionPool.acquire();
@@ -32,8 +34,9 @@ async function callTool(name: string, args: Record<string, unknown>) {
 Externalize session state so any pooled connection can serve any request:
 
 ```typescript
-await redis.setex(`session:${sid}`, 3600, JSON.stringify(state));
-const state = JSON.parse(await redis.get(`session:${sid}`));
+await redis.setex(`session:${sid}`, 3600, JSON.stringify(newState));
+const raw = await redis.get(`session:${sid}`); // string | null
+const state = raw ? JSON.parse(raw) : null;      // null: expired, start a new session
 ```
 
 <!-- src: audit-agentic-mcp/references/patterns/session-and-state.md#5. Conversation Compaction Priorities -->

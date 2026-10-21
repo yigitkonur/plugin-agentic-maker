@@ -13,7 +13,7 @@ Resources and tools both give access to data but serve different purposes; the w
 | **Mutability** | Read-only | Can read AND write |
 | **Addressing** | URI-based (`file://docs/api.md`) | Name-based (`search_docs`) |
 | **Parameters** | Only URI path variables | Full JSON Schema input |
-| **Caching** | Supports ETags, subscriptions | Each call is independent |
+| **Caching** | `lastModified` annotation, subscriptions (no ETags) | Each call is independent |
 | **Token cost** | Typically lower (focused data) | Higher (schema in context) |
 | **Client support** | Inconsistent across clients | Universal |
 

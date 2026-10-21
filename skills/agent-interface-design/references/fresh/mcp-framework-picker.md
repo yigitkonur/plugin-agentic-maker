@@ -17,7 +17,7 @@ verify_before_citing: true
 | **Official TS SDK v2 alpha** (`@modelcontextprotocol/server`) | New projects that want the split-package v2 API and accept pre-release risk | stdio + Streamable HTTP | Yes | Client-side only; server-side OAuth removed | **Alpha if npm still shows alpha**; not production-default. Needs Node 20+, ESM, Zod v4 |
 | **SKIP: use CLI / agent skill** | Agent already has well-maintained CLI/SDK access, or static workflow guidance would suffice | N/A | N/A | N/A | N/A; see `decisions/mcp-vs-cli-evidence.md` and `decisions/companion-routing.md` |
 
-Each framework has an optional companion build skill ("if installed"); names are in `decisions/companion-routing.md`. The source table also carried install commands for those skills from the original author's repository; they are not reproduced because they point to a personal repo.
+Each framework has an optional companion build skill ("if installed"); names are in `decisions/companion-routing.md`. Install commands for those skills are not listed here.
 
 ## Check the npm state before relying on the table
 
@@ -27,4 +27,4 @@ npm view @modelcontextprotocol/server version dist-tags --json
 npm view mcp-use version dist-tags --json
 ```
 
-The 2026-05-09 npm check for the source revision showed `@modelcontextprotocol/sdk` `1.29.0`, `@modelcontextprotocol/server` `2.0.0-alpha.2`, and `mcp-use` `1.27.0`. Treat those as evidence for that edit, not permanent facts. If v2 still shows alpha, the default stays on v1.
+The 2026-05-09 npm check showed `@modelcontextprotocol/sdk` `1.29.0`, `@modelcontextprotocol/server` `2.0.0-alpha.2`, and `mcp-use` `1.27.0`. Treat those as evidence for that date, not permanent facts. If v2 still shows alpha, the default stays on v1.

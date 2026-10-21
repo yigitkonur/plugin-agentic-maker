@@ -16,7 +16,7 @@
 | `auth` | No | Fail fast | Unauthorized |
 | `not_found` | No | Fail fast | Resource doesn't exist |
 
-> Reconciled: the source listed `transient` as an error class; this file keeps the row but treats it as the exit-7 group (`rate_limit`, `timeout`, `network`, `dependency_failed`), not a class. See `error-classes.md`.
+> Note: `transient` is the name of the exit-7 group (`rate_limit`, `timeout`, `network`, `dependency_failed`), not an error class. See `error-classes.md`.
 
 Defaults used by the reference implementations in every language:
 

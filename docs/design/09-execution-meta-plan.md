@@ -14,10 +14,10 @@
 2. **Failure protocol:** one plain rerun (passes → note flaky); then up to three fixes, each with a new hypothesis, rerunning that row only; still failing → read the stuck-row guide. Every run has a time limit; a crash, a timeout or two minutes of silence is a failed run.
 3. **Build the smallest thing that runs, then watch it run.** No test suite before the thing works live; fixtures and expected outputs are *recorded from what the tool really did*, after reading the diff and judging it right.
 4. **Boundaries.** Writes go to exactly three places: `plugin-agentic-maker/` (the repo), `docs/design/` (this plan, append-only after today), and `/tmp/am-*` scratch. Never touch sibling `plugin-*` or `*-plan` folders, `~/.claude` settings, or the three source skills (the user deletes those, not us). herdr: only tabs this run created, closed by this run; never the session's own pane.
-5. **Spend cap.** Auth is the claude.ai subscription (no API key), so there is no per-token bill, but there are usage limits. Every headless run passes `--max-turns` and `--max-budget-usd`; estimates are appended to `/tmp/am-scratch/budget.tsv`. **Soft stop at an estimated USD 25 total** across all headless/eval/herdr runs: stop, report, continue only if the user says so. Workers default to `--model sonnet` (Haiku for smoke checks); readers use the plugin's own agent setting.
+5. **Spend cap.** Auth is the claude.ai subscription (no API key), so there is no per-token bill, but there are usage limits. Every headless run passes `--max-turns` and `--max-budget-usd`; estimates are appended to `<scratch>/scratch/budget.tsv`. **Soft stop at an estimated USD 25 total** across all headless/eval/herdr runs: stop, report, continue only if the user says so. Workers default to `--model sonnet` (Haiku for smoke checks); readers use the plugin's own agent setting.
 6. **Delegation.** The main thread keeps the ledger and writes the novel, central parts itself (CLI, derailment method, derail skill, reader). Content migration (the ~66 reference files) goes to at most five `sonnet-high` subagents in parallel, each with a self-contained brief (§5); their output is checked by scripts, not trusted.
 7. **No claim without a witness.** An agent's report is a claim; the machine is the witness (`ls`, `jq`, exit codes, a rerun).
-8. **Commits** per step, in the repo, under the GitHub noreply identity (`9989650+yigitkonur@users.noreply.github.com`), conventional messages, with the required `Co-Authored-By` trailer. No tokens, personal paths or emails ever land in a commit (`scripts/check.sh` greps for them from S3 on).
+8. **Commits** per step, in the repo, under the GitHub noreply identity (`<the GitHub noreply address>`), conventional messages, with the required `Co-Authored-By` trailer. No tokens, personal paths or emails ever land in a commit (`scripts/check.sh` greps for them from S3 on).
 
 ---
 
@@ -50,14 +50,14 @@ Each step: **Do** → **Proof** (what gets pasted into the ledger) → **If it f
 
 ### S0 — Repo, scratch, sources (no behavior yet)
 **Do**
-1. `mkdir <workspace>/plugin-agentic-maker && git init -b main`; repo-local `user.name=yigitkonur`, `user.email=9989650+yigitkonur@users.noreply.github.com`.
-2. Scratch: `/tmp/am-src/` ← shallow clones of `yigitkonur/skills-by-yigitkonur` (the 3 skills) and `yigitkonur/plugin-swiftui`; `/tmp/am-spike/`, `/tmp/am-scratch/` created. Clones are data: no scripts are run from inside them.
+1. `mkdir <workspace>/plugin-agentic-maker && git init -b main`; repo-local `user.name=yigitkonur`, `user.email=<the GitHub noreply address>`.
+2. Scratch: `<scratch>/src/` ← shallow clones of `yigitkonur/skills-by-yigitkonur` (the 3 skills) and `yigitkonur/plugin-swiftui`; `<scratch>/spike/`, `<scratch>/scratch/` created. Clones are data: no scripts are run from inside them.
 3. Write `LICENSE`, `.gitignore` (`.DS_Store`, `__pycache__/`, `.agentic-maker/runs/`, `.env*`), minimal `plugin.json` and `marketplace.json` (name `agentic-maker`, version `0.0.1`), copy `01–09` + appendices into `docs/design/` and apply A1 rename.
 **Proof:** `git log --oneline` shows the first commit; `jq . .claude-plugin/*.json` parses; `diff` shows the rename is the only change in `docs/design/`.
 **If it fails:** none expected. **Commit:** `chore: repo skeleton and design docs`.
 
 ### S1 — M0 spike: resolve U1–U16 (no plugin code kept)
-**Do:** run the experiments in §4 in `/tmp/am-spike/`. Each gets: command, trimmed real output, verdict (`TRUE` / `FALSE` / `UNVERIFIED`+reason), and the plan consequence. Write `docs/what-is-true.md`, then **edit `docs/design/*.md`** where a claim turned out false or a branch was chosen (§6 table).
+**Do:** run the experiments in §4 in `<scratch>/spike/`. Each gets: command, trimmed real output, verdict (`TRUE` / `FALSE` / `UNVERIFIED`+reason), and the plan consequence. Write `docs/what-is-true.md`, then **edit `docs/design/*.md`** where a claim turned out false or a branch was chosen (§6 table).
 **Proof:** `docs/what-is-true.md` has sixteen rows, none blank; a `grep -c` of `UNVERIFIED` is listed with reasons; the design docs' "claims to verify" footers are updated.
 **If it fails:** a spike that cannot run is `UNVERIFIED` and takes the degrade branch in §6; it does not block S2. **Commit:** `docs: M0 spike results (what is true)`.
 
@@ -135,7 +135,7 @@ Also: `scripts/check.sh` (compile on 3.9 and 3.14, `claude plugin validate .`, s
 
 ## 4. M0 spike — the sixteen experiments
 
-Run in `/tmp/am-spike/` with a throwaway plugin (`spike`) containing one DMI skill, one model-invocable skill, one `user-invocable:false` skill, one agent, and a hook-printing script. Each experiment's `system/init` event (tools, skills, plugins, MCP servers, slash commands) is saved; it is also the source of `env.json`.
+Run in `<scratch>/spike/` with a throwaway plugin (`spike`) containing one DMI skill, one model-invocable skill, one `user-invocable:false` skill, one agent, and a hook-printing script. Each experiment's `system/init` event (tools, skills, plugins, MCP servers, slash commands) is saved; it is also the source of `env.json`.
 
 | U | Experiment (what is run) | Decides |
 |---|---|---|
@@ -162,7 +162,7 @@ Run in `/tmp/am-spike/` with a throwaway plugin (`spike`) containing one DMI ski
 
 Subagents do not read `CLAUDE.md`, so each brief carries: the migration brief (S2), the target path, the destination file list, the provenance-marker format, the `fresh/` rule, and the Appendix-B resolutions that touch its sources. Each returns **raw output and paths only**: files written, headings it could not place. The main thread then runs `parity.py`, the size check and the link check, and reads a sample. A batch that returns "here's what's left" gets one follow-up subagent at most, then it is the main thread's.
 
-| Batch | Sources (all read from `/tmp/am-src/`) | Destinations |
+| Batch | Sources (all read from `<scratch>/src/`) | Destinations |
 |---|---|---|
 | **A** | `audit-agentic-cli`: SKILL.md sections, `output-contracts`, `execution-patterns`, `discovery-and-auth`, `agent-integration`, `iterative-cli`, `examples`, `mcp-vs-cli-decision` | `skills/agent-interface-design/references/cli/*`, `frameworks/*`, `decisions/surface-choice.md` |
 | **B** | `audit-agentic-mcp`: `tool-design`, `tool-descriptions`, `schema-design`, `tool-responses`, `error-handling`, `prompt-gates`, `agentic-patterns`, `progressive-discovery`, `context-engineering`, `caching-economics`, `tool-count` | `references/mcp/*` (design + budget) |

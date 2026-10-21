@@ -8,11 +8,13 @@ Rules and rationale: `../../mcp/ops-composition-patterns.md` and `../../mcp/ops-
 ## Gateway middleware chain
 
 ```python
+from mcp.server.fastmcp.exceptions import ToolError  # fastmcp package: from fastmcp.exceptions import ToolError
+
 class MCPGateway:
     def __init__(self):
         self.servers = {}  # name -> MCP server connection
         self.middleware = [
-            AuthMiddleware(),
+            GatewayAuth(),
             RateLimitMiddleware(max_requests=100, window_seconds=60),
             AuditLogMiddleware(),
         ]
@@ -26,8 +28,11 @@ class MCPGateway:
             await mw.before(tool_name, args, ctx)
 
         # Route to correct server based on namespace
-        server_name = tool_name.split("_")[0]  # e.g., "github" from "github_create_pr"
-        server = self.servers[server_name]
+        # longest registered prefix wins, so server names may contain "_" (e.g. "my_db")
+        names = [n for n in self.servers if tool_name.startswith(n + "_")]
+        if not names:
+            raise ToolError(f"Unknown tool '{tool_name}'. Servers: {sorted(self.servers)}")
+        server = self.servers[max(names, key=len)]
 
         result = await server.call_tool(tool_name, args)
 
@@ -47,7 +52,8 @@ mcp.mount(github_server, namespace="github")
 mcp.mount(jira_server, namespace="jira")
 mcp.mount(slack_server, namespace="slack")
 
-# Apply cross-cutting middleware
+# Apply cross-cutting middleware (FastMCP's own class, not the GatewayAuth above;
+# namespace/prefix and tag/tags spellings are version-specific, check the FastMCP docs)
 mcp.add_transform(AuthMiddleware(tag="all", scopes={"authenticated"}))
 ```
 
@@ -56,17 +62,21 @@ mcp.add_transform(AuthMiddleware(tag="all", scopes={"authenticated"}))
 
 ```python
 # Server 1: GitHub Analysis
-@tool(description="Analyze a GitHub repository's structure, dependencies, and security-relevant patterns.")
+@mcp.tool(description="Analyze a GitHub repository's structure, dependencies, and security-relevant patterns.")
 def github_analyze(repo_url: str) -> dict:
     return {
         "description": "Payment processing API using Express.js with Stripe integration",
         "dependencies": [...],
         "identified_components": ["auth", "payment", "webhook_handler"],
-        "next_steps": "Use threat_framework() with this description for security analysis."
+        "_agent_guidance": {
+            "source": "github_analyze",
+            "instructions": "Use threat_framework() with this description for security analysis.",
+            "allowed_next_tools": ["threat_framework"],
+        },
     }
 
 # Server 2: STRIDE Threat Framework
-@tool(description="Get STRIDE threat analysis framework data for an application.")
+@mcp.tool(description="Get STRIDE threat analysis framework data for an application.")
 def threat_framework(app_description: str) -> dict:
     return {
         "stride_categories": {...},
@@ -76,17 +86,17 @@ def threat_framework(app_description: str) -> dict:
     }
 ```
 
-The `next_steps` field is steering text in tool output; see `../../decisions/steering-contract.md`.
+The `_agent_guidance` block is steering text in tool output; see `../../decisions/steering-contract.md`.
 
 <!-- src: audit-agentic-mcp/references/patterns/composition.md#3. Wrap Complex APIs in One Tool + Resource Documentation -->
 ## One tool plus resource documentation
 
 ```python
 @mcp.tool(description="Execute an API operation. Use resources at tool://{client}/{method} to see available methods and parameters.")
-def api_call(client: str, method: str, params: dict = {}) -> dict:
+def api_call(client: str, method: str, params: dict | None = None) -> dict:
     """Single tool wrapping the entire API surface."""
     api_client = get_client(client)
-    return api_client.call(method, **params)
+    return api_client.call(method, **(params or {}))
 
 @mcp.resource("tool://all")
 def list_all_clients() -> str:
@@ -111,7 +121,7 @@ Provider types:
 
 ```python
 # Local functions
-@tool
+@mcp.tool()
 def my_tool(): ...
 
 # From a directory of Python files

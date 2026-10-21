@@ -21,7 +21,7 @@ Standard classes let an agent reason about failures semantically. The class list
 | `dependency_failed` | Upstream service unavailable | Database down, external API error | Yes |
 | `partial_success` | Some operations succeeded, some failed | Batch with mixed results | No (check details) |
 
-> Reconciled: the sources gave a class enum without `usage` (schema) and a retry table with a `transient` row; this file uses the eleven classes above, with `usage` added and `transient` treated only as the exit-7 group.
+> Note: there are eleven classes, including `usage`; `transient` is the name of the exit-7 group, not a class.
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Error Class Examples -->
 ## Error class examples

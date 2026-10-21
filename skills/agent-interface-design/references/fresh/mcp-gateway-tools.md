@@ -1,12 +1,12 @@
 ---
-as_of: unknown
+as_of: 2026-07-04
 verify_before_citing: true
 ---
 # MCP gateway, composition framework and OpenAPI-proxy products
 
 > Read when: you need named products for a gateway, a composition framework or an OpenAPI-to-MCP proxy, instead of the vendor-neutral patterns.
 
-The source gives no date for these names; verify that each product exists, is maintained and still works as described before citing. The vendor-neutral patterns are in `../mcp/ops-gateway.md` and `../mcp/ops-composition-patterns.md`.
+No date is given for these names; verify that each product exists, is maintained and still works as described before citing. The vendor-neutral patterns are in `../mcp/ops-gateway.md` and `../mcp/ops-composition-patterns.md`.
 
 <!-- src: audit-agentic-mcp/references/patterns/composition.md#6. Use a Gateway/Proxy for Multi-Server Orchestration -->
 ## Existing gateway solutions
@@ -23,7 +23,7 @@ The zero-trust policy gateway (declarative `policy.json`, HMAC job tickets, audi
 <!-- src: audit-agentic-mcp/references/patterns/composition.md#4. Use the Provider + Transform Architecture for Maximum Flexibility | audit-agentic-mcp/references/patterns/composition.md#1. Use a Meta-Server for Cross-Cutting Concerns -->
 ## FastMCP 3.0 provider and transform architecture
 
-The source describes FastMCP 3.0 as introducing Components, Providers and Transforms:
+FastMCP 3.0 is described as introducing Components, Providers and Transforms:
 
 - Providers: `FileSystemProvider("./admin_tools", reload=True)`, `OpenAPIProvider(<openapi.json url>)`, `MCPClientProvider(<remote MCP url>)`, `SkillsProvider("./skills/")`.
 - Transforms: `mcp.mount(provider, prefix="github")`, `VersionFilter(select="latest")`, `AuthGate(tags={"admin"}, scopes={"super-user"})`, `RenameTransform({...})`, `AuthMiddleware(tag="all", scopes={"authenticated"})`.

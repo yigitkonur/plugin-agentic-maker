@@ -43,7 +43,7 @@ Pick this when MCP-shaped code already exists.
 **Audit output contract**
 
 - target path and detected framework
-- short scorecard across: tool interface, schemas/responses, errors, security/auth, context/cost, client compatibility, ops/testing, and architecture
+- the scorecard from `scoring.md`: the eight dimensions of the contract (intent, contract, discovery, steering, safety, budget, recovery, verification), each a score or `not measured`; file the usual MCP topics under them (tool interface and architecture under intent; schemas and responses under contract; security/auth under safety; context/cost under budget; errors under recovery; ops/testing under verification; client compatibility under discovery)
 - prioritized findings, each with severity, evidence path/line, impact, recommended fix, companion-skill route
 - verification plan: an MCP client smoke test, MCP Inspector, unit/integration, or a targeted manual check
 - assumptions and items not touched
@@ -58,6 +58,6 @@ Do not load the whole reference tree by default. Start with the smallest bundle.
 | Existing-server quick audit | the `scan mcp` and `probe mcp --budget` output, `mcp/design-*`, `mcp/schemas-*`, `mcp/responses-*`, `mcp/errors-*`, `mcp/ops-*` (testing) |
 | Security / auth audit | `decisions/security-posture.md`, `mcp/security/*` (generic defenses, auth and identity, threat catalog) |
 | Context / cost audit | the `probe mcp --budget` output, `mcp/budget-*` (context engineering, caching economics, progressive discovery), `decisions/tool-count.md` |
-| New-server architecture | `skills/design/references/interview.md`, `decisions/companion-routing.md`, `decisions/design-phase.md`, `decisions/mcp-vs-cli-evidence.md` |
+| New-server architecture | `skills/design/references/interview-mcp.md`, `decisions/companion-routing.md`, `decisions/design-phase.md`, `decisions/mcp-vs-cli-evidence.md` |
 
 Rules that apply to every finding: `mcp/hard-rules.md`. Common mistakes to pattern-match first: `mcp/pitfalls.md`.

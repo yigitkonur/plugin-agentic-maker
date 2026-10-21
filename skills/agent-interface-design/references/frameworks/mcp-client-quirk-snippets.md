@@ -60,7 +60,9 @@ else:
 
 ```js
 const key = client === "zed" ? "context_servers" : "mcpServers";
-writeJson(configPath, { [key]: { myserver: spec } });
+const cfg = readJson(configPath) ?? {};  // merge, never overwrite other servers
+cfg[key] = { ...cfg[key], myserver: spec };
+writeJson(configPath, cfg);
 ```
 
 ## Pattern 13: elicitation with text fallback
@@ -68,6 +70,7 @@ writeJson(configPath, { [key]: { myserver: spec } });
 ```python
 if "elicitation" in ctx.client_capabilities:
     answer = await ctx.session.elicit(schema=ConfirmDelete)
+    # proceed only when the user accepted; on decline or cancel, do nothing
 else:
     return {"content": [{"type": "text",
         "text": "This action is destructive. Reply with `confirm=true` in the next call to proceed."}]}

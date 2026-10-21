@@ -13,7 +13,7 @@ Durable lesson: override the adapter's default duration, enable the platform's l
 <!-- src: audit-agentic-mcp/references/patterns/deployment-platforms.md#6. On Vercel, Enable Fluid Compute Explicitly — Otherwise You Get 300s Max -->
 ## Fluid Compute and maxDuration
 
-The `@vercel/mcp-adapter` supports both stateless and stateful (Redis-backed) MCP servers, but hits a hard wall on execution duration. The cap depends on plan and on whether Fluid Compute is enabled.
+The npm package `mcp-handler` (earlier name `@vercel/mcp-adapter`) supports both stateless and stateful (Redis-backed) MCP servers, but hits a hard wall on execution duration. The cap depends on plan and on whether Fluid Compute is enabled. Package name checked 2026-10-21: `@vercel/mcp-adapter` on npm (0.3.2) ships only a README saying the package moved; `mcp-handler` (2.3.0) exports `createMcpHandler`.
 
 | Plan | Default max | Fluid Compute max |
 |---|---|---|

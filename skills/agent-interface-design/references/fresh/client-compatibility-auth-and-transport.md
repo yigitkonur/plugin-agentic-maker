@@ -48,7 +48,7 @@ For remote servers, publish both:
 
 Document both in your README; do not rely on DCR alone.
 
-> Reconciled: the sources vary on DCR versus Client ID Metadata Documents (CIMD); the stance used here is to prefer CIMD where the client supports it, keep DCR for clients without it, and detect support from the authorization-server metadata instead of assuming either.
+> Note: prefer CIMD where the client supports it, keep DCR for clients without it, and detect support from the authorization-server metadata instead of assuming either.
 
 Affected clients: all except VS Code for DCR; Cline for OAuth at all. Sources: code.visualstudio.com/api/extension-guides/ai/mcp; cline #3090.
 

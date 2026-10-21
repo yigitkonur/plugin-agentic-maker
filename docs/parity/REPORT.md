@@ -55,7 +55,7 @@ Each of these is a decision, recorded in `docs/design/` and checked against a re
 | Scripts documented by sidecar `.sh.md` files | `agentic-maker <command> --help` carries examples and exit codes | The plugin's own audit demands it of others |
 | Exit codes 0-7 in one file, 0-8 in another; batch "partial" as 3 | One table, 0-8, partial = 8 | Inherited defects 1-2 (`docs/design/appendix-b-inherited-defects.md`) |
 
-Reconciled inherited defects (25 listed in the appendix) were fixed during migration, not copied. Two additions by the migration subagents are worth a second look by the author: the field names used for CIMD/DCR detection in the MCP auth files, and the wording of the "polling-tool" pattern, whose source pointer dangled.
+Reconciled inherited defects (25 listed in the appendix) were fixed during migration, not copied. Two additions by the migration subagents were checked in the second review (`docs/evidence/09-second-review.md`): the CIMD/DCR detection field names match the 2025-11-25 authorization spec, and the "polling-tool" pointer resolves. The registration order around them was wrong and is corrected.
 
 ## 4. Behavioural parity on the seeded fixtures
 
@@ -63,7 +63,7 @@ Fixtures are small, written by the same hand as the probes, and live in `fixture
 
 | Fixture | Planted defects | Plugin | Old scripts | Clean twin |
 |---|---|---|---|---|
-| bash CLI (`fixtures/cli/seeded-cli`) | 11 | **10 found directly, 1 through its cause** | 4 directly, 1 more as a missing standard flag; all text-level | 0 findings, exit 0 |
+| bash CLI (`fixtures/cli/seeded-cli`) | 11 | **10 found directly, 1 through its cause** | 4 directly, 1 more as a missing standard flag; all text-level | 0 findings, exit 0 from the default probe and from the extra probes a full audit chose (the first twin was not clean under a full audit: it found 6 gaps, a High among them, and the twin was fixed; `docs/evidence/10-round-two.md`) |
 | stdio MCP server (`fixtures/mcp/seeded-server.py`) | 11 groups, 24 tools | all groups found, 18 findings today (17 when first recorded); budget 5724 chars / 24 tools equals a `jq` hand count | counted 15 tool candidates, ~459 tok, flagged nothing | 0 findings |
 | skill (`fixtures/skill-project`) | jargon description, opaque name, relative script path, typo in a reference path, a threshold without a number | 4 verified findings in run 1 (1 rejected); the run-2 reader found the untriggered skill (T1) | not runnable: the old modes name the skill | n/a |
 
@@ -96,6 +96,6 @@ Deleting them is the repository owner's decision. Every item below can be re-run
 - [ ] `AM_SRC=<clone of skills-by-yigitkonur>/skills scripts/check.sh --strict-parity` passes: 948 headings, 0 unmapped, 0 dangling.
 - [ ] `python3 scripts/parity.py check --no-write --soft --strict-soft` reports 0 unaccounted table keys and tokens.
 - [ ] Read `accounted.tsv` rows with "author-local" and "domain leak" reasons and agree they should not be carried.
-- [ ] Read the two migration-subagent additions named in section 3.
+- [x] Read the two migration-subagent additions named in section 3 (done in the second review).
 - [ ] Install the plugin from GitHub in a clean config and run `/agentic-maker:audit` on one of your own CLIs and one MCP server you know the faults of.
 - [ ] Tag the source repository before deleting (git history is the archive).

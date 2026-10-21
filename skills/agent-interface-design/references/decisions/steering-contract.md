@@ -12,8 +12,6 @@ Tool responses go straight into the agent's context and steer it mid-conversatio
 | Steering | Steering text in tool output is the strongest lever for in-flight guidance. | Design every response as guidance, not just data. |
 | Injection | The same channel is the attack surface: tool output is untrusted input. | A poisoned or compromised tool can redirect the agent. |
 
-> Reconciled: the sources treat steering text in tool output as the strongest lever and the same channel as an attack surface; this file keeps both with the bridge below.
-
 Bridge: put all steering in one namespaced block (`_agent_guidance` with a `source`) plus an `allowed_next_tools` list that the server validates against its own tool graph. Keep the block to text your own server authored; external content stays in the data part.
 
 <!-- src: audit-agentic-mcp/references/patterns/prompt-gates.md#1. Tool Responses Have Surprisingly High Authority -->

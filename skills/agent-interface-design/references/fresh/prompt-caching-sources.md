@@ -6,7 +6,7 @@ verify_before_citing: true
 
 > Read when: you need the original pages behind the prompt-caching figures, with their dates; verify before citing.
 
-Used by `prompt-caching-providers.md`, `prompt-caching-cost-math.md` and `prompt-caching-cases.md`. Dates are the source's.
+Used by `prompt-caching-providers.md`, `prompt-caching-cost-math.md` and `prompt-caching-cases.md`. Dates are those of the cited pages.
 
 <!-- src: audit-agentic-mcp/references/patterns/caching-economics.md#Key Sources -->
 ## Key sources

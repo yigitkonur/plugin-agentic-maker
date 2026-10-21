@@ -29,9 +29,9 @@ Classify findings in agent terms, not human-UX terms.
 
 | Severity | Use when |
 |---|---|
-| Critical | Agents cannot safely parse, continue, or avoid unintended side effects (e.g. JSON mixed with progress on stdout; destructive command with no `--dry-run`/`--yes`). |
-| High | Agents act but are likely to fail, retry incorrectly, or block (e.g. prompt with no `--no-input`; opaque exit `1` for every error class). |
-| Medium | Agents finish only with extra probing or brittle assumptions (e.g. undocumented output fields, missing help examples). |
+| Critical | Agents cannot continue, lose data or cause unintended side effects (e.g. a hang on a prompt with no `--no-input`; a destructive command with no `--dry-run`/`--yes`; a leaked secret). |
+| High | Agents misparse, misread or act wrongly (e.g. JSON mixed with progress on stdout; a secret on argv; silent success on a typo). |
+| Medium | Agents finish only with extra probing or brittle assumptions (e.g. opaque exit `1` for every error class; undocumented output fields; missing help examples). |
 | Low | Polish or consistency only (e.g. nonstandard alias when long flag is documented). |
 
 How findings are scored is defined in the audit skill, not here.
@@ -51,6 +51,7 @@ Names of specific companion skills are left out on purpose; see `../decisions/co
 
 Do not call a CLI agent-ready until:
 
+- `agentic-maker probe cli <binary> --safe "<read-only args>"` (once per read command that needs arguments) reports no High finding. It runs the CLI the way an agent would, changes nothing and is on your PATH; fix what it reports and run it again.
 - The five core audit checks pass.
 - The JSON envelope is stable enough to script against across commands.
 - `--help` documents the command contract (examples, output fields, exit codes).

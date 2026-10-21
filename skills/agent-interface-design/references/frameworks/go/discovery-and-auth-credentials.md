@@ -47,7 +47,8 @@ func resolveCredentials(cmd *cobra.Command) (string, string, error) {
     }
 
     // 4. Try credential helper / OS credential store
-    if token, err := getFromCredentialHelper(); err == nil {
+    eff, _ := loadEffectiveConfig(cmd) // the helper is queried for the host actually in use
+    if token, err := getFromCredentialHelper(fmt.Sprint(eff.APIUrl.Value)); err == nil {
         return token, "credential_helper", nil
     }
 
@@ -56,18 +57,18 @@ func resolveCredentials(cmd *cobra.Command) (string, string, error) {
         return token, "workload_identity", nil
     }
 
-    return "", "", fmt.Errorf("no credentials found") // map to ExitAuth (4)
+    return "", "", fmt.Errorf("no credentials found: %w", ErrUnauthorized) // exitWithError maps it to ExitAuth (4)
 }
 ```
 
-> Reconciled: the source also accepted `--token <value>` on the command line, which exposes the secret in the process list; this file drops that branch and keeps `--token-file` and `--token-stdin`.
+> Note: pass the token only with `--token-file` or `--token-stdin`; a `--token <value>` flag is not offered because it exposes the secret in the process list.
 
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#Token Refresh -->
 ## Token refresh
 
 ```go
-func getAuthenticatedClient(ctx context.Context) (*Client, error) {
-    token, source, err := resolveCredentials()
+func getAuthenticatedClient(ctx context.Context, cmd *cobra.Command) (*Client, error) {
+    token, source, err := resolveCredentials(cmd)
     if err != nil {
         return nil, err
     }
@@ -76,12 +77,12 @@ func getAuthenticatedClient(ctx context.Context) (*Client, error) {
     if isExpired(token) {
         refreshToken, err := getRefreshToken(source)
         if err != nil {
-            return nil, fmt.Errorf("token expired and no refresh token: %w", err)
+            return nil, fmt.Errorf("token expired and no refresh token: %w: %w", ErrUnauthorized, err) // Go 1.20+: both stay matchable
         }
 
         newToken, err := refreshAccessToken(ctx, refreshToken)
         if err != nil {
-            return nil, fmt.Errorf("token refresh failed: %w", err)
+            return nil, fmt.Errorf("token refresh failed: %w: %w", ErrUnauthorized, err)
         }
 
         // Store new token
@@ -126,7 +127,7 @@ func redactSensitive(v interface{}) interface{} {
 }
 
 func isSensitiveKey(key string) bool {
-    sensitive := []string{"password", "token", "secret", "key", "credential", "auth"}
+    sensitive := []string{"password", "token", "secret", "api_key", "apikey", "credential", "authorization"}
     lower := strings.ToLower(key)
     for _, s := range sensitive {
         if strings.Contains(lower, s) {
@@ -137,14 +138,18 @@ func isSensitiveKey(key string) bool {
 }
 
 // Git-style credential helper support
-func getFromCredentialHelper() (string, error) {
+func getFromCredentialHelper(apiURL string) (string, error) {
+    u, err := url.Parse(apiURL)
+    if err != nil {
+        return "", err
+    }
     helper := os.Getenv("MYCLI_CREDENTIAL_HELPER")
     if helper == "" {
         helper = "mycli-credential-helper"
     }
 
     cmd := exec.Command(helper, "get")
-    cmd.Stdin = strings.NewReader("host=api.example.com\nprotocol=https\n")
+    cmd.Stdin = strings.NewReader("host=" + u.Host + "\nprotocol=" + u.Scheme + "\n")
 
     output, err := cmd.Output()
     if err != nil {

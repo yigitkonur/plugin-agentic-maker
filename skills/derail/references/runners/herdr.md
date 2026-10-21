@@ -3,7 +3,7 @@
 > Read when: the scenario needs what a person would see - trust dialogs, approvals, multi-turn, the real TUI - or the user asks for a live round. Status: watched working on herdr 0.9.5 with a Claude worker (2026-10-20): the sequence below ran as written; evidence in `docs/evidence/07-live-herdr.md`. Codex and agy workers were not started.
 
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#Herdr Native Runner & CLI Orchestration Guide -->
-herdr is a terminal workspace manager that runs coding agents in tabs and panes and reports their state (`idle`, `working`, `blocked`, `done`). This plugin does **not** re-document herdr. If the `herdr-conductor` plugin is installed, follow its `herdr` skill for syntax and rules; otherwise `herdr --help`, `herdr agent --help` and `herdr --skill` are the authority. What follows is only what a derailment round needs and where it differs from the old runner guide.
+herdr is a terminal workspace manager that runs coding agents in tabs and panes and reports their state (`idle`, `working`, `blocked`, `done`). This plugin does **not** re-document herdr. If the `herdr-conductor` plugin is installed, follow its `herdr` skill for syntax and rules; otherwise `herdr --help`, `herdr agent --help` and `herdr --skill` are the authority. What follows is only what a derailment round needs.
 
 ## The rules that matter here (from herdr-conductor)
 
@@ -29,7 +29,7 @@ List workspaces, panes and agents only to find ids; the replies already carry th
 Prefer a new tab in the current workspace over a new workspace; a workspace is only needed if the user wants the round isolated.
 
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#Create a Tab & Resolve its Pane ID -->
-Prepare first: `agentic-maker run <scenario> --prepare` seeds the workspace, writes the wrapper plugin and prints the exact `claude_args`, the prompt and a `session_id`; it launches nothing (`--workspace-dir <dir>` reuses one scratch directory, so the trust dialog below is answered once; the directory must be new, empty or made by an earlier `--prepare`, because it is emptied each time, and `--dry-run` is refused with `--prepare`). Then `herdr tab create --workspace <w> --cwd <the prepared workspace> --label derail-<name> --no-focus`. Take the ids from the reply: `.result.tab.tab_id` and `.result.root_pane.pane_id` (observed on 0.9.5; the old guide's `.result.pane.id` does not exist). The tab's cwd is the seeded temp workspace from `run`'s fixtures, never the target project.
+Prepare first: `agentic-maker run <scenario> --prepare` seeds the workspace, writes the wrapper plugin and prints the exact `claude_args`, the prompt and a `session_id`; it launches nothing (`--workspace-dir <dir>` reuses one scratch directory, so the trust dialog below is answered once; the directory must be new, empty or made by an earlier `--prepare`, because it is emptied each time, and `--dry-run` is refused with `--prepare`). Then `herdr tab create --workspace <w> --cwd <the prepared workspace> --label derail-<name> --no-focus`. Take the ids from the reply: `.result.tab.tab_id` and `.result.root_pane.pane_id` (observed on 0.9.5; there is no `.result.pane.id`). The tab's cwd is the seeded temp workspace from `run`'s fixtures, never the target project.
 
 <!-- src: audit-skill-by-derailment/references/herdr-native-runner.md#3. Launching Worker Agents (`herdr agent start`) -->
 ## 3. Start the worker
@@ -43,4 +43,4 @@ Prepare first: `agentic-maker run <scenario> --prepare` seeds the workspace, wri
 
 ## Continue
 
-Reporting back, waiting, capturing the record, keys, teardown and the old step-by-step loop: [herdr-record-and-teardown](herdr-record-and-teardown.md).
+Reporting back, waiting, capturing the record, keys, teardown and the step-by-step loop: [herdr-record-and-teardown](herdr-record-and-teardown.md).

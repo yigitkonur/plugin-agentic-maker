@@ -38,32 +38,47 @@ const (
     ExitPartial    = 8
 )
 
-func exitWithError(err error) {
-    var code int
+// exitWithError maps an error to the exit table and, in --json mode, prints the failure envelope
+// once on stdout (../../cli/envelope-and-errors.md); the human line always goes to stderr.
+func exitWithError(err error, jsonMode bool) {
+    code, class := ExitCrash, "internal"
     switch {
     case errors.Is(err, ErrNotFound):
-        code = ExitNotFound
+        code, class = ExitNotFound, "not_found"
     case errors.Is(err, ErrUnauthorized), errors.Is(err, ErrForbidden):
-        code = ExitAuth
+        code, class = ExitAuth, "auth"
     case errors.Is(err, ErrConflict), errors.Is(err, ErrAlreadyExists):
-        code = ExitConflict
+        code, class = ExitConflict, "conflict"
     case errors.Is(err, ErrValidation), errors.Is(err, ErrInvalidInput):
-        code = ExitValidation
-    case errors.Is(err, ErrTimeout), errors.Is(err, ErrRateLimit), errors.Is(err, ErrUnavailable):
-        code = ExitTransient
+        code, class = ExitValidation, "validation"
+    case errors.Is(err, ErrTimeout):
+        code, class = ExitTransient, "timeout"
+    case errors.Is(err, ErrRateLimit):
+        code, class = ExitTransient, "rate_limit"
+    case errors.Is(err, ErrUnavailable):
+        code, class = ExitTransient, "dependency_failed"
     case errors.Is(err, ErrPartial):
-        code = ExitPartial
+        code, class = ExitPartial, "partial_success"
     case errors.Is(err, ErrUsage):
-        code = ExitUsage
-    default:
-        code = ExitCrash
+        code, class = ExitUsage, "usage"
+    case errors.Is(err, context.Canceled):
+        code = 130 // SIGINT stop; a SIGTERM stop exits 143 (../../cli/timeouts-and-signals.md)
     }
-    fmt.Fprintln(os.Stderr, err) // human diagnostic; in --json mode print the envelope to stdout instead
+    fmt.Fprintln(os.Stderr, err)
+    if jsonMode {
+        json.NewEncoder(os.Stdout).Encode(map[string]interface{}{
+            "ok": false, "schema_version": "1.0",
+            "error": map[string]interface{}{
+                "class": class, "code": strings.ToUpper(class), "message": err.Error(),
+                "retryable": code == ExitTransient,
+            },
+        })
+    }
     os.Exit(code)
 }
 ```
 
-> Reconciled: the sources named the auth constant `ExitAuthDenied` in one file and `ExitAuth` in another, and stopped at 7; this file uses `ExitAuth` and adds `ExitPartial = 8` (and an `ErrPartial` case) for the 0-8 table.
+> Note: the auth constant is `ExitAuth`, and `ExitPartial = 8` (with an `ErrPartial` case) completes the 0-8 exit-code table.
 
 <!-- src: audit-agentic-cli/references/discovery-and-auth.md#Implementation Example (Go/Cobra) -->
 ## Help with examples
@@ -95,7 +110,7 @@ func init() {
     deployCmd.Flags().Bool("dry-run", false, "Preview changes without applying")
     deployCmd.Flags().Bool("wait", true, "Wait for deployment to complete")
     deployCmd.Flags().Duration("timeout", 5*time.Minute, "Maximum wait time")
-    deployCmd.Flags().Bool("json", false, "Output result as JSON")
+    // --json is the root persistent flag; do not redeclare it here (a local copy shadows -j)
 
     deployCmd.MarkFlagRequired("env")
 }
@@ -128,7 +143,10 @@ var versionCmd = &cobra.Command{
         }
 
         if jsonOutput, _ := cmd.Flags().GetBool("json"); jsonOutput {
-            return json.NewEncoder(os.Stdout).Encode(info)
+            return json.NewEncoder(os.Stdout).Encode(map[string]interface{}{
+                "ok": true, "command": "version", "schema_version": "1.0",
+                "result": info, "meta": map[string]interface{}{},
+            })
         }
 
         fmt.Printf("mycli %s (commit: %s, built: %s)\n",

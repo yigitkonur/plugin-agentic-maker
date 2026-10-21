@@ -44,15 +44,6 @@ const rateLimiters: Record<string, TokenBucket> = {
   ai:    new TokenBucket({ capacity: 10,  refillRate: 0.5 }), // tight: AI calls are expensive
 };
 
-const toolCategory: Record<string, keyof typeof rateLimiters> = {
-  search_files:   "read",
-  list_resources: "read",
-  update_record:  "write",
-  create_issue:   "write",
-  analyze_code:   "ai",
-  summarize:      "ai",
-};
-
 function withRateLimit(category: string, handler: Function) {
   return async (...args: any[]) => {
     const bucket = rateLimiters[category];

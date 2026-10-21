@@ -14,7 +14,10 @@ type CreateRequest struct {
 
 func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
     var req CreateRequest
-    json.NewDecoder(r.Body).Decode(&req)
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        writeError(w, fmt.Errorf("invalid request body: %w", ErrValidation)) // exit 6 class
+        return
+    }
 
     // Check idempotency cache
     if req.IdempotencyKey != "" {
@@ -57,6 +60,7 @@ import (
     "math/rand"
     "net/http"
     "strconv"
+    "sync"
     "time"
 )
 
@@ -111,6 +115,10 @@ func Do(ctx context.Context, cfg Config, operation func() error) error {
             return ctx.Err()
         }
 
+        if attempt == cfg.MaxAttempts-1 {
+            break // no sleep before giving up
+        }
+
         // Calculate backoff
         var backoff time.Duration
         if retryErr.RetryAfter > 0 {
@@ -133,7 +141,7 @@ func Do(ctx context.Context, cfg Config, operation func() error) error {
         }
     }
 
-    return fmt.Errorf("max retries exceeded: %w", lastErr)
+    return fmt.Errorf("max retries exceeded: %w: %w", ErrUnavailable, lastErr) // exit 7
 }
 
 // HTTP client with retry
@@ -141,8 +149,15 @@ func DoHTTP(ctx context.Context, client *http.Client, req *http.Request) (*http.
     var resp *http.Response
 
     err := Do(ctx, DefaultConfig, func() error {
+        if resp != nil {
+            resp.Body.Close() // the previous 429/5xx response is abandoned
+        }
+        r := req.Clone(ctx)
+        if req.GetBody != nil { // Clone shares Body, which a first attempt consumed
+            r.Body, _ = req.GetBody()
+        }
         var err error
-        resp, err = client.Do(req.Clone(ctx))
+        resp, err = client.Do(r)
         if err != nil {
             return &RetryableError{Err: err}
         }
@@ -157,8 +172,8 @@ func DoHTTP(ctx context.Context, client *http.Client, req *http.Request) (*http.
         case http.StatusServiceUnavailable, http.StatusBadGateway, http.StatusGatewayTimeout:
             return &RetryableError{Err: fmt.Errorf("server error: %d", resp.StatusCode)}
         case http.StatusConflict:
-            // Conflict might be retryable after re-read
-            return &RetryableError{Err: fmt.Errorf("conflict")}
+            // Not retried: the table says conflict is "No (check details)". Re-read and decide, then start a new operation.
+            return fmt.Errorf("conflict: %w", ErrConflict) // exit 5
         default:
             if resp.StatusCode >= 500 {
                 return &RetryableError{Err: fmt.Errorf("server error: %d", resp.StatusCode)}
@@ -178,8 +193,8 @@ func parseRetryAfter(value string) time.Duration {
     if seconds, err := strconv.Atoi(value); err == nil {
         return time.Duration(seconds) * time.Second
     }
-    // Try HTTP date (simplified)
-    if t, err := time.Parse(time.RFC1123, value); err == nil {
+    // Try HTTP date
+    if t, err := http.ParseTime(value); err == nil {
         return time.Until(t)
     }
     return 0
@@ -209,7 +224,7 @@ func (cb *CircuitBreaker) Execute(operation func() error) error {
             cb.state = "half-open"
         } else {
             cb.mu.Unlock()
-            return errors.New("circuit breaker open")
+            return fmt.Errorf("circuit breaker open: %w", ErrUnavailable) // exit 7
         }
     }
     cb.mu.Unlock()

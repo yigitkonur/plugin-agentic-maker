@@ -71,10 +71,10 @@ A single tool that runs the CLI (the parameter descriptions carry the examples):
 
 | Flag | Short | Description | When to Use |
 |------|-------|-------------|-------------|
-| `--json` | | Structured JSON output | **Always** in agent context |
+| `--json` | `-j` | Structured JSON output | **Always** in agent context |
 | `--quiet` | `-q` | Suppress non-essential output | Cleaner parsing, reduce noise |
 | `--yes` | `-y` | Auto-approve confirmations | Non-interactive automation |
-| `--timeout <secs>` | `-t` | Set operation timeout | Long-running tasks, prevent hangs |
+| `--timeout <duration>` | | Set operation timeout | Long-running tasks, prevent hangs |
 | `--dry-run` | | Preview without executing | Validation before commit |
 | `--force` | `-f` | Override safety checks | Conflict resolution |
 | `--verbose` | `-v` | Extra debug output | Troubleshooting (not for agents) |

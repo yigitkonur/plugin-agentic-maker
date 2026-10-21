@@ -14,8 +14,8 @@ Explanation and rules: ../../mcp/design-intent-based-tools.md
 #   get_member_comments()  -> comments for one member
 
 # Intent-centric (good): one call, the server orchestrates
-@tool(description="Get activity insights for all members in a space. Returns members sorted by engagement with their posts, comments, and last active date.")
-def get_space_activity(space_id: str, days: int = 30, sort_by: str = "total_activity") -> dict:
+@mcp.tool(description="Get activity insights for all members in a space. Returns members sorted by engagement with their posts, comments, and last active date.")
+def get_space_activity(space_id: str, days: int = 30) -> dict:
     members = api.get_members(space_id)
     for m in members:
         m.activity = api.get_activity(m.id, days=days)
@@ -61,20 +61,21 @@ def get_threat_framework(app_description: str):
 
 ```python
 # Before (4 separate tools)
-create_project(name, repo)       # Tool 1
+create_project(name, repo_url)  # Tool 1
 add_env_vars(pid, vars)          # Tool 2
 create_deployment(pid, branch)   # Tool 3
 add_domain(pid, domain)          # Tool 4
 
 # After (1 workflow tool)
-@tool(description="Deploy a new project end-to-end. Creates the project, configures environment variables, deploys from the specified branch, and sets up the custom domain.")
+@mcp.tool(description="Deploy a new project end-to-end. Creates the project, configures environment variables, deploys from the specified branch, and sets up the custom domain.")
 def deploy_project(
+    name: str,
     repo_url: str,
     domain: str,
     env_vars: dict,
     branch: str = "main"
 ) -> dict:
-    pid = create_project(repo_url)
+    pid = create_project(name, repo_url)
     add_env_vars(pid, env_vars)
     deployment = create_deployment(pid, branch)
     add_domain(pid, domain)

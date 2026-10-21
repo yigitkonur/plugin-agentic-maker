@@ -11,7 +11,7 @@ kind: skill            # skill | plugin | cli | mcp
 target: skills/my-skill          # a skill or plugin directory, a CLI binary path, or an MCP config / mcp-stdio:<command>
 wrapper_name: notes              # skill dirs only: the namespace the worker sees (notes:my-skill)
 bin: target/debug/mycli          # cli: the built executable (a crate or package name is not a path)
-build: cargo build               # cli: how to produce it (the plugin does not run it unless asked)
+build: cargo build               # cli: how to produce it - a note for people and for `detect`; the plugin never runs it
 env: ["FOO_API_BASE"]            # extra environment variable NAMES passed to the worker; no secrets by default
 runner: headless                 # headless | existing
 isolation: clean                 # clean (default) | in-situ
@@ -32,10 +32,14 @@ Front matter is flat `key: value`, one key per line. A value that starts with `[
 
 ## The four sections
 
-- **Prompt:** exactly what a user would type. Everyday energy, two or three implicit constraints, **never the target's name or path** unless a user really would say it. Naming the target hides the most common skill failure - the skill not being chosen (T1) - and `run` warns when the prompt contains the target's name.
+- **Prompt:** exactly what a user would type. Everyday energy, two or three implicit constraints, **never the target's name or path** unless a user really would say it. Naming the target hides the most common skill failure - the skill not being chosen (T1) - and `run` warns when the prompt contains the target's name. The exception is a skill that only the user can start (`disable-model-invocation: true`): its prompt begins with `/<wrapper_name>:<skill>` and `run` checks that it does.
 - **Implicit constraints:** what the worker is not told but a good result respects (the output goes in the working directory; inputs stay untouched). The reader checks these.
 - **Fixtures:** how a fresh workspace is seeded. `- copy: src -> dest` lines (paths relative to the project) and, optionally, one fenced `sh` block run in the workspace with a minimal environment.
 - **Receipts:** what must be true afterwards, one per line, evaluated by `agentic-maker check receipts`. This is the anti-self-report ledger.
+
+## Tools the worker gets
+
+Two lists decide what the worker can do. `tools` is which built-in tools exist for it at all (default for a skill or plugin: `Read Glob Grep Skill Bash Write Edit Agent`; for a CLI: `Read Glob Grep Bash`; for an MCP server: `Read Glob Grep`). `allowed_tools` is which of them run without a prompt; anything else is denied (`dontAsk`), recorded as a permission denial and shown to the reader. The default `allowed_tools` for a skill or plugin is read-only: `Read Glob Grep Skill Agent`. A task that writes files needs `Write` (or `Edit`) in `allowed_tools`, and in `tools` too for a CLI or MCP target; one that runs the skill's scripts needs `Bash(<pattern>)`, for example `Bash(python3 *)`. For a CLI the default `allowed_tools` is `Read Glob Grep` plus the binary under test; for an MCP server, `Read Glob Grep` plus the server's tools. `run --dry-run` warns when the receipts expect a file the worker cannot write: a run that dies on permissions is a defect of the run (O6), not of the target.
 
 ## Receipt kinds
 

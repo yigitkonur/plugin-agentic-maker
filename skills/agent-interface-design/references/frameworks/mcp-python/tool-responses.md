@@ -13,7 +13,7 @@ class ResponseFormat(Enum):
     DETAILED = "detailed"
     CONCISE = "concise"
 
-@tool
+@mcp.tool()  # mcp = FastMCP(...)
 def get_customer(customer_id: str, response_format: ResponseFormat = ResponseFormat.CONCISE):
     data = fetch_customer(customer_id)
 
@@ -37,7 +37,7 @@ def get_customer(customer_id: str, response_format: ResponseFormat = ResponseFor
 ## Pattern 4: Truncation guidance before the data
 
 ```python
-@tool
+@mcp.tool()
 def search_logs(query: str, limit: int = 50) -> dict:
     results = log_store.search(query, limit=limit + 1)
     truncated = len(results) > limit
@@ -62,7 +62,7 @@ def search_logs(query: str, limit: int = 50) -> dict:
 ## Pattern 5: Next-step hints in a successful response
 
 ```python
-@tool
+@mcp.tool()
 def create_project(name: str, repo_url: str) -> dict:
     project = api.create_project(name=name, repo=repo_url)
     return {
@@ -71,9 +71,9 @@ def create_project(name: str, repo_url: str) -> dict:
         "project_name": name,
         "message": f"Project '{name}' created successfully.",
         "next_steps": [
-            f"Use add_environment_variables(project_id='{project.id}') to configure env vars.",
+            f"Use add_env_vars(project_id='{project.id}') to configure env vars.",
             f"Use create_deployment(project_id='{project.id}', branch='main') to deploy.",
-            f"Use add_custom_domain(project_id='{project.id}', domain='...') to set up a domain."
+            f"Use add_domain(project_id='{project.id}', domain='...') to set up a domain."
         ]
     }
 ```

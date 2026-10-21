@@ -12,7 +12,7 @@ The injection vectors in `threat-catalog.md` all land payloads in model context.
 3. Tool output (ATPA). Sanitize before the model sees it. A tool response is untrusted data, not instructions.
 4. External data read by a tool (XPIA). Issues, emails, pages, files, messages: treat as red/untrusted. Use "MCP colors" to keep red tools out of contexts with blue tools.
 5. Sampling requests/responses (covert invocation, conversation hijack, resource theft). Gate each sampling request; strip instruction-like patterns from responses (`../protocol-sampling.md`).
-6. Elicitation prompts (phishing). Enforce the spec `MUST NOT` for credentials; label the server identity clearly (`../protocol-elicitation.md`).
+6. Elicitation prompts (phishing). Enforce the spec `MUST NOT` for secrets in form mode (URL mode is for those); label the server identity clearly (`../protocol-elicitation.md`).
 
 Defender's rule of thumb: every piece of text that reaches the model from an MCP server is user-input-equivalent. Apply the same guardrails you apply to untrusted form fields. Steering text in tool output is a lever and the same channel is an attack surface; the bridge (namespaced guidance plus an `allowed_next_tools` list) is in `../../decisions/steering-contract.md`.
 

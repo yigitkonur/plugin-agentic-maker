@@ -42,6 +42,8 @@ def lint(path):
             head = "\n".join(lines[1:end])
             if "as_of:" not in head or "verify_before_citing:" not in head:
                 errs.append("fresh/ front matter lacks as_of or verify_before_citing")
+            elif re.search(r"^as_of:\s*(unknown|)\s*$", head, re.M):
+                errs.append("fresh/ as_of must be a date (YYYY, YYYY-MM or YYYY-MM-DD), not unknown")
             body = lines[end + 1:]
     nonblank = [l for l in body if l.strip()]
     if not nonblank or not nonblank[0].startswith("# "):
@@ -59,6 +61,15 @@ def lint(path):
                 fence = None
     if fence is not None:
         errs.append("unbalanced code fence")
+    infence = None
+    for i, l in enumerate(lines, 1):                  # an empty code span ("relative to ``.") is a path that went missing
+        m = FENCE.match(l)
+        if m:
+            tok = m.group(1)
+            infence = None if (infence and tok[0] == infence[0] and len(tok) >= infence[1] and l.strip() == tok) else (infence or (tok[0], len(tok)))
+            continue
+        if infence is None and l.count("``") == 1 and re.search(r"(?<!`)``(?!`)[.,;:)]", l):
+            errs.append("line %d: empty code span (``) followed by punctuation" % i)
     for m in MARKER.finditer(raw):
         for k in m.group(1).split("|"):
             if "#" not in k:

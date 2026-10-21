@@ -5,6 +5,7 @@ existing: ingest a record that already exists (no launch).
 """
 import json
 import os
+import re
 import shlex
 import shutil
 import signal
@@ -14,11 +15,17 @@ import time
 import uuid
 
 from agentic_maker import scenario as sc_mod
+from agentic_maker import sessions as sessions_mod
 from agentic_maker import trace as trace_mod
-from agentic_maker.common import read_json, runs_dir, sha256_file, slug, write_json
+from agentic_maker.common import ensure_state_gitignore, read_json, runs_dir, sha256_file, slug, write_json
 from agentic_maker.envelope import CliError
 
-PASS_PREFIXES = ("CLAUDE_CODE_", "ANTHROPIC_", "CLAUDE_CONFIG_DIR", "CLOUD_ML_", "AWS_", "GOOGLE_", "VERTEX_")
+# what claude itself needs to start and to authenticate; cloud-provider credentials are added only when that provider is in use
+PASS_PREFIXES = ("CLAUDE_CODE_", "ANTHROPIC_", "CLAUDE_CONFIG_DIR")
+PROVIDER_PREFIXES = {"CLAUDE_CODE_USE_BEDROCK": ("AWS_",), "CLAUDE_CODE_USE_VERTEX": ("CLOUD_ML_", "GOOGLE_", "VERTEX_"),
+                     "CLAUDE_CODE_USE_FOUNDRY": ("AZURE_",)}
+# these identify or authenticate the orchestrator's own session (its messaging socket and token); a worker must not hold them
+NEVER_PASS = ("CLAUDE_CODE_MESSAGING_", "CLAUDE_CODE_SESSION_", "CLAUDE_CODE_CHILD_SESSION", "HERDR_")
 PASS_NAMES = ("PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "LC_ALL", "LC_CTYPE", "TMPDIR", "TERM", "TZ")
 DEFAULT_TOOLS = {
     "skill": ["Read", "Glob", "Grep", "Skill", "Bash", "Write", "Edit", "Agent"],
@@ -45,12 +52,13 @@ As you work, flag only the moments where the provided text changes your path:
 
 
 def clean_env(meta, extra=None):
-    """A short allowlist: what claude itself needs, the scenario's `env:` names, and nothing from herdr."""
+    """A short allowlist: what claude itself needs, the credentials of the cloud provider it is set to use, the scenario's `env:` names, and nothing from herdr."""
     env, names = {}, []
+    prefixes = PASS_PREFIXES + tuple(p for flag, ps in PROVIDER_PREFIXES.items() if os.environ.get(flag) not in (None, "", "0", "false") for p in ps)
     for k, v in os.environ.items():
-        if k == "ANTHROPIC_MODEL" or k.startswith("HERDR_"):
+        if k == "ANTHROPIC_MODEL" or k.startswith(NEVER_PASS):
             continue
-        if k in PASS_NAMES or k.startswith(PASS_PREFIXES) or k in (meta.get("env") or []):
+        if k in PASS_NAMES or k.startswith(prefixes) or k in (meta.get("env") or []):
             env[k] = v
             names.append(k)
     for k, v in (extra or {}).items():
@@ -61,6 +69,17 @@ def clean_env(meta, extra=None):
 
 def _abs(root, p):
     return p if os.path.isabs(p) else os.path.abspath(os.path.join(root, p))
+
+
+IGNORE_COPY = shutil.ignore_patterns(".git", "__pycache__", ".agentic-maker", "node_modules")
+
+
+def _copied_plugin(plugin_dir, run_dir):
+    """The worker gets a copy: a scenario that allows Write, Edit or Bash must not be able to change the real target."""
+    c = os.path.join(run_dir, "plugin")
+    shutil.rmtree(c, ignore_errors=True)
+    shutil.copytree(plugin_dir, c, ignore=IGNORE_COPY)
+    return c
 
 
 def _wrapper_plugin(skill_dir, run_dir, name):
@@ -91,7 +110,8 @@ def plan(root, sc, args, run_dir):
         if not os.path.isdir(t):
             raise CliError("not_found", "target_not_found", "target directory not found: %s" % t)
         if os.path.exists(os.path.join(t, ".claude-plugin", "plugin.json")):
-            plugin_dir, wrapped = t, False
+            plugin_dir, wrapped = _copied_plugin(t, run_dir), False
+            warnings.append("the worker runs on a copy of the plugin made for each run; edits you make to the target are picked up on the next run")
         elif os.path.exists(os.path.join(t, "SKILL.md")):
             wname = str(meta.get("wrapper_name") or "target")
             plugin_dir, wrapped = _wrapper_plugin(t, run_dir, wname), True
@@ -103,7 +123,7 @@ def plan(root, sc, args, run_dir):
         # --restricted confines Read/Glob/Grep to the working directory; a skill must be able to read its own
         # references and scripts, exactly as it can after a normal install (M0 E9)
         cmd += ["--plugin-dir", plugin_dir, "--add-dir", plugin_dir]
-        exposure = {"plugin_dir": plugin_dir, "wrapped_loose_skill": wrapped, "target": t}
+        exposure = {"plugin_dir": plugin_dir, "wrapped_loose_skill": wrapped, "target": t, "copied": True}
     elif kind == "cli":
         binp = _abs(root, str(meta.get("bin") or target.split(":", 1)[-1]))
         if not os.path.exists(binp):
@@ -209,6 +229,7 @@ def contamination(stream_path, kept_plugin_names):
 
 
 def next_take_dir(root, run_id, scenario_name):
+    ensure_state_gitignore(root)
     base = os.path.join(runs_dir(root), run_id, slug(scenario_name))
     os.makedirs(base, exist_ok=True)
     n = len([d for d in os.listdir(base) if d.isdigit()]) + 1
@@ -245,10 +266,13 @@ def run_headless(root, sc, args):
            "note": "the budget is a client-side estimate that can overshoot slightly; subscription auth has no per-token bill but uses plan limits"}
     try:
         cmd, exposure, warnings, path_dirs, toolset = plan(root, sc, args, scratch)
-        warnings = warnings + sc_mod.target_name_warnings(sc)
+        warnings = warnings + sc_mod.target_name_warnings(sc, root) + sc_mod.writability_warnings(sc, toolset["allowed_tools"], toolset["tools"])
         if args.get("dry_run"):
             shown = [("<prompt>" if i == PROMPT_INDEX else c) for i, c in enumerate(cmd)]
-            return ({"dry_run": True, "plan": est, "exposure": exposure, "tools": toolset, "command": shown, "run_id": run_id},
+            # `run` evaluates the receipts when the take ends; `cmd` receipts run through /bin/sh as you, so the approval to spend covers reading them here
+            receipts = [{"kind": r["kind"], "spec": r["spec"]} for r in sc_mod.receipt_specs(sc)]
+            return ({"dry_run": True, "plan": est, "exposure": exposure, "tools": toolset, "env_names": clean_env(meta)[1], "command": shown, "run_id": run_id,
+                     "receipts_run_after": receipts},
                     warnings, 0)
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
@@ -342,7 +366,11 @@ def run_existing(root, sc, args):
     src = args.get("from_file")
     if not src:
         raise CliError("usage", "from_required", "--runner existing needs --from <record file>",
-                       suggestion="pass a Claude stream-json file or a session transcript JSONL")
+                       suggestion="pass a Claude stream-json file or a session transcript JSONL, or session:<id>, or herdr:<pane>")
+    resolved = None
+    if re.match(r"^(session|herdr):", src):
+        resolved = sessions_mod.resolve(src)
+        src = resolved["path"]
     src = _abs(root, src)
     if not os.path.isfile(src):
         raise CliError("not_found", "record_not_found", "no such record: %s" % src)
@@ -367,7 +395,9 @@ def run_existing(root, sc, args):
               "tool_calls": stats["tool_calls"], "tool_errors": stats["tool_errors"], "trace_md": md, "trace_norm": norm,
               "env_json": os.path.join(take, "env.json"), "isolated": cont.get("isolated"), "unparsed": stats["unparsed"],
               "unknown_event_types": stats["unknown"]}
-    return result, sc_mod.target_name_warnings(sc), 0
+    if resolved:
+        result["session"] = {k: resolved[k] for k in ("harness", "id", "path")}
+    return result, sc_mod.target_name_warnings(sc, root) + (resolved["warnings"] if resolved else []), 0
 
 
 def prepare_live(root, sc, args):

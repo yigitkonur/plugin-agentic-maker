@@ -2,20 +2,22 @@
 
 > Read when: the user says "I want to build an MCP server" and the repo has no MCP yet. Run this interview before any code or other decision tree.
 
+Paths in this file are relative to `${CLAUDE_PLUGIN_ROOT}/skills/agent-interface-design/references/`, except `mcp-design-workflow.md`, which sits beside this file.
+
 <!-- src: audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Brainstorming a New MCP from Scratch | audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Decision Tree -->
 ## Decision tree
 
-The interview collects intent, converts it to an architecture sketch (`mcp-design-workflow.md`), picks a framework (`skills/agent-interface-design/references/fresh/mcp-framework-picker.md`), and routes to a companion build skill if one is installed (`skills/agent-interface-design/references/decisions/companion-routing.md`).
+The interview collects intent, converts it to an architecture sketch (`mcp-design-workflow.md`), picks a framework (`fresh/mcp-framework-picker.md`), and routes to a companion build skill if one is installed (`decisions/companion-routing.md`).
 
 ```
 START: User wants to build a new MCP server
 |
 +-- Q1: End-user task in one sentence?
 |   +-- unclear / restates the API  --> pause; run the design-phase question set first
-|                                       (skills/agent-interface-design/references/decisions/design-phase.md)
+|                                       (decisions/design-phase.md)
 |
 +-- Q2: Does an official CLI / well-maintained SDK already cover it?
-|   +-- YES --> read skills/agent-interface-design/references/decisions/mcp-vs-cli-evidence.md; MCP may not be the primitive
+|   +-- YES --> read decisions/mcp-vs-cli-evidence.md; MCP may not be the primitive
 |   +-- NO  --> continue
 |
 +-- Q3: Local or remote?
@@ -48,14 +50,14 @@ START: User wants to build a new MCP server
 11. **Advanced protocol features** — "Do you need sampling or elicitation? If yes, client support is uneven — see `mcp/protocol-*` before committing."
 12. **Success metric** — "How will you know this MCP is working 3 months from now? Tool-call success rate, task completion in <N steps, cost per session, user retention."
 
-Paths in the questions are relative to `skills/agent-interface-design/references/`. Q5(d): detect CIMD or DCR support from the authorization-server metadata instead of assuming either; prefer Client ID Metadata Documents where the client supports them (see `mcp/security/*`).
+Paths in the questions are relative to `${CLAUDE_PLUGIN_ROOT}/skills/agent-interface-design/references/`. Q5(d): detect CIMD or DCR support from the authorization-server metadata instead of assuming either; prefer Client ID Metadata Documents where the client supports them (see `mcp/security/*`).
 
-> Reconciled: the sources treated CIMD and DCR differently in different places; this file keeps the question as written and the stance is: prefer CIMD where the client supports it, keep DCR for clients without it, never assume either.
+> Note: prefer CIMD where the client supports it, keep DCR for clients without it, never assume either.
 
 <!-- src: audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Routing After This Tree -->
 ## Routing after the interview
 
-Paths relative to `skills/agent-interface-design/references/`.
+Paths relative to `${CLAUDE_PLUGIN_ROOT}/skills/agent-interface-design/references/`.
 
 - Tool granularity and intent-based design: `decisions/design-phase.md`
 - Tool count >10, progressive discovery, toolsets: `decisions/tool-count.md`

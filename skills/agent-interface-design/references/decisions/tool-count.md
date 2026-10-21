@@ -7,7 +7,7 @@
 
 Every tool in the prompt costs tokens and degrades routing accuracy past a model-specific threshold. Treat the numbers below as diagnostic cues, not verdicts.
 
-> Reconciled: the sources gave tool-count ceilings of 10, 20, 30 and 40 and different per-model caps; this file uses up to 20 active tools as the default comfortable range, about 30 as a warning, and 40 or more as the point where progressive discovery is needed. Per-model sweet spots and client caps are in `fresh/tool-count-by-model.md`.
+> Note: up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute); 100 or more adds semantic search. "Progressive discovery" therefore has two grades: showing only the relevant group past about 20, and meta-tools at 40 or more. Per-model sweet spots and client caps are in `fresh/tool-count-by-model.md`.
 
 ```
 START: How many tools does your server expose?
@@ -26,7 +26,7 @@ START: How many tools does your server expose?
 |   +-- --> mcp/budget-*
 |
 +-- 20-40 tools  (about 30 is a warning)
-|   +-- Use progressive discovery (expose only relevant tools per task)
+|   +-- Expose only the tools the task needs (progressive discovery, first grade)
 |   +-- Option A: Tool groups -- predefine groups, expose per context
 |   |   (e.g., "code-review" group = read_file, search_code, get_diff)
 |   +-- Option B: Session-based unlocking -- start with 3-5 always-on
@@ -34,7 +34,7 @@ START: How many tools does your server expose?
 |   +-- Keep the target model's active-set cap in mind (fresh/tool-count-by-model.md)
 |   +-- --> mcp/budget-*
 |
-+-- 40-100 tools  (progressive discovery needed)
++-- 40-100 tools  (meta-tools needed)
 |   +-- Use meta-tools: list_tools / describe_tools / execute_tool
 |   +-- Only 3 tools in prompt regardless of catalog size
 |   +-- Hierarchical prefixes for tool IDs (/domain/entity/action)

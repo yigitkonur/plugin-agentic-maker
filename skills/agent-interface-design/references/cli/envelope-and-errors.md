@@ -20,7 +20,7 @@ Every agent-friendly CLI supports structured JSON output.
 | Structure | Prefer flat over deeply nested |
 | Types | Consistent: numbers stay numbers, dates as ISO 8601 |
 
-> Reconciled: the sources put error JSON on stdout in one file and stderr in another; this file uses one rule. In `--json` mode the envelope (success and failure) is written once to stdout; stderr carries human diagnostics only and never JSON. A CLI that varies by case, or that documents neither, is the finding.
+> Note: in `--json` mode the envelope (success and failure) is written once to stdout; stderr carries human diagnostics only and never JSON. A CLI that varies by case, or that documents neither, is the finding.
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Success Envelope -->
 ## Success envelope
@@ -49,7 +49,7 @@ Every agent-friendly CLI supports structured JSON output.
 | `command` | string | The command that was executed |
 | `schema_version` | string | Output schema version for forward compatibility |
 | `result` | object | The actual operation result |
-| `meta` | object | Metadata about the response |
+| `meta` | object | Metadata about the response. `meta.total_count` is the number of items available for a list operation; a paginated list carries the same figure as `result.total` (`pagination.md`): emit one of the two, `result.total`, not both |
 
 <!-- src: audit-agentic-cli/references/output-contracts.md#Error Envelope -->
 ## Error envelope

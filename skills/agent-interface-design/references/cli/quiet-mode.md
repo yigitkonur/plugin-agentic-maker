@@ -27,7 +27,7 @@ If `--quiet` and `--json` are both given, the CLI must pick one deterministicall
 <!-- src: audit-agentic-cli/references/output-contracts.md#When to Use Quiet Mode -->
 ## When to use quiet mode
 
-- Piping to other commands: `mycli list --quiet | xargs mycli delete`
+- Piping to other commands: `mycli list --quiet | xargs -n1 mycli get`
 - Capturing IDs in variables: `ID=$(mycli create --quiet)`
 - Counting results: `mycli list --quiet | wc -l`
 

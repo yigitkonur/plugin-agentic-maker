@@ -7,7 +7,7 @@
 
 Every item is yes/no. Work top to bottom before shipping a new MCP integration. There are 36 items (the source heading said "30+"). Authorization detail lives in the auth files (`auth-audit-checklist.md`, `auth-flows.md`, `auth-client-identity.md`); keep these binary checks here.
 
-> Reconciled: the sources variously recommended CIMD over DCR or treated DCR as the baseline; this file prefers Client ID Metadata Documents where the client supports them, keeps Dynamic Client Registration for clients without them, and never assumes either: detect support from the authorization-server metadata (see auth-client-identity.md).
+> Note: prefer Client ID Metadata Documents (CIMD) where the client supports them; keep Dynamic Client Registration (DCR) for clients without them; never assume either. Detect support from the authorization-server metadata (see auth-client-identity.md).
 
 **Trust and supply chain**
 
@@ -49,10 +49,10 @@ Every item is yes/no. Work top to bottom before shipping a new MCP integration. 
 
 **Capability and consent**
 
-27. Is explicit user consent required before every tool invocation?
+27. Is explicit user consent required before every tool invocation, with the only exception being a standing approval the user or host policy gave (for example a read tier from a server the user trusts; see `least-privilege-and-confirmation.md`)?
 28. Is explicit user consent required before each sampling request?
 29. Are sampling requests rate-limited and monitored for token-consumption anomalies (#10)?
-30. Does the server abstain from eliciting sensitive info (no passwords / SSN / financials via `elicitation/create`)?
+30. Does the server abstain from eliciting secrets in form mode (no passwords, API keys, tokens or payment data via `elicitation/create` form mode; URL mode for those)?
 31. Is there a deny list keeping "red" (untrusted-data-reading) tools out of the same context as "blue" (critical-action) tools?
 
 **Input and output validation**
@@ -72,5 +72,3 @@ Every item is yes/no. Work top to bottom before shipping a new MCP integration. 
 - Content sanitization, PII tokenization, HMAC schema signing, SSRF blocking and delegated-permission design: `untrusted-content-and-pii.md`, `tool-schema-integrity.md`, `least-privilege-and-confirmation.md`, `oauth-scopes-ssrf-sessions.md`.
 - OAuth confused deputy, token-audience binding (RFC 8707), DCR impersonation vs CIMD, session lifecycle and token-passthrough hardening: `auth-attack-primitives.md`, `auth-client-identity.md`, `auth-obo-and-token-passthrough.md`, `auth-audit-checklist.md`.
 - Injection-surface advice: `threat-delivery-surfaces.md`. Posture guidance: `../../decisions/security-posture.md`; pre-launch gate: `../../decisions/production-readiness.md`.
-
-> Reconciled: the source routed to tool-descriptions.md, tool-responses.md and decision-trees/response-format.md, which are not part of this file set; those routes are dropped here and the injection-surface advice is kept in threat-delivery-surfaces.md.

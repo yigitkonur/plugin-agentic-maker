@@ -28,7 +28,7 @@ class StreamEvent:
             self.timestamp = datetime.now(timezone.utc).isoformat()
 
 def emit_event(event: StreamEvent):
-    """Emit a single JSONL event: progress/log to stderr, results to stdout."""
+    """Emit one JSONL event in stream mode: progress/log to stderr, results to stdout."""
     d = {k: v for k, v in asdict(event).items() if v is not None}
     line = json.dumps(d)
 
@@ -134,6 +134,9 @@ class Credential:
     token: str
     source: str  # 'stdin', 'file', 'env', 'config', 'keychain', 'oidc'
 
+class AuthError(Exception):
+    exit_code = 4  # the CLI's top-level handler exits with this, class "auth"
+
 def resolve_credential(
     flag_token_file: Optional[str] = None,
     flag_token_stdin: bool = False
@@ -180,4 +183,4 @@ def resolve_credential(
     raise AuthError("No credentials found. Run 'mycli auth login' first.")  # exit 4
 ```
 
-> Reconciled: the source accepted a `--token <value>` argument (visible in `ps`) and listed OIDC in the docstring without implementing it; this file drops the argv branch, implements OIDC, and follows the one credential precedence.
+> Note: the token is never accepted as an argv value (it would be visible in `ps`); OIDC is implemented, and credentials follow the one precedence order.

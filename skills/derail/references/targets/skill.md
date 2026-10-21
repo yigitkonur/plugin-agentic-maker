@@ -2,7 +2,7 @@
 
 > Read when: the target is a skill directory (a `SKILL.md` with or without references and scripts).
 
-**Exposure:** `--plugin-dir` (a loose skill is wrapped in a generated plugin whose name you set with `wrapper_name`), `--add-dir` so the worker can read the skill's own files. The prompt never names the skill.
+**Exposure:** `--plugin-dir` (a loose skill is wrapped in a generated plugin whose name you set with `wrapper_name`), `--add-dir` so the worker can read the skill's own files. The prompt never names the skill, with one exception: a skill with `disable-model-invocation: true` cannot be chosen by a worker, only started by a slash command, so its prompt has to begin with `/<wrapper_name>:<skill>` (the dry-run tells you the exact form). Such a run tests what happens after the skill starts; whether it would be chosen (T1) cannot be observed for it.
 
 **Lens, in order:**
 1. **Trigger (T1-T3).** Was the skill chosen? The listing the worker saw is in `env.json`; the description is the only thing it had to decide with (plus the name). Several takes: report the rate.

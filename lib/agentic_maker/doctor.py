@@ -40,13 +40,19 @@ def run():
     caps["python_ok"] = sys.version_info >= (3, 9)
     claude = tools["claude"]["present"]
     if claude:
-        h = subprocess.run(["claude", "--help"], capture_output=True, text=True, timeout=20)
-        caps["claude_restricted_flag"] = "--restricted" in (h.stdout or "")
+        try:
+            h = subprocess.run(["claude", "--help"], capture_output=True, text=True, timeout=20)
+            caps["claude_restricted_flag"] = "--restricted" in (h.stdout or "")
+        except Exception:       # a slow or broken claude is a degraded machine, not a crash of doctor
+            caps["claude_restricted_flag"] = False
+            degrades.append("`claude --help` did not answer in 20 s: headless runs are reported unavailable")
         caps["claude_version_ok"] = _ver_tuple(tools["claude"]["version"]) >= (2, 1, 269)
         caps["claude_plugin_eval"] = _ok(["claude", "plugin", "eval", "--help"])
         caps["claude_plugin_validate"] = _ok(["claude", "plugin", "validate", "--help"])
         if not caps["claude_restricted_flag"]:
             degrades.append("this claude has no --restricted flag: headless runs cannot be isolated, so runs are in-situ with a contamination report; run `claude update`")
+        if not caps["claude_version_ok"]:
+            degrades.append("claude %s is older than 2.1.269, which `claude plugin eval` (eval-emit) needs; run `claude update`" % tools["claude"]["version"])
         if not caps["claude_plugin_eval"]:
             degrades.append("`claude plugin eval` is unavailable: eval-emit and trigger statistics are skipped; run `claude update`")
     else:

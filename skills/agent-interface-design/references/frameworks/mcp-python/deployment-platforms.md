@@ -28,13 +28,14 @@ from fastapi import FastAPI
 
 app = modal.App("mcp-server")
 image = modal.Image.debian_slim().pip_install("fastmcp", "fastapi")
-mcp = FastMCP("my-mcp", stateless_http=True)
+mcp = FastMCP("my-mcp")
+mcp_app = mcp.http_app(path="/", stateless_http=True)  # fastmcp: ASGI app; no sessions for Modal
 
 @mcp.tool()
 async def analyze(code: str) -> str: return f"lines: {len(code.splitlines())}"
 
-web_app = FastAPI()
-web_app.mount("/mcp", mcp.streamable_http_app())
+web_app = FastAPI(lifespan=mcp_app.lifespan)
+web_app.mount("/mcp", mcp_app)
 
 @app.function(image=image, gpu="H100", timeout=600)
 @modal.asgi_app()

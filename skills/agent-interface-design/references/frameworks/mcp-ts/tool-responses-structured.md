@@ -101,8 +101,8 @@ Returns a JSON object with:
 Example response:
 {
   "users": [
-    {"id": "u_abc1", "name": "Jane Doe", "email": "jane@co.com", "role": "admin"},
-    {"id": "u_abc2", "name": "Bob Smith", "email": "bob@co.com", "role": "member"}
+    {"id": "u_abc1", "name": "Jane Doe", "email": "jane@example.com", "role": "admin"},
+    {"id": "u_abc2", "name": "Bob Smith", "email": "bob@example.com", "role": "member"}
   ],
   "total": 47,
   "has_more": true

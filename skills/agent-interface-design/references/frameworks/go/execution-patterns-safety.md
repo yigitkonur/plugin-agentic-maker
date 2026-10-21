@@ -60,12 +60,16 @@ func (c *Client) Apply(ctx context.Context, opts ApplyOptions) (*ApplyResult, er
 
 Contract: `../../cli/non-interactive.md`.
 
-> Reconciled: the source `Confirm` returned `(false, error)` and left the exit code open. Here the error is a sentinel the caller maps to exit 2 (`ExitUsage`), printing a message that names `--yes` / `--force`.
+> Note: `Confirm` returns a sentinel error that the caller maps to exit 2 (`ExitUsage`), printing a message that names `--yes` / `--force`.
 
 ```go
 import (
+    "bufio"
     "errors"
+    "fmt"
     "os"
+    "strings"
+
     "golang.org/x/term"
 )
 
@@ -94,7 +98,7 @@ func IsInteractive(mode InteractiveMode) bool {
 
 func Prompt(message string, mode InteractiveMode) (string, error) {
     if !IsInteractive(mode) {
-        return "", fmt.Errorf("prompt required in non-interactive mode: %s", message)
+        return "", fmt.Errorf("prompt required in non-interactive mode (%s): %w", message, ErrConfirmationRequired)
     }
 
     fmt.Fprint(os.Stderr, message) // prompts go to stderr

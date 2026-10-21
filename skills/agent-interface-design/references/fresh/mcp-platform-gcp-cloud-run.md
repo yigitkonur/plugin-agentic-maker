@@ -15,8 +15,6 @@ Durable lesson: Cloud Run has the longest managed request timeout, but you must 
 
 Cloud Run caps request duration at 3,600 seconds (60 min), default 300s. That is 4.5x Vercel Enterprise's 800s and 4x Lambda's 900s. When you need one managed platform that can run a single MCP tool call for close to an hour, Cloud Run is the answer.
 
-> Reconciled: the source said Cloud Run's 3,600 s limit is "double" Vercel Enterprise's 800 s; 3600/800 is 4.5x (and 4x Lambda's 900 s); this file uses 4.5x.
-
 ```bash
 gcloud run deploy my-mcp \
   --source . \

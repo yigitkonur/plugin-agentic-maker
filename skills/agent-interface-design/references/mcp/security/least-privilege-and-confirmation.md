@@ -27,7 +27,7 @@ The MCP spec supports tool annotations that tell the agent and host about a tool
 
 | Annotation | Meaning for the agent |
 |---|---|
-| `readOnlyHint: true` | Agent can auto-approve without human confirmation |
+| `readOnlyHint: true` | Agent may auto-approve without human confirmation, but only for a server the user trusts: the spec treats annotations from an untrusted server as untrusted claims |
 | `destructiveHint: true` | Agent should require explicit human approval |
 | `idempotentHint: true` | Agent knows it is safe to retry on failure |
 | `openWorldHint: true` | Agent knows the tool accesses external/unbounded resources |
@@ -44,9 +44,9 @@ Sources: MCP specification (Tools); Anthropic "Writing effective tools for AI ag
 Split tools into a read tier (auto-approve) and a write tier (confirm). This matters most when responses contain user-generated content that could include injection.
 
 ```
-ALWAYS AUTO-APPROVE (read-only):
+AUTO-APPROVE (read-only, trusted server only):
   - search_*, list_*, get_*, describe_*
-  - Any tool with readOnlyHint: true
+  - Any tool with readOnlyHint: true, if the host trusts the server that set it
 
 ALWAYS REQUIRE CONFIRMATION:
   - delete_*, remove_*, drop_*

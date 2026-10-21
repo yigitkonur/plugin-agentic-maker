@@ -45,7 +45,7 @@ const gateway = new MCPGateway({
     {
       name: 'web',
       command: 'npx',
-      args: ['-y', '@anthropic/web-search-mcp'],
+      args: ['-y', '<web-search-mcp-package>'],
       lazy: true,           // only start when a tool is called
       idleTimeout: 120_000, // stop after 2min of inactivity
       healthCheck: { interval: 30_000, timeout: 5_000 }
@@ -71,18 +71,19 @@ await gateway.start();
 
 ```typescript
 import { createHmac } from "crypto";
+import { readFile } from "fs/promises";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 interface Policy {
   allowed_tools: string[];
   per_tool: Record<string, {
-    max_params?: Record<string, unknown>;
     require_context?: string[];  // Required session fields
     require_role?: string;
   }>;
 }
 
 async function loadPolicy(): Promise<Policy> {
-  return JSON.parse(await fs.readFile("policy.json", "utf-8"));
+  return JSON.parse(await readFile("policy.json", "utf-8"));
 }
 
 class ExecutionGateway {
@@ -112,14 +113,24 @@ class ExecutionGateway {
   }
 }
 
-// Wrap server dispatch
+// Wrap each tool handler (McpServer has no use() middleware)
 const gateway = new ExecutionGateway();
 await gateway.init();
 
-server.use(async (req, next) => {
-  await gateway.authorize(req.tool, req.params, req.session);
-  const ticket = gateway.signJobTicket(req.tool, req.params);
-  auditLog.write({ ticket, ...req.session, tool: req.tool });
-  return next();
-});
+function gated<A>(toolName: string, handler: (args: A) => Promise<CallToolResult>) {
+  return async (args: A): Promise<CallToolResult> => {
+    const session = await getSessionContext(); // however your transport resolves the caller
+    const ticket = gateway.signJobTicket(toolName, args);
+    auditLog.write({ ticket, ...session, tool: toolName }); // log before authorize so denials leave a record
+    try {
+      await gateway.authorize(toolName, args, session);
+    } catch (e) {
+      return { content: [{ type: "text", text: (e as Error).message }], isError: true };
+    }
+    return handler(args);
+  };
+}
+
+server.registerTool("query_db", { description: "Run a read-only query", inputSchema: { query: z.string() } },
+  gated("query_db", async ({ query }) => ({ content: [{ type: "text", text: await db.query(query) }] })));
 ```

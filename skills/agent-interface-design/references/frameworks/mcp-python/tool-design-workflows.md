@@ -7,7 +7,7 @@ Explanation and rules: ../../mcp/design-workflow-planner-and-facade.md
 ## Pattern 4: Planner tool
 
 ```python
-@tool(description="Get the recommended workflow plan for the current task. Call this FIRST before using any other visualization tools.")
+@mcp.tool(description="Get the recommended workflow plan for the current task. Call this FIRST before using any other visualization tools.")
 def create_plan(task_description: str) -> dict:
     return {
         "workflow": [
@@ -61,7 +61,7 @@ s3_url = s3_client.upload(
     data=json.dumps(all_leads),
     filename=f"leads_{len(all_leads)}.json"
 )
-return {"status": "success", "total": len(all_leads), "s3_url": s3_url}
+return {"status": "success", "total": len(all_leads), "s3_url": s3_url}  # the sandbox runs this as a function body
 ```
 
 Security requirements (non-negotiable):
@@ -85,7 +85,7 @@ list_commits(branch_id)   # Call 5-6 (pagination)
 get_commit(commit_id)     # Call 7-12 (per commit)
 
 # After: 2 calls
-@tool(description="Get recent activity summary for a repository. Returns latest commits, active branches, and contributor stats for the specified time range.")
+@mcp.tool(description="Get recent activity summary for a repository. Returns latest commits, active branches, and contributor stats for the specified time range.")
 def get_repo_activity(
     repo: str,
     days: int = 7,
@@ -106,7 +106,7 @@ def get_repo_activity(
 ## Pattern 7: Combined CRUD tool
 
 ```python
-@tool(description="Manage users. Actions: 'list' (filter by role/status), 'get' (by user_id), 'create' (name+email required), 'update' (user_id + fields to change), 'delete' (by user_id, irreversible).")
+@mcp.tool(description="Manage users. Actions: 'list' (filter by role/status), 'get' (by user_id), 'create' (name+email required), 'update' (user_id + fields to change), 'delete' (by user_id, irreversible).")
 def manage_user(
     action: Literal["list", "get", "create", "update", "delete"],
     user_id: str | None = None,
@@ -131,6 +131,8 @@ def manage_user(
 ## Pattern 8: Toolhost / facade
 
 ```python
+from mcp.server.fastmcp.exceptions import ToolError  # fastmcp package: from fastmcp.exceptions import ToolError
+
 OPERATIONS = {
     "list_users":    {"handler": list_users,    "args": ["filters", "page"]},
     "get_user":      {"handler": get_user,      "args": ["user_id"]},
@@ -140,22 +142,23 @@ OPERATIONS = {
     "export_data":   {"handler": export_data,    "args": ["entity", "format"]},
 }
 
-@tool(description=f"Admin API gateway. Operations: {', '.join(OPERATIONS.keys())}. Pass the operation name and its arguments.")
+@mcp.tool(description=f"Admin API gateway. Operations: {', '.join(OPERATIONS.keys())}. Pass the operation name and its arguments.")
 def admin_toolhost(
     operation: str,
-    args: dict = {}
+    args: dict | None = None
 ) -> dict:
+    args = args or {}
     if operation not in OPERATIONS:
-        return {"error": f"Unknown operation. Available: {list(OPERATIONS.keys())}"}
+        raise ToolError(f"Unknown operation. Available: {list(OPERATIONS.keys())}")
 
     op = OPERATIONS[operation]
-    missing = [a for a in op["args"] if a not in args and a not in OPTIONAL_ARGS]
+    missing = [a for a in op["args"] if a not in args]
     if missing:
-        return {"error": f"Missing required args for {operation}: {missing}"}
+        raise ToolError(f"Missing required args for {operation}: {missing}")
 
     try:
         result = op["handler"](**args)
         return {"operation": operation, "status": "success", "result": result}
     except Exception as e:
-        return {"operation": operation, "status": "error", "error": str(e)}
+        raise ToolError(f"{operation} failed: {e}") from e
 ```

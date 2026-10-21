@@ -5,7 +5,7 @@
 <!-- src: audit-agentic-mcp/references/patterns/tool-descriptions.md#Tool Description Patterns -->
 Tool descriptions are the model's only guide to when and how to use a tool. These patterns cover structure and length; routing between tools is in `descriptions-names-and-routing.md`; the schema/description split, server instructions and examples are in `descriptions-schema-split-and-examples.md`. Code: `../frameworks/mcp-ts/tool-descriptions.md`, `../frameworks/mcp-python/tool-descriptions.md`.
 
-> Reconciled: the sources gave three length numbers (about 100 tokens in one pattern, 200 in another, a 320-token example called too long). This file uses: target at most about 100 tokens, never above 200; the first five words are Verb + Resource; long examples go in the parameter descriptions of the input schema.
+> Note: target at most about 100 tokens, never above 200; the first five words are Verb + Resource; long examples go in the parameter descriptions of the input schema.
 
 <!-- src: audit-agentic-mcp/references/patterns/tool-descriptions.md#Pattern 1: Use XML Tags to Separate Purpose from Instructions -->
 ## Separate purpose from instructions with tags

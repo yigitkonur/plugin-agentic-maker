@@ -37,11 +37,7 @@ func detectEnvironment() *Environment {
 }
 
 func isTerminal(f *os.File) bool {
-    fi, err := f.Stat()
-    if err != nil {
-        return false
-    }
-    return fi.Mode()&os.ModeCharDevice != 0
+    return term.IsTerminal(int(f.Fd())) // golang.org/x/term; /dev/null is not a terminal
 }
 
 func isCI() bool {
@@ -105,11 +101,12 @@ func detectShell() string {
 
 ```go
 func runCommand(cmd *cobra.Command, args []string) error {
+    ctx := cmd.Context()
     env := detectEnvironment()
 
     // Configure output based on environment
     output := &OutputConfig{
-        JSON:     jsonFlag || !env.Terminal,
+        JSON:     jsonFlag, // JSON only when asked for (--json or -o json), not inferred from a pipe
         Color:    env.ColorSupport && !jsonFlag,
         Progress: env.Terminal && !env.CI,
         Prompts:  env.Terminal && !env.CI && !nonInteractive,
@@ -128,4 +125,4 @@ func runCommand(cmd *cobra.Command, args []string) error {
 }
 ```
 
-> Reconciled: the source returned a generic error here; this file returns a usage error (exit 2) naming the flag.
+> Note: a missing value here returns a usage error (exit 2) that names the flag.

@@ -5,7 +5,7 @@
 <!-- src: audit-agentic-mcp/references/patterns/caching-economics.md#Prompt Caching and MCP Cost Economics -->
 Provider-side prompt caching can drive per-turn MCP cost down 55-92% once the prefix stays byte-identical; the hard part is keeping it so across tool edits, reconnects and dynamic system prompts. This file covers prefix stability; TTL choice, tool results, monitoring and stacking are in `budget-cache-ttl-and-monitoring.md`.
 
-Scope: the **provider** cache (what each vendor charges, what invalidates it). Tool-definition budgets: `budget-tool-definitions.md`; response size: `budget-response-size.md`; application-level response caching (L1/L2/L3, Redis, ETag) belongs to session-and-state design; why dynamic tool lists invalidate the cache: `patterns-dynamic-tool-lists.md`. Prices, TTLs, minimum prefixes and the cost math: `../fresh/prompt-caching-providers.md`, `../fresh/prompt-caching-cost-math.md`. Before cache-sensitive changes run `agentic-maker probe mcp --budget`, and re-run after, so the audit can state the direction of change.
+Scope: the **provider** cache (what each vendor charges, what invalidates it). Tool-definition budgets: `budget-tool-definitions.md`; response size: `budget-response-size.md`; application-level response caching (L1/L2/L3, Redis, ETag) belongs to session-and-state design. Prices, TTLs, minimum prefixes and the cost math: `../fresh/prompt-caching-providers.md`, `../fresh/prompt-caching-cost-math.md`. Before cache-sensitive changes run `agentic-maker probe mcp --budget`, and re-run after, so the audit can state the direction of change.
 
 <!-- src: audit-agentic-mcp/references/patterns/caching-economics.md#Pattern 1: Freeze Tool Descriptions Before You Enable Caching -->
 ## Freeze tool descriptions before enabling caching
@@ -29,9 +29,9 @@ Case evidence: `../fresh/prompt-caching-cases.md`.
 
 With explicit breakpoints, everything you want cached must sit at or before your last breakpoint, everything volatile after it. The canonical order is `tools -> system -> messages` (breakpoint cap and lookback window: `../fresh/prompt-caching-providers.md`).
 
-Target order for an MCP agent:
-1. System prompt (stable persona and product rules).
-2. Tool block: static tools first, dynamic/subagent tools last.
+Target order for an MCP agent (the provider fixes the order `tools -> system -> messages`; you control what goes inside each):
+1. Tool block: static tools first, dynamic/subagent tools last.
+2. System prompt (stable persona and product rules).
 3. Shared project context (CLAUDE.md / AGENTS.md / repo conventions).
 4. [BREAKPOINT 1]
 5. Conversation history older than the current turn.
@@ -50,20 +50,19 @@ Don't:
 Case evidence: same file.
 
 <!-- src: audit-agentic-mcp/references/patterns/caching-economics.md#Pattern 3: Never Renegotiate the MCP Tool List Mid-Session -->
-## Never renegotiate the MCP tool list mid-session
+## Do not change the MCP tool list inside a phase of the session
 
-Adding, removing or re-ordering one tool rewrites the whole tools block and forces a fresh cache write for the whole conversation. (`patterns-dynamic-tool-lists.md` states it in a sentence; this is the cost consequence.)
+Adding, removing or re-ordering one tool rewrites the whole tools block and forces a fresh cache write for the whole conversation. Change the list only at a boundary (connection setup, a mode switch, a workflow phase change; rule in `patterns-dynamic-tool-lists.md`), never per request. An unlock at a boundary costs one cache write and is fine.
 
 Do:
-- Register every tool at session start. For feature-flagged tools register thin stubs with `defer_loading: true` (see the stub section below).
+- Register every tool the phase needs at its start; for feature-flagged tools use thin `defer_loading: true` stubs (below).
 - Use a stable alphabetical or topological sort so re-registration yields byte-identical output.
 - If a tool must be hidden mid-session, suppress it at the **routing layer**, not by unregistering.
 
 Don't:
-- Lazily attach MCP servers based on user intent detected at turn 3; that detonates the cache of turns 1-2.
-- Assume "removing one unused tool" is free; it shifts the byte offset of every subsequent tool.
+- Attach MCP servers lazily on intent detected mid-phase; that wipes the cache of the turns before it.
+- Assume "removing one unused tool" is free; it shifts every later tool's byte offset.
 
-One widely used coding agent forbids post-session tool registration for exactly this reason (cases file).
 
 <!-- src: audit-agentic-mcp/references/patterns/caching-economics.md#Pattern 5: Eliminate Every Byte-Varying Element From the Cacheable Prefix -->
 ## Eliminate every byte-varying element from the cacheable prefix
@@ -112,4 +111,3 @@ Don't:
 - Load the schema back into the tool block after the model asks; that rewrites the prefix.
 - Leave hydrated schemas in context after the call; they inflate the tail. Let the model discard them.
 
-A coding agent's deferred-loading strategy is the canonical reference (cases file).
