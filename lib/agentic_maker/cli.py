@@ -4,6 +4,7 @@ import json
 import os
 import re
 import sys
+import time
 import traceback
 
 from agentic_maker import __version__
@@ -18,7 +19,7 @@ from agentic_maker import runner as runner_mod
 from agentic_maker import scenario as sc_mod
 from agentic_maker import sessions as sessions_mod
 from agentic_maker import trace as trace_mod
-from agentic_maker.common import project_root, read_json, write_json
+from agentic_maker.common import ensure_state_gitignore, project_root, read_json, runs_dir, write_json
 from agentic_maker.envelope import CliError, Output
 
 EXIT_TABLE = """exit codes:
@@ -387,6 +388,20 @@ def _read_lines(path, root, what):
     return [ln.strip() for ln in open(p, encoding="utf-8") if ln.strip() and not ln.lstrip().startswith("#")]
 
 
+def _save_probe(root, surface, res):
+    """The probe's full reply, kept: a claim in an audit report can be checked against this file instead of by running the target again."""
+    d = os.path.join(runs_dir(root), "audit-%s" % time.strftime("%Y%m%d"))
+    os.makedirs(d, exist_ok=True)
+    ensure_state_gitignore(root)
+    p = os.path.join(d, "probe-%s-%s.json" % (surface, time.strftime("%H%M%S")))
+    n = 1
+    while os.path.exists(p):
+        n += 1
+        p = os.path.join(d, "probe-%s-%s-%d.json" % (surface, time.strftime("%H%M%S"), n))
+    write_json(p, res)
+    return p
+
+
 def dispatch_probe(args, root, out):
     w = args.what
     if w == "cli":
@@ -394,6 +409,7 @@ def dispatch_probe(args, root, out):
         safe = (_read_lines(args.safe_cmds, root, "safe-cmds") if args.safe_cmds else []) + [a.strip() for a in args.safe if a.strip()]
         safe = safe or None
         res = probe_cli_mod.finalize(probe_cli_mod.probe(args.binary, subs, safe, args.timeout))
+        res["evidence_file"] = _save_probe(root, "cli", res)
         if safe is None:
             res["limits"].insert(0, "no --safe-cmds were declared: only help, version and one invalid command were run, so stdout purity and exit codes of real commands are unchecked")
         lines = ["# CLI audit: %s" % res["binary"], "", "kind: %s | executed %d command(s) | findings: %s" % (res["kind"], len(res["executed"]), json.dumps(res["summary"]["by_severity"]))]
@@ -436,6 +452,7 @@ def dispatch_probe(args, root, out):
         res = probe_mcp_mod.finalize(probe_mcp_mod.probe(
             target, {"description_chars": args.description_chars, "schema_chars": args.schema_chars, "response_chars": args.response_chars,
                      "tool_threshold": args.tool_threshold}, args.call, args.timeout, args.cwd, env_pairs, args.server))
+        res["evidence_file"] = _save_probe(root, "mcp", res)       # the whole reply, per-tool rows included
         b = res["budget"]
         if not args.full:
             res["tools_omitted"] = len(res.pop("tools"))        # keep the envelope small: it is read by a model (O8 applies to us)

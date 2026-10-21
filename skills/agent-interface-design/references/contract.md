@@ -30,7 +30,7 @@ A surface is "agent-facing" when a model, not a person, is its user: it reads th
 
 ## Using the contract
 
-- **Auditing.** `/agentic-maker:audit` probes the surface at runtime where it can (the CLI is run, the server's `tools/list` is read) and walks these eight questions for the rest. Findings are written in agent terms: can the agent parse it, continue after an error, avoid side effects?
+- **Auditing.** `agentic-maker probe cli <binary>` and `agentic-maker probe mcp "<command>"` observe the surface at runtime (the CLI is run, the server's `tools/list` is read) and are yours to run on what you build; `/agentic-maker:audit` is the same, started by the user, and walks these eight questions for the rest. Findings are written in agent terms: can the agent parse it, continue after an error, avoid side effects?
 - **Designing.** Start from question 1: write the agent's task, then the smallest surface that serves it, then the answers to 2-8. `/agentic-maker:design` runs this as an interview.
 - **Testing.** Questions 3, 4 and 7 are about behaviour you only see in a run: `/agentic-maker:derail` shows what an agent actually does with the text and tells you which sentence caused it.
 

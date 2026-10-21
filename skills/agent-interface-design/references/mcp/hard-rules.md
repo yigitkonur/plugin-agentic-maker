@@ -9,7 +9,7 @@ Rule numbers are stable; findings cite them as "rule N". Reference names ending 
 
 | # | Rule | Read next |
 |---|---|---|
-| 1 | Explore the codebase before asking. Run the scan helper (`bin/agentic-maker scan mcp`) and `rg` first. | `skills/audit/references/mcp-audit-workflow.md` |
+| 1 | Explore the codebase before asking. Run the scan helper (`agentic-maker scan mcp`) and `rg` first. | `skills/audit/references/mcp-audit-workflow.md` |
 | 2 | Audit requests stop at the report. Optimize/fix requests apply edits and verify. | none |
 | 3 | Every finding cites file path and line, real code or labeled assumption. | none |
 | 4 | One server at a time. If multiple servers exist, inventory and ask which is in scope. | none |
@@ -23,6 +23,6 @@ Rule numbers are stable; findings cite them as "rule N". Reference names ending 
 | 12 | Tool descriptions are prompt engineering; treat them with care. | `mcp/descriptions-*` |
 | 13 | Capability-gate sampling, elicitation, and roots; never silently drop. | `mcp/protocol-*` |
 | 14 | Use OBO (on-behalf-of) with audience checks; never forward user tokens to upstream APIs. | `mcp/security/*` |
-| 15 | Verify after every applied edit. Pick one live route (MCP client smoke test, MCP Inspector, unit/integration test, or targeted endpoint check). | `mcp/ops-*` |
+| 15 | Verify after every applied edit: run `agentic-maker probe mcp "<the command that starts the server>"` (add `--call 'tool={}'` for read-only tools) and fix what it reports; a client smoke test, the MCP Inspector or an integration test covers what a probe cannot. | `mcp/ops-*` |
 
 Thresholds in these rules and in the decision trees are diagnostic cues, not verdicts. Rule 11 and `decisions/tool-count.md` agree: up to 20 active tools is comfortable (register them eagerly); past about 20, expose only the tools the task needs (groups or session unlocking); about 30 is a warning; 40 or more needs meta-tools (list, describe, execute).

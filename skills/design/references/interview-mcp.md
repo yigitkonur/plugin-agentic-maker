@@ -50,14 +50,14 @@ START: User wants to build a new MCP server
 11. **Advanced protocol features** — "Do you need sampling or elicitation? If yes, client support is uneven — see `mcp/protocol-*` before committing."
 12. **Success metric** — "How will you know this MCP is working 3 months from now? Tool-call success rate, task completion in <N steps, cost per session, user retention."
 
-Paths in the questions are relative to ``. Q5(d): detect CIMD or DCR support from the authorization-server metadata instead of assuming either; prefer Client ID Metadata Documents where the client supports them (see `mcp/security/*`).
+Paths in the questions are relative to `${CLAUDE_PLUGIN_ROOT}/skills/agent-interface-design/references/`. Q5(d): detect CIMD or DCR support from the authorization-server metadata instead of assuming either; prefer Client ID Metadata Documents where the client supports them (see `mcp/security/*`).
 
 > Note: prefer CIMD where the client supports it, keep DCR for clients without it, never assume either.
 
 <!-- src: audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Routing After This Tree -->
 ## Routing after the interview
 
-Paths relative to ``.
+Paths relative to `${CLAUDE_PLUGIN_ROOT}/skills/agent-interface-design/references/`.
 
 - Tool granularity and intent-based design: `decisions/design-phase.md`
 - Tool count >10, progressive discovery, toolsets: `decisions/tool-count.md`

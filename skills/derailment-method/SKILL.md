@@ -14,7 +14,7 @@ A skill, a tool description, a `--help` page and an error message are a program 
 
 1. **Fix the text, not the executor.** Every remedy is an edit to the controlling text (a skill sentence, an example, a routing row, a tool description, an error message, a script) or to the tool itself. Never conclude "use a smarter agent". Rewrite or delete the sentence that misled; do not leave it and add a "do / don't" rule beside it.
 2. **Claims are leads; the machine is the witness.** An agent's closing report is a claim. Verify exit codes and what is on disk (`agentic-maker check receipts`) before believing "done". See [evidence-and-anti-sycophancy](references/evidence-and-anti-sycophancy.md).
-3. **Never judge from a view that hides what the agent did.** Read the harness's structured record (every tool call with full arguments, every result, hook events). A folded terminal view, a summary or the agent's own account is not evidence. Source ranking: `derail/references/trace-sources.md`.
+3. **Never judge from a view that hides what the agent did.** Read the harness's structured record (every tool call with full arguments, every result, hook events). A folded terminal view, a summary or the agent's own account is not evidence. Source ranking: `skills/derail/references/trace-sources.md`.
 4. **Search by dimension; do not chase a quota.** Cover trigger, discovery, syntax, thresholds, paths, resilience, mental model, recovery, completion and budget. "Nothing found in this dimension" is a valid answer; a list padded to a target length invites invented findings.
 5. **No errata files.** The corrected source is the deliverable. A line marked `[NICE]` is load-bearing: never weaken or delete it without a finding that supersedes it.
 

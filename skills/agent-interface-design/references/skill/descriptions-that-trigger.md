@@ -20,7 +20,7 @@ A skill named `manifest-synth` with the description "Synthesizes semver-delimite
 
 ## Test it, do not argue about it
 
-- Write a scenario whose prompt is an everyday request and never names the skill (`derail/references/scenarios.md`). Run several takes: the rate at which the skill is chosen is the measurement.
+- Write a scenario whose prompt is an everyday request and never names the skill (`skills/derail/references/scenarios.md`). Run several takes: the rate at which the skill is chosen is the measurement.
 - Run it once with the user's real skills installed (`isolation: in-situ`): collisions (T2) only show up in a crowd.
 - Keep a trigger test in CI with `claude plugin eval`: a positive case (`tool_used: Skill`), a negative case (an unrelated request must not use it), and the no-plugin baseline for the difference. `agentic-maker eval-emit <scenario>` writes the positive case from a scenario that already passed.
 

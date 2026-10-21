@@ -58,6 +58,6 @@ Do not load the whole reference tree by default. Start with the smallest bundle.
 | Existing-server quick audit | the `scan mcp` and `probe mcp --budget` output, `mcp/design-*`, `mcp/schemas-*`, `mcp/responses-*`, `mcp/errors-*`, `mcp/ops-*` (testing) |
 | Security / auth audit | `decisions/security-posture.md`, `mcp/security/*` (generic defenses, auth and identity, threat catalog) |
 | Context / cost audit | the `probe mcp --budget` output, `mcp/budget-*` (context engineering, caching economics, progressive discovery), `decisions/tool-count.md` |
-| New-server architecture | `skills/design/references/interview.md`, `decisions/companion-routing.md`, `decisions/design-phase.md`, `decisions/mcp-vs-cli-evidence.md` |
+| New-server architecture | `skills/design/references/interview-mcp.md`, `decisions/companion-routing.md`, `decisions/design-phase.md`, `decisions/mcp-vs-cli-evidence.md` |
 
 Rules that apply to every finding: `mcp/hard-rules.md`. Common mistakes to pattern-match first: `mcp/pitfalls.md`.

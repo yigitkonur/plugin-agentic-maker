@@ -9,6 +9,9 @@ import re
 import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "skills", "agent-interface-design", "references")
+SKILL = os.path.join(ROOT, "..", "SKILL.md")
+STACK_NAMES = {"bash": "a Bash CLI", "go": "a Go CLI", "python": "a Python CLI", "node": "a Node.js CLI", "rust": "a Rust CLI",
+               "mcp-python": "a Python MCP server", "mcp-ts": "a TypeScript MCP server"}
 GROUPS = ["cli", "mcp", "skill", "decisions", "frameworks", "fresh"]
 LIMIT = 7600
 
@@ -37,10 +40,38 @@ def render(group, files, page, pages):
     return name, "\n".join(lines) + "\n"
 
 
+def skill_blocks(by_group):
+    """Two blocks for SKILL.md, from the pages just built: which index lists each stack's pages, and every index."""
+    stacks = {}
+    for page, rels in by_group.get("frameworks", {}).items():
+        for rel in rels:
+            parts = rel.split("/")
+            if len(parts) > 2:
+                stacks.setdefault(parts[1], set()).add(page)
+    rows = ["| Writing code for | Open |", "|---|---|"]
+    for st in sorted(stacks):
+        rows.append("| %s | %s |" % (STACK_NAMES.get(st, st), ", ".join("[%s](references/%s)" % (p, p) for p in sorted(stacks[st]))))
+    allx = []
+    for g in GROUPS:
+        pages = sorted(by_group.get(g, {}))
+        allx.append("**%s**: %s" % (g, ", ".join("[%s](references/%s)" % (p, p) for p in pages)))
+    return "\n".join(rows), " | ".join(allx)
+
+
+def patch_skill(text, stacks_md, all_md):
+    for name, body in (("stacks", stacks_md), ("all", all_md)):
+        pat = re.compile(r"(<!-- build-index:%s:start -->\n).*?(\n?<!-- build-index:%s:end -->)" % (name, name), re.S)
+        if not pat.search(text):
+            raise SystemExit("build-index: SKILL.md lacks the %s markers" % name)
+        text = pat.sub(lambda m: m.group(1) + body + "\n" + m.group(2).lstrip("\n"), text, count=1)
+    return text
+
+
 def main(argv):
     check = "--check" in argv
     root = os.path.abspath(ROOT)
     stale = []
+    by_group = {}
     for g in GROUPS:
         files = []
         for dp, _, fns in os.walk(os.path.join(root, g)):
@@ -61,9 +92,11 @@ def main(argv):
             size += len(line.encode())
         pages.append(cur)
         want = {}
+        by_group[g] = {}
         for i, pg in enumerate(pages, 1):
             n, t = render(g, pg, i, len(pages))
             want[n] = t
+            by_group[g][n] = [f[0] for f in pg]
         # remove stale pages of this group
         for fn in os.listdir(root):
             if re.match(r"^index-%s(-\d+)?\.md$" % g, fn) and fn not in want:
@@ -79,6 +112,13 @@ def main(argv):
                     stale.append(n)
                 else:
                     open(p, "w", encoding="utf-8").write(t)
+    skill_text = open(SKILL, encoding="utf-8").read()
+    patched = patch_skill(skill_text, *skill_blocks(by_group))
+    if patched != skill_text:
+        if check:
+            stale.append("SKILL.md (stack table / all-indexes line)")
+        else:
+            open(SKILL, "w", encoding="utf-8").write(patched)
     if check:
         for s in stale:
             print("stale index:", s)

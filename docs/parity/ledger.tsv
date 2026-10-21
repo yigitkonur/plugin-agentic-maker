@@ -314,14 +314,14 @@ audit-agentic-mcp/SKILL.md#Pattern files (`references/patterns/`)	3	234	dropped	
 audit-agentic-mcp/SKILL.md#Decision-tree files (`references/decision-trees/`)	3	264	dropped		Routing rows for decision-tree files whose own Read-when lines and decisions/ file names now do this job.
 audit-agentic-mcp/SKILL.md#Freshness checks	2	278	mapped	skills/agent-interface-design/references/fresh/freshness-checklist.md:10	
 audit-agentic-mcp/SKILL.md#Delegation policy	2	292	dropped		User-level subagent policy (when to delegate, binary done criteria); it belongs to the user's own delegation settings, not to a reference about MCP servers, and the plugin forbids steering the user's agent configuration.
-audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Brainstorming a New MCP from Scratch	1	1	mapped	skills/design/references/interview.md:7	
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Brainstorming a New MCP from Scratch	1	1	mapped	skills/design/references/interview-mcp.md:7	
 audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Contents	2	5	dropped		Navigation: table of contents of the source file, replaced by the new file's sections.
-audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Decision Tree	2	14	mapped	skills/design/references/interview.md:7	
-audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Interview Questions (ask verbatim; adapt only to reference user-supplied context)	2	40	mapped	skills/design/references/interview.md:37	
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Decision Tree	2	14	mapped	skills/design/references/interview-mcp.md:7	
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Interview Questions (ask verbatim; adapt only to reference user-supplied context)	2	40	mapped	skills/design/references/interview-mcp.md:37	
 audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Framework Picker	2	55	mapped	skills/agent-interface-design/references/fresh/mcp-framework-picker.md:10	
 audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Architecture-Sketch Template	2	74	mapped	skills/design/references/mcp-design-workflow.md:25	
-audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Routing After This Tree	2	123	mapped	skills/design/references/interview.md:57	
-audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#When to Re-evaluate	2	136	mapped	skills/design/references/interview.md:73	
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#Routing After This Tree	2	123	mapped	skills/design/references/interview-mcp.md:57	
+audit-agentic-mcp/references/decision-trees/brainstorming-new-mcp.md#When to Re-evaluate	2	136	mapped	skills/design/references/interview-mcp.md:73	
 audit-agentic-mcp/references/decision-trees/companion-toolchain.md#Companion Toolchain Decision Tree	1	1	mapped	skills/agent-interface-design/references/decisions/companion-routing.md:5	
 audit-agentic-mcp/references/decision-trees/companion-toolchain.md#Decision Tree	2	5	mapped	skills/agent-interface-design/references/decisions/companion-routing.md:5	
 audit-agentic-mcp/references/decision-trees/companion-toolchain.md#Positive Routing Rules	2	50	mapped	skills/agent-interface-design/references/decisions/companion-routing.md:53	

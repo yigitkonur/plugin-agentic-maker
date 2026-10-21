@@ -81,7 +81,7 @@ What it says, plainly:
 - No worker in the plugin arm ran `agentic-maker probe` (0 of 9): the write-time loop (build, probe, fix) is not in the text they were given.
 - Harness noise: 3 plugin-arm and 4 plugin-less runs hit one or two permission denials of compound commands (`cd ... && ...`, `for` loops, heredocs) that the allow-list did not match; the workers recovered, and both arms are affected alike.
 
-The same tasks are rerun after the steering text changes (last section).
+**These numbers carry a confound** (denied compound commands, see the harness-noise bullet): they are kept as recorded, and section 7 repeats the comparison with the allow-list fixed and a third arm (the plugin as it was before the steering edits).
 
 ## 3. The reader hands its findings over by hook (the spike)
 
@@ -194,3 +194,45 @@ The edit, as a diff against the original (offered, not applied to the source rep
  - [ ] Zero mechanical token blacklists or regex bans were applied.
  - [ ] No fake personal anecdotes or synthetic human quirks were fabricated.
 ```
+
+## 7. Does the knowledge help? After the steering changes
+
+### 7.1 Build tasks, with and without the plugin (the same three tasks as section 2)
+
+Section 2's first numbers were confounded: the workers' compound commands (`cd ... && agentic-maker probe ... | head; ./seeded-cli ...`, `for` loops, heredocs) were denied by my narrow allow-list, so the plugin arm often could not run what it was told to run. All 27 runs below allow Bash (a user approving a build task would), had **0 permission denials**, and compare three arms: the plugin as it was before these steering edits (an exact copy of the previous commit), the plugin as it is now, and no plugin. Three samples each, graded by `agentic-maker probe` on what the worker left.
+
+| Task | No plugin | Old plugin text | New plugin text |
+|---|---|---|---|
+| (a) `seeded-cli`: "agents keep tripping over it" (pristine: 11 findings, 4 High) | findings 4, 4, 4; High 2, 2, 2 | findings 2, 2, 2; High 1, 2, 1; skill fired 3/3; **probe run 0/3** | findings **0, 0, 0**; High **0**; skill fired 3/3; **probe run 3/3** |
+| (b) build a small MCP server from `_mini.py` | findings 2, 0, 0 | findings 1, 0, 0; skill fired **0/3** | findings 0, 0, 0; skill fired **3/3**; probe run 3/3 |
+| (c) clean up the 24-tool seeded MCP server (pristine: 16 findings, 2 High) | findings 4, 5, 4 (none High) | findings 0, 0, 0; skill fired 3/3; probe run 0/3 | findings 0, 0, 0; skill fired 3/3; probe run 3/3 |
+| (d) add a tool that deletes a calendar event to a server that has `delete_user` | (section 2: all six runs copied the existing pattern) | skill fired **0/3** (section 2) | skill fired **3/3**; probe run 3/3; 0 findings; `delete_event` has `destructiveHint: true` |
+
+- Reading it: the knowledge alone halves what the probe finds on the CLI task (4.0 to 2.0); telling the model to run the probe on what it built takes it to 0. The description now fires the skill on plain wording ("build an MCP server", "add a tool") where it fired 0 of 3 before.
+- Caveats, stated plainly: the grader is the same probe the new-plugin workers were told to run, so 0 findings after they used it is expected; the old-plugin arm (knowledge without the probe instruction) is the arm that measures the knowledge. Three samples per cell. Small MCP servers come out clean without the plugin, so (b) and (d) show the trigger and the probe loop, not a quality gap.
+- No gaming: all nine CLI results still have `list`, `get` and `delete`, valid JSON from `list --json`, exit 3 for a missing item, and a working `delete --yes`.
+- Worker cost per cell (three runs): $0.20 without, $0.30 old, $0.39 new on (a); the probe loop costs about a third more.
+
+### 7.2 `claude plugin eval` over `evals/` (10 cases, 3 runs each, with and without the plugin; $2.65, 195 s)
+
+| Case | With | Without | Δ |
+|---|---|---|---|
+| ignores-chatbot-prompt | 1.00 | 1.00 | +0.00 |
+| ignores-code-review | 1.00 | 1.00 | +0.00 |
+| ignores-human-ui | 1.00 | 1.00 | +0.00 |
+| ignores-react-form | 1.00 | 1.00 | +0.00 |
+| ignores-rest-api | 1.00 | 1.00 | +0.00 |
+| triggers-agent-interface-design | 1.00 | 0.00 | +1.00 |
+| triggers-derailment-method | 1.00 | 0.00 | +1.00 |
+| triggers-mcp-add-tool | 0.00 | 0.00 | +0.00 |
+| triggers-mcp-build | 1.00 | 0.00 | +1.00 |
+| triggers-skill-write | 1.00 | 0.00 | +1.00 |
+
+Mean Δ +0.40. The five stay-quiet cases (three new: a REST API for a web frontend, a chatbot system prompt, a React form) score 1.00 with and without the plugin. Of the new trigger cases written in plain words (no "agent" in the prompt), "build me a small MCP server" and "write a SKILL.md for our deploy process" fire the skill every time. "Add a tool to our MCP server that deletes a calendar event" scored 0: the sandbox has no such server, the model searched for it (`Grep` for `McpServer|FastMCP|registerTool`) and never reached the skill. The case was rewritten to be self-contained (the three existing tools are named in the prompt) and rerun: 1 of 3 fire (Δ +0.33). A small, direct design question is answered without the skill; the same request as work on real code fires it 3 of 3 (7.1, row d).
+
+## 8. The audit and the knowledge pages
+
+- `agentic-maker probe cli|mcp` saves its whole reply under `.agentic-maker/runs/audit-<date>/probe-*.json` (ignored by git) and prints the path as `evidence_file`; the MCP envelope stays compact while the file holds the per-tool rows. The audit cites the file; the line "the target must not be run again by hand" is replaced by "read that file or rerun the same probe".
+- The first audit of the clean twin (section 1.3) put `delete 1 --dry-run` into `--safe`, against the skill's rule, and said so. The rule gave the prohibition without the reason; it now says why (whether the dry-run flag is honoured is part of what is being audited, and a CLI that ignores it runs the command), and the same sentence is in `agent-interface-design`.
+- `agent-interface-design/SKILL.md`: a description in the words people use, a "Check what you built" section (run the probe, fix, run again), a "When an agent already misbehaved" section (read the session by id), a row for tools that delete or send, and two blocks generated by `scripts/build-index.py` (which index page lists each stack's pages; every index), checked by `--check`. The probe instruction is also in `contract.md`, `cli/checks.md` (finish criteria) and `mcp/hard-rules.md` (rule 15).
+- `design` asks the interview of the chosen surface (`interview-mcp.md`, new `interview-cli.md` and `interview-skill.md`). Run under herdr with the author as the user: a CLI idea (list and cancel scheduled database backups) got "Who runs it" and "Distribution" as dialogs, the open questions as plain text, then group 2 (output, credentials, destructive operations), with no MCP question; an MCP idea (wiki search with per-user permissions) got the surface choice with labelled evidence and "group 1 of 3" of the MCP interview.

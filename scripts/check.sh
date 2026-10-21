@@ -34,13 +34,13 @@ bin/agentic-maker run --json >/dev/null 2>&1; [ "$?" = 2 ] || bad "missing argum
 printf 'not json' | bin/agentic-maker ledger gate >/dev/null 2>&1; [ "$?" = 0 ] || bad "gate must never fail a hook"
 bin/agentic-maker normalize fixtures/traces/codex-rollout-sample.jsonl --out "$tmp/cx" --json >"$tmp/cx.json" 2>/dev/null; python3 -c 'import json,sys; d=json.load(open(sys.argv[1]))["result"]; sys.exit(0 if d["events"]>=6 and d["tool_calls"]==1 else 1)' "$tmp/cx.json" || bad "codex rollout adapter"
 rm -f /tmp/seeded-cli-delete-ran
-bin/agentic-maker probe cli fixtures/cli/seeded-cli/seeded-cli --safe-cmds fixtures/cli/seeded-cli/safe-cmds.txt --json >"$tmp/p1.json" 2>/dev/null; [ "$?" = 8 ] || bad "probe cli on the seeded CLI should exit 8"
+bin/agentic-maker --root "$tmp" probe cli fixtures/cli/seeded-cli/seeded-cli --safe-cmds "$PWD/fixtures/cli/seeded-cli/safe-cmds.txt" --json >"$tmp/p1.json" 2>/dev/null; [ "$?" = 8 ] || bad "probe cli on the seeded CLI should exit 8"
 python3 -c 'import json,sys; d=json.load(open(sys.argv[1]))["result"]; sys.exit(0 if d["summary"]["findings"]>=10 else 1)' "$tmp/p1.json" || bad "probe cli should find at least 10 planted defects"
 [ ! -e /tmp/seeded-cli-delete-ran ] || bad "SAFETY: probe cli executed the destructive command"
-bin/agentic-maker probe cli fixtures/cli/clean-cli/clean-cli --safe-cmds fixtures/cli/clean-cli/safe-cmds.txt --json >/dev/null 2>&1; [ "$?" = 0 ] || bad "probe cli must report nothing on the clean twin"
-bin/agentic-maker probe mcp "python3 fixtures/mcp/seeded-server.py" --call 'get_user={"id":"nope"}' --call 'export_all={}' --json >"$tmp/m1.json" 2>/dev/null; [ "$?" = 8 ] || bad "probe mcp on the seeded server should exit 8"
+bin/agentic-maker --root "$tmp" probe cli fixtures/cli/clean-cli/clean-cli --safe-cmds "$PWD/fixtures/cli/clean-cli/safe-cmds.txt" --json >/dev/null 2>&1; [ "$?" = 0 ] || bad "probe cli must report nothing on the clean twin"
+bin/agentic-maker --root "$tmp" probe mcp "python3 fixtures/mcp/seeded-server.py" --call 'get_user={"id":"nope"}' --call 'export_all={}' --json >"$tmp/m1.json" 2>/dev/null; [ "$?" = 8 ] || bad "probe mcp on the seeded server should exit 8"
 python3 -c 'import json,sys; d=json.load(open(sys.argv[1]))["result"]; ids=" ".join(f["id"] for f in d["findings"]); need=["stdio.pollution","response.error_as_success.get_user","response.big.export_all","destructive.unmarked.delete_account","description.missing.ping_thing"]; sys.exit(0 if all(n in ids for n in need) and d["budget"]["tools"]==24 and d["budget"]["definition_chars"]==5724 else 1)' "$tmp/m1.json" || bad "probe mcp: planted defects or the hand-counted budget (24 tools, 5724 chars) not matched"
-bin/agentic-maker probe mcp "python3 fixtures/mcp/clean-server.py" --call 'get_user={"id":"zz"}' --json >/dev/null 2>&1; [ "$?" = 0 ] || bad "probe mcp must report nothing on the clean server"
+bin/agentic-maker --root "$tmp" probe mcp "python3 fixtures/mcp/clean-server.py" --call 'get_user={"id":"zz"}' --json >/dev/null 2>&1; [ "$?" = 0 ] || bad "probe mcp must report nothing on the clean server"
 rm -rf "$tmp"
 
 step "reference files: shape and size, links, generated indexes"
@@ -132,7 +132,7 @@ with tempfile.TemporaryDirectory() as t:
     cli = os.path.join(t, "actor"); sentinel = os.path.join(t, "pwned-probe")
     open(cli, "w").write("#!/bin/sh\ncase \"$1\" in\n  list) echo \"list [--json]\";;\n  sync|deploy) touch %s;;\n  *) printf 'usage: actor <command>\\n\\nCommands:\\n  list    List things\\n  sync    Sync things\\n  deploy  Deploy things\\n'; exit 0;;\nesac\n" % sentinel)
     os.chmod(cli, 0o755)
-    r = run("probe", "cli", cli)
+    r = run("--root", t, "probe", "cli", cli)          # a scratch root: the probe saves its reply under the root, never in the repository
     try: rep = json.loads(r.stdout)["result"]
     except Exception: rep = {}; bad.append("probe produced no envelope: %s" % r.stderr[:200])
     if os.path.exists(sentinel): bad.append("the probe ran an undeclared subcommand")

@@ -51,6 +51,7 @@ Names of specific companion skills are left out on purpose; see `../decisions/co
 
 Do not call a CLI agent-ready until:
 
+- `agentic-maker probe cli <binary> --safe "<read-only args>"` (once per read command that needs arguments) reports no High finding. It runs the CLI the way an agent would, changes nothing and is on your PATH; fix what it reports and run it again.
 - The five core audit checks pass.
 - The JSON envelope is stable enough to script against across commands.
 - `--help` documents the command contract (examples, output fields, exit codes).

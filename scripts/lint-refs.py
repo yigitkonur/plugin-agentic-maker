@@ -61,6 +61,15 @@ def lint(path):
                 fence = None
     if fence is not None:
         errs.append("unbalanced code fence")
+    infence = None
+    for i, l in enumerate(lines, 1):                  # an empty code span ("relative to ``.") is a path that went missing
+        m = FENCE.match(l)
+        if m:
+            tok = m.group(1)
+            infence = None if (infence and tok[0] == infence[0] and len(tok) >= infence[1] and l.strip() == tok) else (infence or (tok[0], len(tok)))
+            continue
+        if infence is None and l.count("``") == 1 and re.search(r"(?<!`)``(?!`)[.,;:)]", l):
+            errs.append("line %d: empty code span (``) followed by punctuation" % i)
     for m in MARKER.finditer(raw):
         for k in m.group(1).split("|"):
             if "#" not in k:
