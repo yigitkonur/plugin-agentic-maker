@@ -31,6 +31,7 @@ Two review rounds on 0.1.0, from the top, each claim checked before it was edite
 - Reader cost is not in dollars. Third-party packages not installed here (`openai`, `ioredis`, `@langchain/*` and others) leave their samples checked for syntax only.
 - Four pre-approved `agentic-maker` commands asked for approval once in a long manual-permission loop in round one; a controlled test could not reproduce it.
 - A small design question ("add a tool to our MCP server that deletes events: write its definition") is answered without loading the skill (1 of 3); the same request as work on code fires it every time.
+- Deferred to a later release: a `probe skill` (skills are checked by `derail` runs and by reading), freezing a scenario's receipts with a hash at `ledger init`, re-checking the seven `fresh/` pages dated before 2026-01, and merging the hybrid sections that `decisions/surface-choice.md` and `decisions/mcp-vs-cli-hybrids.md` both carry.
 
 ## 0.1.0 - 2026-10-20
 
