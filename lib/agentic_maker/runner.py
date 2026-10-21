@@ -267,7 +267,10 @@ def run_headless(root, sc, args):
         warnings = warnings + sc_mod.target_name_warnings(sc) + sc_mod.writability_warnings(sc, toolset["allowed_tools"], toolset["tools"])
         if args.get("dry_run"):
             shown = [("<prompt>" if i == PROMPT_INDEX else c) for i, c in enumerate(cmd)]
-            return ({"dry_run": True, "plan": est, "exposure": exposure, "tools": toolset, "env_names": clean_env(meta)[1], "command": shown, "run_id": run_id},
+            # `run` evaluates the receipts when the take ends; `cmd` receipts run through /bin/sh as you, so the approval to spend covers reading them here
+            receipts = [{"kind": r["kind"], "spec": r["spec"]} for r in sc_mod.receipt_specs(sc)]
+            return ({"dry_run": True, "plan": est, "exposure": exposure, "tools": toolset, "env_names": clean_env(meta)[1], "command": shown, "run_id": run_id,
+                     "receipts_run_after": receipts},
                     warnings, 0)
     finally:
         shutil.rmtree(scratch, ignore_errors=True)

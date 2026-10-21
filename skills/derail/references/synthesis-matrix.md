@@ -5,7 +5,7 @@
 <!-- src: audit-skill-by-derailment/references/forensic-subagent-briefs.md#3. Launching Multiple Auditor Subagents in Parallel -->
 ## Several readers at once
 
-When several takes or sessions finished (five scenarios, a fleet of panes), spawn **one `trace-reader` per take**, at most five at a time (more than that is a workflow, not a loop). Confirm every take is complete first (receipts computed, status recorded). Each reader writes nothing; the orchestrator saves each reply as its own file so attribution is never ambiguous. As the reports come back, verify each with `check findings`, then cross-reference: a defect found by several readers or in several scenarios is **systemic**; one found once is scenario-specific. Fix systemic defects first, serially (one writer), and rerun.
+When several takes or sessions finished (five scenarios, a fleet of panes), spawn **one `trace-reader` per take**, at most five at a time (more than that is a workflow, not a loop). Confirm every take is complete first (receipts computed, status recorded). Each reader writes nothing; the plugin's hook saves each reply as its own file under its take (`findings/<n>.json`, checked with `check findings` as it arrives), so attribution is never ambiguous. Once every reader has stopped, `ledger status` lists them; then cross-reference: a defect found by several readers or in several scenarios is **systemic**; one found once is scenario-specific. Fix systemic defects first, serially (one writer), and rerun.
 
 ## Merge rules
 

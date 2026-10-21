@@ -187,11 +187,34 @@ def _event_text(rec):
     return norm_ws(" ".join(parts))
 
 
-def _in_events(quote, refs, norm):
-    q = norm_ws(quote)
-    if not q:
-        return False
-    return any(q in _event_text(norm[r]) for r in refs if r in norm)
+# What `trace.md` puts in front of an event's text: "[12] tool tool_result: " and, for results, "(Bash, ERROR exit=1) ".
+# A reader copying from trace.md quotes the label too; the label is not the event's text.
+_LINE_LABEL = re.compile(r"^(?:\[\d+\]\s+)?(?:user|assistant|tool|system)\s+[a-z_]+(?:\s+\S+)?:\s+")
+_RESULT_LABEL = re.compile(r"^\([^()]*\)\s+")
+
+
+def _quote_variants(q):
+    """The quote as written, then with the trace.md labels taken off the front. Whatever remains must still be verbatim."""
+    out = [q]
+    a = _LINE_LABEL.sub("", q, count=1)
+    if a != q:
+        out.append(a)
+    for base in list(out):
+        b = _RESULT_LABEL.sub("", base, count=1)
+        if b != base:
+            out.append(b)
+    return out
+
+
+def _in_events(quote, refs, norm, notes=None):
+    texts = [_event_text(norm[r]) for r in refs if r in norm]
+    for i, v in enumerate(_quote_variants(quote)):
+        q = norm_ws(v)
+        if q and any(q in t for t in texts):
+            if i and notes is not None:
+                notes.append("the quote began with a trace.md label; the label was ignored and the rest matched verbatim")
+            return True
+    return False
 
 
 def _predicate_problems(p):
@@ -200,7 +223,7 @@ def _predicate_problems(p):
     return ["rerun_predicate.%s missing" % f for f in PREDICATE_FIELDS[p["type"]] if p.get(f) in (None, "")]
 
 
-def verify_finding(f, norm, root):
+def verify_finding(f, norm, root, notes=None):
     probs = []
     if not isinstance(f, dict):
         return ["finding is not an object"]
@@ -219,12 +242,13 @@ def verify_finding(f, norm, root):
         probs.append("belief_source must be observed|inferred")
     refs = f.get("trace_refs")
     if not (isinstance(refs, list) and refs and all(isinstance(r, int) for r in refs)):
-        probs.append("trace_refs must be a non-empty list of event numbers")
+        probs.append("trace_refs must be a non-empty list of event numbers: the [n] in front of each trace.md line the quote comes from "
+                     "(for something that never happened, cite the init event [1] and the event where the worker went another way)")
         refs = []
     missing = [r for r in refs if r not in norm]
     if missing:
         probs.append("trace_refs %s do not exist in the trace" % missing)
-    elif refs and isinstance(f.get("quote"), str) and f["quote"].strip() and not _in_events(f["quote"], refs, norm):
+    elif refs and isinstance(f.get("quote"), str) and f["quote"].strip() and not _in_events(f["quote"], refs, norm, notes):
         probs.append("quote does not appear verbatim in the cited events %s" % refs)
     if f.get("belief_source") == "observed" and refs:
         if not any(norm[r]["kind"] == "thinking" and (norm[r].get("text") or "").strip() for r in refs if r in norm):
@@ -254,12 +278,16 @@ def check_findings(findings_path, trace_norm, root):
     norm = trace_mod.load_norm(trace_norm)
     seen, out = set(), []
     for f in items:
-        probs = verify_finding(f, norm, root)
+        notes = []
+        probs = verify_finding(f, norm, root, notes)
         fid = f.get("id") if isinstance(f, dict) else None
         if fid in seen:
             probs.append("duplicate id %r" % fid)
         seen.add(fid)
-        out.append({"id": fid, "verified": not probs, "problems": probs})
+        row = {"id": fid, "verified": not probs, "problems": probs}
+        if notes and not probs:
+            row["notes"] = notes
+        out.append(row)
     nice_out = []
     for n in nice:
         refs = n.get("trace_refs") if isinstance(n, dict) else None
@@ -395,16 +423,21 @@ def eval_predicate(pred, norm):
     """Judge one rerun_predicate against a new trace. Returns {passed: True|False|None, detail}."""
     t = pred.get("type")
     recs = sorted(norm.values(), key=lambda r: r["n"])
-    blob = "\n".join("%s %s" % (r.get("text") or "", json.dumps(r.get("args"), ensure_ascii=False) if r.get("args") else "") for r in recs)
+
+    def _hit(pattern):
+        """A regex is matched against each event on its own (tool name, text, tool arguments); ^ and $ anchor lines inside it."""
+        rx = re.compile(pattern, re.M | re.S)
+        return [r["n"] for r in recs if rx.search("%s\n%s\n%s" % (r.get("name") or "", r.get("text") or "",
+                                                              json.dumps(r.get("args"), ensure_ascii=False) if r.get("args") else ""))]
     if t == "tool_used":
         n = sum(1 for r in _calls(norm) if _call_matches(r, pred))
         return {"passed": n >= 1, "detail": "%d matching call(s)" % n}
     if t == "regex":
-        ok = re.search(pred["pattern"], blob, re.S) is not None
-        return {"passed": ok, "detail": "pattern %s" % ("found" if ok else "not found")}
+        hits = _hit(pred["pattern"])
+        return {"passed": bool(hits), "detail": "pattern found in event(s) %s" % hits[:6] if hits else "pattern not found in any event"}
     if t == "not_regex":
-        ok = re.search(pred["pattern"], blob, re.S) is None
-        return {"passed": ok, "detail": "pattern %s" % ("absent" if ok else "present")}
+        hits = _hit(pred["pattern"])
+        return {"passed": not hits, "detail": "pattern present in event(s) %s" % hits[:6] if hits else "pattern absent from every event"}
     if t == "order":
         idx = {}
         for key in ("before", "after"):

@@ -3,12 +3,12 @@ name: derail
 description: Test a skill, plugin, CLI or MCP tool with fresh agents, read their runs, fix the text that caused each drift, rerun. Started by you; spends model usage.
 disable-model-invocation: true
 argument-hint: "<target path or scenario> [--rounds N] [--runner headless|existing] [--from <record>]"
-allowed-tools: Bash(agentic-maker *) Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker *) Bash(git diff *) Bash(git -C * diff *) Write(.agentic-maker/runs/**) Read(//**/am-ws-*/**)
+allowed-tools: Bash(agentic-maker *) Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker *) Bash(git diff *) Bash(git -C * diff *) Read(//**/am-ws-*/**)
 hooks:
   Stop:
     - hooks:
         - type: command
-          command: "${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker ledger gate"
+          command: '"${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker" ledger gate'
 ---
 
 <!-- src: audit-skill-by-derailment/SKILL.md#When to Use -->
@@ -24,6 +24,8 @@ Method and vocabulary come from the `derailment-method` skill (invariants, marke
 
 ## The loop
 
+Lost your place (a long loop, a compaction)? `agentic-maker ledger status --session ${CLAUDE_SESSION_ID}` names the phase you are in and the one command that moves it on; run that.
+
 Work serially through these steps. Every step ends in a command whose output you read; a claim is not a result.
 
 **How to run the commands:** one `agentic-maker` command per Bash call, and one Bash call per message (a second call issued in the same message has been seen to ask for approval although its pattern is pre-approved), with literal paths copied from the previous reply (every reply carries the next command in `next_actions`). Shell variables, `&&` or `;` chains and heredocs cannot be checked against the allowed-tools patterns and are denied. A scenario can be named instead of pathed: `agentic-maker run release-notes`.
@@ -31,16 +33,14 @@ Work serially through these steps. Every step ends in a command whose output you
 1. **Frame.**
    - The target is in the arguments. If it is not, or you cannot tell its kind (`skill`, `plugin`, `cli`, `mcp`), ask the user once.
    - Scenarios are files in `.agentic-maker/scenarios/`. If there are none for this target, propose three (a normal task, an ambiguous one, a failure-injection one) following [scenarios](references/scenarios.md), and write them once the user agrees. **A scenario prompt must read like a user's request and must never name the target.**
-   - Preview the cost: `agentic-maker run <scenario> --dry-run` for each scenario. Show runner, model, turn cap, budget ceiling, the environment variable names the worker gets and the number of takes, then ask before spending. Read its warnings: the worker's tools are exactly the scenario's `allowed_tools` (read-only by default), so a task that writes files needs `Write` listed, and the dry-run says when the receipts expect a file the worker cannot write.
+   - Preview the cost: `agentic-maker run <scenario> --dry-run` for each scenario. Show runner, model, turn cap, budget ceiling, the environment variable names the worker gets, the number of takes and the receipts it will run afterwards (`receipts_run_after`; a `cmd` receipt runs through /bin/sh as you), then ask before spending. Read its warnings: the worker's tools are exactly the scenario's `allowed_tools` (read-only by default), so a task that writes files needs `Write` listed, and the dry-run says when the receipts expect a file the worker cannot write.
    - Open the ledger: `agentic-maker ledger init --session ${CLAUDE_SESSION_ID} --target <the target directory, exactly as given in the arguments> --budget-usd <n> --rounds <n>` (the `--rounds` value from the arguments; without it the limit is 5). Files a fix later touches are added automatically.
-2. **Run.** `agentic-maker run <scenario> --session ${CLAUDE_SESSION_ID}` starts a fresh worker in a clean room and keeps everything. Several takes of the same scenario are normal (agents are not deterministic). Long runs: start them with the Bash tool in the background and wait for the completion notice; do not poll. Runner choices: [runners](#runners).
-3. **Receipts.** `agentic-maker check receipts <take>`. A run whose receipts fail is not a success, whatever the worker said. The worker's files stay in the temp workspace named in the run reply (`workspace`); you may Read them to see why a receipt failed.
-4. **Read.** Spawn the `agentic-maker:trace-reader` agent once per take (at most five at a time) with absolute paths to `trace.md`, `trace.norm.jsonl`, `receipts.json`, `env.json`, the target files and the scenario prompt. It is read-only and returns one JSON object as its final message. It runs in the background: wait for its completion notice, and do not `sleep` or poll. Save the reply with the Write tool as `<take>/findings/<n>.json`. The notification can show `<` and `>` as `&lt;` and `&gt;`: write the plain characters, or `check findings` rejects the quote.
-5. **Verify.** `agentic-maker check findings <file> --trace <take>/trace.norm.jsonl --out <take>/findings/verified.json`. A rejected finding (quote not verbatim, event missing, bad code) is dropped or sent back to the reader; **never fix an unverified finding**.
-6. **Synthesize.** Merge findings across takes and scenarios, rank by severity, apply the compound-P0 rule. See [synthesis-matrix](references/synthesis-matrix.md).
-7. **Fix the cause.** `agentic-maker ledger fix <ids> --session ${CLAUDE_SESSION_ID} --findings <file> --trace <norm>`, then rewrite or delete the controlling text named in the finding (patterns: `derailment-method/references/fix-patterns.md`). You are the only writer. After each edit run `agentic-maker check diff --findings <file> --finding <id> --session ${CLAUDE_SESSION_ID}` (it judges the edit against the copy `ledger fix` kept, so only this round counts, and flags an edit that adds a rule while the cause text is unchanged) and `agentic-maker check nice --findings <file>`.
-8. **Rerun** in a fresh session: run the scenario again, then `agentic-maker check predicate --findings <file> --trace <new take>/trace.norm.jsonl`. The finding is closed only when its predicate passes and the receipts pass. A predicate that is "not met" while the trace plainly shows the behaviour is a badly written predicate (it tested a command's exact wording): say so in the report, judge it from the trace, and do not edit it to pass.
-9. **Stop** when there is no P0 or P1, the receipts pass and two consecutive takes are clean; or when the round limit (default 5) or the budget is reached (`ledger fix` and `run --session` refuse past either; readers' cost is not metered, so keep your own eye on it). Then `agentic-maker ledger close --session ${CLAUDE_SESSION_ID} --outcome clean|open|unverified --reason "<why>"`. Report the rounds, the text that changed (`git diff -- <target>`, run from the project directory), the evidence references, and everything left open or unverified.
+2. **Run.** `agentic-maker run <scenario> --session ${CLAUDE_SESSION_ID}` starts a fresh worker in a clean room, keeps everything, and checks the scenario's Receipts when the take ends: the reply carries `receipts` (passed of total, and what failed). A take whose receipts fail is not a success, whatever the worker said. Several takes of the same scenario are normal (agents are not deterministic). The worker's files stay in the temp workspace named in the reply (`workspace`); you may Read them to see why a receipt failed. Long runs: start them with the Bash tool in the background and wait for the completion notice; do not poll. Runner choices: [runners](#runners).
+3. **Read.** Spawn the `agentic-maker:trace-reader` agent once per take (at most five at a time) with absolute paths to `trace.md`, `trace.norm.jsonl`, `receipts.json`, `env.json`, the target files and the scenario prompt. It is read-only and runs in the background: wait for its completion notice, and do not `sleep` or poll. When it stops, a hook saves its reply as `<take>/findings/<n>.json`, runs `check findings` on it and, if a quote does not verify, sends the reply back to the reader once with the reasons. You copy and save nothing. Then run `agentic-maker ledger status`: it names the findings file and the next command. **Never fix a finding that did not verify**; `ledger fix` refuses it.
+4. **Synthesize.** Merge findings across takes and scenarios, rank by severity, apply the compound-P0 rule. See [synthesis-matrix](references/synthesis-matrix.md).
+5. **Fix the cause.** `agentic-maker ledger fix <ids> --session ${CLAUDE_SESSION_ID} --findings <the findings file> --trace <norm>` first (it keeps a copy of the controlling file and refuses if the file was already edited), then rewrite or delete the controlling text named in the finding (patterns: `derailment-method/references/fix-patterns.md`). You are the only writer. After each edit run `agentic-maker check diff --findings <file> --finding <id> --session ${CLAUDE_SESSION_ID}` (it judges the edit against the copy `ledger fix` kept, so only this round counts, and flags an edit that adds a rule while the cause text is unchanged) and `agentic-maker check nice --findings <file>`.
+6. **Rerun** in a fresh session: run the scenario again, then `agentic-maker check predicate --findings <file> --trace <new take>/trace.norm.jsonl --session ${CLAUDE_SESSION_ID}`. It judges the findings being fixed and records each verdict. A fix is closed only when its predicate passes on a take that ran after the fix and that take's receipts pass. When a predicate cannot decide (type `judged`) or tested the wrong thing, read the new trace yourself and record your verdict with its reason: `agentic-maker ledger judge <id> --session ${CLAUDE_SESSION_ID} --findings <file> --pass|--fail --reason "<what the trace shows>"`. Do not edit the predicate to make it pass.
+7. **Stop** when there is no P0 or P1, the receipts pass and two consecutive takes are clean; or when the round limit (default 5) or the budget is reached (`ledger fix` and `run --session` refuse past either; the budget counts the workers, the readers' tokens are listed in `ledger status`). Then `agentic-maker ledger close --session ${CLAUDE_SESSION_ID} --outcome clean|open|unverified --reason "<why>"`. `clean` is refused until every fix has a passing verdict from a take that ran after it; the refusal names what is missing and the command for it. Report the rounds, the text that changed (`git diff -- <target>`, run from the project directory), the evidence references, and everything left open or unverified.
 
 ## Rules
 
@@ -65,12 +65,12 @@ How is the target being evaluated?
 
 | Command | Purpose |
 |---|---|
-| `run <scenario> [--dry-run] [--runner headless\|existing --from <record>] [--session id]` | start a fresh worker (or ingest a record) and keep the trace, env report and workspace |
+| `run <scenario> [--dry-run] [--runner headless\|existing --from <record>] [--session id]` | start a fresh worker (or ingest a record), keep the trace, env report and workspace, and check the Receipts |
 | `normalize <take or file>` | trace.norm.jsonl and trace.md from stream-json or a session transcript |
-| `check receipts <take>` | what the run left on disk, against the scenario's Receipts |
-| `check findings <file> --trace <norm>` | every quote verbatim in the cited events |
+| `check receipts <take> [--list]` | the Receipts again (`--list` shows them without running anything) |
+| `check findings <file> --trace <norm>` | every quote verbatim in the cited events (the reader's hook runs it for you) |
 | `check diff / nice / predicate` | the applied edit fixed the cause / a [NICE] line survived / the rerun passed |
-| `ledger init / fix / set-status / close / abandon / status` | the loop's state; survives compaction; backs the Stop gate |
+| `ledger init / status / fix / judge / set-status / close / abandon` | the loop's state and phase; survives compaction; backs the Stop gate |
 
 Each command has `--help` with examples and its exit codes (0 ok, 2 usage, 3 not found, 6 validation, 8 partial).
 

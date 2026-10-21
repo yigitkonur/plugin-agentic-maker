@@ -139,6 +139,7 @@ def build():
     cr.add_argument("take_dir", help="a take directory under .agentic-maker/runs/<run>/<scenario>/NN")
     cr.add_argument("--workspace", help="check this directory instead of the recorded workspace")
     cr.add_argument("--list", action="store_true", help="print the receipts (including every `cmd` that would run) and run nothing")
+    cr.add_argument("--session", help="record the result in this orchestrator session's ledger (`run --session` already does for the take it ends)")
     cf = _p(csub, "findings", "Verify the reader's findings: quotes verbatim in cited events, fields valid, ids unique.",
             "example:\n  agentic-maker check findings findings/f1.json --trace <take>/trace.norm.jsonl")
     cf.add_argument("findings")
@@ -155,7 +156,8 @@ def build():
             "example:\n  agentic-maker check predicate --findings f1.json --trace <new take>/trace.norm.jsonl")
     cp.add_argument("--findings", required=True)
     cp.add_argument("--trace", required=True, help="the new take's trace.norm.jsonl")
-    cp.add_argument("--finding", nargs="*", help="only these ids")
+    cp.add_argument("--finding", nargs="*", help="only these ids (with --session and no --finding: the findings of this file that are being fixed)")
+    cp.add_argument("--session", help="record each verdict in this orchestrator session's ledger; `ledger close --outcome clean` reads them")
     cn = _p(csub, "nice", "Did an edit delete text that a [NICE] behaviour depended on?",
             "example:\n  agentic-maker check nice --findings f1.json")
     cn.add_argument("--findings", required=True)
@@ -185,6 +187,17 @@ def build():
     lf.add_argument("--session", required=True)
     lf.add_argument("--findings", required=True)
     lf.add_argument("--trace", required=True)
+    lj = _p(lsub, "judge", "Record your own verdict on a fix when its rerun predicate cannot decide (type `judged`, or a predicate that tested the wrong thing). The reason is kept.",
+            "example:\n  agentic-maker ledger judge F2 --session \"$CLAUDE_SESSION_ID\" --findings f1.json --pass --reason \"the new trace shows the worker reading references/format.md at event 14\"")
+    lj.add_argument("id")
+    lj.add_argument("--session", required=True)
+    lj.add_argument("--findings", required=True, help="the findings file the id belongs to")
+    jg = lj.add_mutually_exclusive_group(required=True)
+    jg.add_argument("--pass", dest="judged_pass", action="store_true")
+    jg.add_argument("--fail", dest="judged_fail", action="store_true")
+    lj.add_argument("--reason", required=True)
+    _p(lsub, "reader-done", "SubagentStop hook entry point for the trace-reader (see hooks/hooks.json): saves the reader's reply, checks it, sends it back once if a quote does not verify. Always exits 0.",
+       "example:\n  echo '{\"agent_type\": \"x\"}' | agentic-maker ledger reader-done")
     lss = _p(lsub, "set-status", "Set framing|running|reading|fixing|awaiting_user (awaiting_user lets the Stop gate pass).",
              "example:\n  agentic-maker ledger set-status awaiting_user --session \"$CLAUDE_SESSION_ID\" --reason \"asked the user which scenario\"")
     lss.add_argument("status")
@@ -260,6 +273,8 @@ def dispatch(args, root, out):
             return out.ok(res, [{"command": "herdr tab create --cwd %s --label derail --no-focus" % res["workspace"], "why": "then follow skills/derail/references/runners/herdr.md; one herdr command per reply"}], json.dumps(res, indent=2), warnings=warns)
         if args.session and runner == "headless" and not args.dry_run:
             ledger_mod.refuse_if_over_budget(root, args.session)
+            if sc["meta"]["kind"] == "cli":
+                ledger_mod.refuse_if_stale_bin(root, args.session, runner_mod._abs(root, str(sc["meta"].get("bin") or str(sc["meta"]["target"]).split(":", 1)[-1])))
         if runner == "headless":
             res, warns, code = runner_mod.run_headless(root, sc, a)
         elif runner == "existing":
@@ -269,15 +284,28 @@ def dispatch(args, root, out):
                            suggestion="use headless or existing; the herdr runner is driven by the agent through herdr-conductor rules, see skills/derail/references/runners/herdr.md")
         if res.get("dry_run"):
             return out.ok(res, [{"command": "agentic-maker run %s" % args.scenario, "why": "launch it for real"}], json.dumps(res, indent=2), warnings=warns)
+        # what the run left on disk is the witness, not the worker's closing message: the take is judged by its receipts right away
+        receipts = None
+        try:
+            rc = check_mod.check_receipts(res["take_dir"])
+            receipts = {"total": rc["total"], "passed": rc["passed"], "failed": rc["failed"],
+                        "failures": [{"kind": r["kind"], "spec": r["spec"], "detail": r["detail"]} for r in rc["receipts"] if not r["ok"]]}
+            res["receipts"] = receipts
+            if rc["total"] == 0:
+                warns = warns + ["the scenario has no Receipts: nothing checks what the worker left behind, completion rests on its own report"]
+        except CliError as e:
+            warns = warns + ["receipts not evaluated: " + e.message]
         if args.session:
             try:
-                ledger_mod.record_trace(root, args.session, res["take_dir"])
+                ledger_mod.record_trace(root, args.session, res["take_dir"], receipts)
             except CliError as e:
                 warns = warns + ["not recorded in a ledger: " + e.message]
-        nxt = [{"command": "agentic-maker check receipts %s" % res["take_dir"], "why": "what the run left on disk (the agent's own report is only a claim)"},
-               {"delegate": "trace-reader", "input": res["trace_md"], "why": "give the reader trace.md plus receipts.json; it returns findings as JSON"}]
-        human = "%s: %s, %d events, %d tool calls (%d errors), $%s, isolated=%s\n  trace: %s" % (
-            res["run_id"], res["status"], res["events"], res["tool_calls"], res["tool_errors"], res.get("cost_usd", "-"), res.get("isolated"), res["trace_md"])
+        nxt = [{"delegate": "trace-reader", "input": res["trace_md"], "why": "spawn agentic-maker:trace-reader with the absolute paths of this take (trace.md, trace.norm.jsonl, receipts.json, env.json, the target files, the prompt)"}]
+        if args.session:
+            nxt.append({"command": "agentic-maker ledger status --session %s" % args.session, "why": "after the reader stops: where the loop is and the next command"})
+        human = "%s: %s, %d events, %d tool calls (%d errors), $%s, isolated=%s, receipts %s\n  trace: %s" % (
+            res["run_id"], res["status"], res["events"], res["tool_calls"], res["tool_errors"], res.get("cost_usd", "-"), res.get("isolated"),
+            ("%d/%d" % (receipts["passed"], receipts["total"])) if receipts else "not evaluated", res["trace_md"])
         if code == 8:
             return out.partial(res, "the run ended as %s, not completed; the trace was kept" % res["status"], nxt, human, warns)
         return out.ok(res, nxt, human, warnings=warns)
@@ -430,6 +458,9 @@ def dispatch_check(args, root, out):
                           [{"command": "agentic-maker check receipts %s" % td, "why": "run them (cmd receipts execute through /bin/sh in the workspace)"}],
                           "%d receipt(s)" % len(specs) + "".join("\n  %s: %s" % (r["kind"], r["spec"]) for r in specs))
         res = check_mod.check_receipts(td, args.workspace)
+        if args.session:
+            ledger_mod.record_receipts(root, args.session, td, {"total": res["total"], "passed": res["passed"], "failed": res["failed"],
+                                                               "failures": [{"kind": r["kind"], "spec": r["spec"], "detail": r["detail"]} for r in res["receipts"] if not r["ok"]]})
         human = "%d/%d receipts passed" % (res["passed"], res["total"]) + "".join("\n  FAIL %s: %s" % (r["line"] if "line" in r else r["kind"] + ": " + r["spec"], r["detail"]) for r in res["receipts"] if not r["ok"])
         if res["total"] == 0:
             return out.partial(res, "the scenario has no Receipts: nothing was checked, completion rests on the agent's own report", [], human)
@@ -457,7 +488,7 @@ def dispatch_check(args, root, out):
         if args.session:
             led, _ = ledger_mod.load(root, session=args.session)
             fnd = _finding_file(args.findings, args.finding)
-            entries = (led.get("snapshots") or {}).get(args.finding) or []
+            entries = (led.get("snapshots") or {}).get(ledger_mod.fkey(root, args.findings, args.finding)) or []
             match = [e for e in entries if os.path.realpath(e["file"]) == os.path.realpath(fnd if os.path.isabs(fnd) else os.path.join(root, fnd))]
             if not match:
                 raise CliError("not_found", "no_snapshot", "`ledger fix` kept no copy of %s for finding %s" % (fnd, args.finding),
@@ -471,7 +502,16 @@ def dispatch_check(args, root, out):
             raise CliError("validation", "no_change", res["reason"], details=res, suggestion="apply the fix first")
         return out.ok(res, [], "%s: %s" % (res["verdict"], res.get("reason") or res.get("note", "")))
     if w == "predicate":
-        res = check_mod.check_predicates(args.findings, args.trace, args.finding)
+        ids, scope_note = args.finding, None
+        if args.session and not ids:
+            ids = ledger_mod.fixing_ids(root, args.session, args.findings)
+            if not ids:
+                scope_note = "no finding of this file is being fixed in the ledger, so all of them were judged"
+        res = check_mod.check_predicates(args.findings, args.trace, ids or None)
+        if args.session:
+            ledger_mod.record_predicates(root, args.session, args.findings, args.trace, res["results"])
+        if scope_note:
+            res["note"] = scope_note
         human = "%d passed, %d failed, %d need a judge" % (res["passed"], res["failed"], res["needs_judgement"]) + "".join(
             "\n  %s %s: %s" % ({True: "PASS", False: "FAIL", None: "JUDGE"}[r["passed"]], r["id"], r["detail"]) for r in res["results"])
         if res["total"] == 0:
@@ -499,7 +539,11 @@ def dispatch_ledger(args, root, out):
                       "ledger %s opened for session %s" % (led["run_id"], args.session))
     if w == "status":
         led, p = ledger_mod.load(root, args.session, args.run_id)
-        return out.ok(dict(led, ledger_file=p), [], "%s: %s, %d trace(s), $%s spent of $%s" % (led["run_id"], led["status"], len(led["traces"]), led["spent_usd"], led["budget_usd_total"]))
+        phase, nxt = ledger_mod.phase_and_next(led, led["session_id"])
+        toks = {k: sum(((r.get("reader_tokens") or {}).get(k, 0)) for r in led.get("reads", [])) for k in ("input", "output", "cache_read", "cache_create")}
+        return out.ok(dict(led, ledger_file=p, phase=phase, reader_tokens_total=toks), nxt,
+                      "%s: %s (phase %s), %d trace(s), $%s spent of $%s on workers, readers %d tokens in/%d out" % (
+                          led["run_id"], led["status"], phase, len(led["traces"]), led["spent_usd"], led["budget_usd_total"], toks["input"] + toks["cache_read"] + toks["cache_create"], toks["output"]))
     if w == "trace":
         led = ledger_mod.record_trace(root, args.session, args.take_dir)
         return out.ok({"run_id": led["run_id"], "status": led["status"], "traces": len(led["traces"])}, [], "recorded")
@@ -511,6 +555,10 @@ def dispatch_ledger(args, root, out):
                       [{"command": "agentic-maker check diff --findings %s --finding %s --session %s" % (args.findings, args.ids[0], args.session), "why": "after the edit, check it fixed the cause"},
                        {"command": "agentic-maker run <scenario> --session %s" % args.session, "why": "a fresh run is the only proof"}],
                       "fixing: %s" % ", ".join(args.ids))
+    if w == "judge":
+        f = ledger_mod.judge(root, args.session, args.findings, args.id, args.judged_pass, args.reason)
+        return out.ok({"finding": args.id, "predicate": f["predicate"]}, [{"command": "agentic-maker ledger status --session %s" % args.session, "why": "where the loop is now"}],
+                      "%s judged %s" % (args.id, "pass" if args.judged_pass else "fail"))
     if w == "set-status":
         led = ledger_mod.set_status(root, args.session, args.status, args.reason)
         return out.ok({"run_id": led["run_id"], "status": led["status"]}, [], led["status"])
@@ -544,6 +592,11 @@ def main(argv):
     argv, fj, fh, root_arg = _split_globals(list(argv))
     if argv[:2] == ["ledger", "gate"] and not {"-h", "--help"} & set(argv):
         code, text = ledger_mod.gate(_read_stdin(2.0))
+        if text:
+            sys.stdout.write(text + "\n")
+        return code  # always 0: a hook must never trap the agent
+    if argv[:2] == ["ledger", "reader-done"] and not {"-h", "--help"} & set(argv):
+        code, text = ledger_mod.reader_done(_read_stdin(2.0))
         if text:
             sys.stdout.write(text + "\n")
         return code  # always 0: a hook must never trap the agent
