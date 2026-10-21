@@ -7,8 +7,8 @@ Recorded 2026-10-20 on herdr 0.9.5 and Claude Code 2.1.302. A Claude worker, sta
 | # | Command (shortened) | What came back |
 |---|---|---|
 | 1 | `agentic-maker run release-notes --prepare` | seeded workspace, wrapper plugin, the exact `claude_args`, the prompt; nothing launched |
-| 2 | `herdr tab create --workspace <w> --cwd <workspace> --label am-live-1 --no-focus` | `tab_id wTG:tZ`, `root_pane.pane_id wTG:pZ` (the old guide's `.result.pane.id` does not exist) |
-| 3 | `herdr agent start am-live-1 --kind claude --pane wTG:pZ --timeout 30000 -- <claude_args>` | `agent_not_ready`: "agent am-live-1 is blocked during startup" |
+| 2 | `herdr tab create --workspace <w> --cwd <workspace> --label am-live-1 --no-focus` | `tab_id <tab>`, `root_pane.pane_id <pane>` (the old guide's `.result.pane.id` does not exist) |
+| 3 | `herdr agent start am-live-1 --kind claude --pane <pane> --timeout 30000 -- <claude_args>` | `agent_not_ready`: "agent am-live-1 is blocked during startup" |
 | 4 | `herdr agent read am-live-1 --source visible` | the trust dialog, naming the prepared folder: "No, exit" selected, "Yes, I trust this folder" |
 | 5 | `herdr agent send-keys am-live-1 down`, then a visible read | "Yes" selected |
 | 6 | `herdr agent send-keys am-live-1 enter`, then `agent get` and a read | `idle`; the TUI banner shows "don't ask on" and the model |
@@ -17,7 +17,7 @@ Recorded 2026-10-20 on herdr 0.9.5 and Claude Code 2.1.302. A Claude worker, sta
 | 9 | `herdr agent send-keys am-live-1 ctrl+o`, read; again, read | see `Ctrl+O` below |
 | 10 | `agentic-maker run release-notes --runner existing --from <transcript> --workspace <workspace>` | 52 events, 10 tool calls |
 | 11 | `agentic-maker check receipts <take>` | **11/11 passed** |
-| 12 | `herdr tab close wTG:tZ` | `ok`; the tab list shows no `am-live` tab |
+| 12 | `herdr tab close <tab>` | `ok`; the tab list shows no `am-live` tab |
 
 The worker's brief was the scenario prompt and nothing else: no marker request, no "you are a worker", no return address, no herdr instruction. This session's own pane was never prompted, keyed or closed.
 

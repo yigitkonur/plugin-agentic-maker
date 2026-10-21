@@ -230,6 +230,10 @@ Section 2's first numbers were confounded: the workers' compound commands (`cd .
 
 Mean Δ +0.40. The five stay-quiet cases (three new: a REST API for a web frontend, a chatbot system prompt, a React form) score 1.00 with and without the plugin. Of the new trigger cases written in plain words (no "agent" in the prompt), "build me a small MCP server" and "write a SKILL.md for our deploy process" fire the skill every time. "Add a tool to our MCP server that deletes a calendar event" scored 0: the sandbox has no such server, the model searched for it (`Grep` for `McpServer|FastMCP|registerTool`) and never reached the skill. The case was rewritten to be self-contained (the three existing tools are named in the prompt) and rerun: 1 of 3 fire (Δ +0.33). A small, direct design question is answered without the skill; the same request as work on real code fires it 3 of 3 (7.1, row d).
 
+### 7.3 In a normal session with every skill installed
+
+`claude -p "Build me a tiny command-line tool called todo that lists the tasks in tasks.txt and marks one done, so that our automation agents can use it. Put it in this folder."` with `--plugin-dir` and no restriction, on the author's machine (**104 skills installed**, among them the three `audit-*` skills this plugin replaces), two runs: `agentic-maker:agent-interface-design` was called in both, and each run ran `agentic-maker probe` on the tool it had built once (25 and 19 tool calls, $0.25 and $0.22).
+
 ## 8. The audit and the knowledge pages
 
 - `agentic-maker probe cli|mcp` saves its whole reply under `.agentic-maker/runs/audit-<date>/probe-*.json` (ignored by git) and prints the path as `evidence_file`; the MCP envelope stays compact while the file holds the per-tool rows. The audit cites the file; the line "the target must not be run again by hand" is replaced by "read that file or rerun the same probe".

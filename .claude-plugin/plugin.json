@@ -1,6 +1,6 @@
 {
   "name": "agentic-maker",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Design agent-facing tools (CLIs, scripts, MCP servers, skills) and test them by derailment: run a fresh agent, read the whole execution, fix the text that caused each drift, rerun.",
   "author": { "name": "yigitkonur", "url": "https://github.com/yigitkonur" },
   "homepage": "https://github.com/yigitkonur/plugin-agentic-maker",
