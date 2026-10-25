@@ -1,0 +1,67 @@
+name: release
+# Every shipped change on main gets a new version, a tag and a GitHub release, so installed copies see an update:
+# Claude Code only updates a plugin whose `version` string changed. scripts/release.py decides the bump from the
+# commit types (feat -> minor, fix/perf -> patch, breaking -> major; docs/ci/chore -> no release).
+# Other plugin repos can use this same file: when scripts/release.py is missing it is downloaded from
+# yigitkonur/plugin-agentic-maker.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      level:
+        description: "auto, patch, minor or major"
+        default: auto
+permissions:
+  contents: write
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  release:
+    if: ${{ github.ref == 'refs/heads/main' && !startsWith(github.event.head_commit.message || '', 'chore(release)') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main        # the newest main, not the pushed commit: a queued run must see the release commit of the run before it
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Decide and write the next version
+        id: bump
+        run: |
+          script=scripts/release.py
+          if [ ! -f "$script" ]; then
+            script="$RUNNER_TEMP/release.py"
+            curl -fsSL https://raw.githubusercontent.com/yigitkonur/plugin-agentic-maker/main/scripts/release.py -o "$script"
+          fi
+          python3 "$script" --apply --level "${{ inputs.level || 'auto' }}" --notes-out "$RUNNER_TEMP/notes.md" --github-output
+      - uses: actions/setup-node@v4
+        if: steps.bump.outputs.released == 'true' && hashFiles('scripts/check.sh') != ''
+        with:
+          node-version: "22"
+      - name: Gate on the bumped tree
+        if: steps.bump.outputs.released == 'true' && hashFiles('scripts/check.sh') != ''
+        run: |
+          npm install -g @anthropic-ai/claude-code@2.1.302
+          scripts/check.sh
+      - name: Commit, tag, release
+        if: steps.bump.outputs.released == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.bump.outputs.version }}
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -u
+          git commit -m "chore(release): $TAG"
+          # No rebase: if main moved while this ran, the version and the gate no longer describe it. The push that
+          # moved main queued its own run, which starts from the newest main and releases everything since the last tag.
+          git push origin HEAD:main || { echo "::error::main moved during the release; the queued run for that push will release"; exit 1; }
+          git tag -a "$TAG" -m "$TAG"
+          git push origin "$TAG"
+          name=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['name'])")
+          gh release create "$TAG" --title "$name $VERSION" --notes-file "$RUNNER_TEMP/notes.md" --latest
