@@ -13,4 +13,6 @@
 
 **Typical scenarios:** a normal task in a user's words; an ambiguous one; one with a missing prerequisite. A skill with a `references/` directory also needs a scenario that can only be solved by reading one.
 
+To write or redesign the skill under test, use `/agentic-maker:build-skill`; this page is for testing it.
+
 **Do not** test by telling the worker "use the X skill".

@@ -110,6 +110,7 @@ error [conflict/not_witnessed]: the loop cannot be closed as clean: 8 of 11 rece
 | `/agentic-maker:audit <target>` | probes a cli, script, mcp server or skill and reports against the contract: scorecard plus evidence. it's told to change nothing; it runs in a forked agent with the usual tools, so that's an instruction, not a sandbox. |
 | `/agentic-maker:derail <target>` | the loop: scenarios, fresh agents in a clean room, a read-only reader whose reply a hook saves and checks, a fix of the controlling text, a rerun, and a ledger that refuses "clean" until each fix is witnessed (plus a stop gate that refuses "fixed" without a fresh run). |
 | `/agentic-maker:design <idea>` | picks cli, mcp or skill, asks the interview for that surface, and sketches it before anyone writes code. |
+| `/agentic-maker:build-skill <idea or path>` | creates, redesigns or merges a skill: facts verified first (uses the `research` plugin when installed), layout, frontmatter, body, a ship checklist, then the fresh-agent loop above to test it. |
 | `agent-interface-design` (model-invoked) | write-time guidance while an agent-facing surface is being built or reviewed; tells the model to run `agentic-maker probe` on what it just built. |
 | `derailment-method` (model-invoked, narrow) | the vocabulary and discipline of the method; preloaded into the reader. |
 
@@ -165,7 +166,7 @@ the three skills `audit-agentic-cli`, `audit-agentic-mcp` and `audit-skill-by-de
 
 ## footprint
 
-lowkey light: about 323 tokens always-on, total (`claude plugin details agentic-maker@plugin-agentic-maker`). that's a short description per skill (about 40 each for the three commands you start, 60 and 100 for the two knowledge skills) plus about 50 for the reader. the `SubagentStop` hook costs no model context. skill bodies load only when a skill actually runs.
+lowkey light: about 365 tokens always-on, total (`claude plugin details agentic-maker@plugin-agentic-maker`). that's a short description per skill (about 40 each for the four commands you start, 60 and 100 for the two knowledge skills) plus about 50 for the reader. the `SubagentStop` hook costs no model context. skill bodies load only when a skill actually runs.
 
 ## safety (the boring part that matters)
 
