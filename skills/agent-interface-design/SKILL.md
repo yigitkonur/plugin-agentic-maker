@@ -5,6 +5,8 @@ description: Use when building, changing or reviewing something an AI agent will
 
 # Agent-interface design
 
+> In Codex: `$ARGUMENTS` is what the user wrote after the skill name. `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}` mean the plugin folder and this skill's folder (the plugin folder is two levels above this file); `agentic-maker` is on PATH or is `<plugin folder>/bin/agentic-maker`. A line that starts with an exclamation mark and a backtick is a command: run it yourself first.
+
 An agent is the user of this surface: it reads the text, picks the call, parses the answer and decides what to do next. Paths below are relative to `${CLAUDE_SKILL_DIR}/references/`; a path that starts with `skills/` is relative to the plugin root (the folder that holds `skills/`).
 
 ## The eight questions

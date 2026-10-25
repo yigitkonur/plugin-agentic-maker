@@ -1,0 +1,6 @@
+interface:
+  display_name: "derail"
+  short_description: "Test a skill, plugin, CLI or MCP tool with fresh agents and fix the text that misled them. Started b"
+  default_prompt: "Use $derail on this project."
+policy:
+  allow_implicit_invocation: false

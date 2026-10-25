@@ -8,6 +8,8 @@ allowed-tools: Bash(agentic-maker *) Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-make
 
 # Build a CLI for agents
 
+> In Codex: `$ARGUMENTS` is what the user wrote after the skill name. `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}` mean the plugin folder and this skill's folder (the plugin folder is two levels above this file); `agentic-maker` is on PATH or is `<plugin folder>/bin/agentic-maker`. A line that starts with an exclamation mark and a backtick is a command: run it yourself first.
+
 Request: `$ARGUMENTS`
 
 The caller is an AI agent in a shell. It reads stdout, trusts the exit code, cannot answer a prompt, and learns the tool from `--help`. Pages are under `${CLAUDE_PLUGIN_ROOT}/skills/agent-interface-design/references/cli/`; open one when the step names it. This runs in the main conversation: ask the user directly, and only what changes the result.

@@ -1,0 +1,6 @@
+interface:
+  display_name: "audit"
+  short_description: "Audit a CLI, MCP server or skill with read-only probes; changes nothing. Started by you."
+  default_prompt: "Use $audit on this project."
+policy:
+  allow_implicit_invocation: false

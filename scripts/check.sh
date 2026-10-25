@@ -67,8 +67,9 @@ p = json.load(open(".claude-plugin/plugin.json")); m = json.load(open(".claude-p
 v = m["plugins"][0]["version"]
 import re
 code = re.search(r'__version__ = "([^"]+)"', open("lib/agentic_maker/__init__.py").read()).group(1)
-ok = p["version"] == v == m["metadata"]["version"] == code and p["name"] == m["plugins"][0]["name"]
-print("  plugin %s %s / marketplace %s / code %s" % (p["name"], p["version"], v, code))
+cx = json.load(open(".codex-plugin/plugin.json"))
+ok = p["version"] == v == m["metadata"]["version"] == code == cx["version"] and p["name"] == m["plugins"][0]["name"] == cx["name"]
+print("  plugin %s %s / marketplace %s / code %s / codex %s" % (p["name"], p["version"], v, code, cx["version"]))
 bad = [k for k in p if k in ("commands", "agents", "skills", "hooks", "mcpServers")]
 if bad: print("  manual path fields in plugin.json:", bad); ok = False
 sys.exit(0 if ok else 1)

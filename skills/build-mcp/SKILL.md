@@ -8,6 +8,8 @@ allowed-tools: Bash(agentic-maker *) Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-make
 
 # Build an MCP server for agents
 
+> In Codex: `$ARGUMENTS` is what the user wrote after the skill name. `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}` mean the plugin folder and this skill's folder (the plugin folder is two levels above this file); `agentic-maker` is on PATH or is `<plugin folder>/bin/agentic-maker`. A line that starts with an exclamation mark and a backtick is a command: run it yourself first.
+
 Request: `$ARGUMENTS`
 
 The caller is a model that reads tool names and descriptions, fills a schema, and acts on the answer. This skill decides the tools and checks the result; it does not carry SDK code, so write the implementation with the SDK's own documentation (or a companion builder skill, only if installed: [companion-routing.md](../agent-interface-design/references/decisions/companion-routing.md)). Pages are under `${CLAUDE_PLUGIN_ROOT}/skills/agent-interface-design/references/mcp/`. This runs in the main conversation: ask the user directly, and only what changes the result.
