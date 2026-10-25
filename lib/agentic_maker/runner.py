@@ -74,11 +74,20 @@ def _abs(root, p):
 IGNORE_COPY = shutil.ignore_patterns(".git", "__pycache__", ".agentic-maker", "node_modules")
 
 
-def _copied_plugin(plugin_dir, run_dir):
-    """The worker gets a copy: a scenario that allows Write, Edit or Bash must not be able to change the real target."""
+def _copied_plugin(plugin_dir, run_dir, leave_out=()):
+    """The worker gets a copy: a scenario that allows Write, Edit or Bash must not be able to change the real target.
+    `leave_out` names top-level folders of the plugin that stay out of the copy (test material such as fixtures/ that the
+    worker could otherwise find and mistake for the real thing)."""
     c = os.path.join(run_dir, "plugin")
     shutil.rmtree(c, ignore_errors=True)
-    shutil.copytree(plugin_dir, c, ignore=IGNORE_COPY)
+    top, skip = os.path.abspath(plugin_dir), set(leave_out or ())
+
+    def ignore(d, names):
+        out = set(IGNORE_COPY(d, names))
+        if os.path.abspath(d) == top:
+            out |= {n for n in names if n in skip}
+        return out
+    shutil.copytree(plugin_dir, c, ignore=ignore)
     return c
 
 
@@ -110,7 +119,7 @@ def plan(root, sc, args, run_dir):
         if not os.path.isdir(t):
             raise CliError("not_found", "target_not_found", "target directory not found: %s" % t)
         if os.path.exists(os.path.join(t, ".claude-plugin", "plugin.json")):
-            plugin_dir, wrapped = _copied_plugin(t, run_dir), False
+            plugin_dir, wrapped = _copied_plugin(t, run_dir, meta.get("leave_out") or []), False
             warnings.append("the worker runs on a copy of the plugin made for each run; edits you make to the target are picked up on the next run")
         elif os.path.exists(os.path.join(t, "SKILL.md")):
             wname = str(meta.get("wrapper_name") or "target")

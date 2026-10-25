@@ -13,6 +13,7 @@ wrapper_name: notes              # skill dirs only: the namespace the worker see
 bin: target/debug/mycli          # cli: the built executable (a crate or package name is not a path)
 build: cargo build               # cli: how to produce it - a note for people and for `detect`; the plugin never runs it
 env: ["FOO_API_BASE"]            # extra environment variable NAMES passed to the worker; no secrets by default
+leave_out: ["fixtures", "evals"]   # plugin dirs: top-level folders left out of the worker's copy (test material it could mistake for the real thing)
 runner: headless                 # headless | existing
 isolation: clean                 # clean (default) | in-situ
 model: sonnet
