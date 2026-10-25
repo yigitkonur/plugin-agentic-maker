@@ -2,13 +2,14 @@
 name: new-from-doc
 kind: plugin
 target: ../..
+leave_out: ["fixtures", "evals", "docs"]
 runner: headless
 isolation: clean
 model: sonnet
 max_turns: 40
 timeout_s: 420
 budget_usd: 1.5
-allowed_tools: ["Read", "Glob", "Grep", "Write", "Edit", "Skill", "Bash(ls *)", "Bash(cat *)", "Bash(wc *)", "Bash(grep *)", "Bash(mkdir *)", "Bash(mv *)", "Bash(python3 *)", "Bash(claude plugin validate *)"]
+allowed_tools: ["Read", "Glob", "Grep", "Write", "Edit", "Skill", "Bash(ls *)", "Bash(cat *)", "Bash(wc *)", "Bash(grep *)", "Bash(mkdir *)", "Bash(mv *)", "Bash(python3 *)", "Bash(claude plugin validate *)", "Bash(agentic-maker *)"]
 ---
 
 ## Prompt
@@ -39,3 +40,4 @@ allowed_tools: ["Read", "Glob", "Grep", "Write", "Edit", "Skill", "Bash(ls *)", 
 - cmd: ! grep -rqiE 'TODO|lorem|FIXME' skills/acme-report => 0
 - cmd: cd skills/acme-report && for f in $(grep -o 'references/[A-Za-z0-9_./-]*\.md' SKILL.md | sort -u); do test -f "$f" || exit 1; done => 0
 - unchanged: docs/acme-report.md
+- cmd: test "$(ls .agentic-maker/scenarios/*.md 2>/dev/null | wc -l)" -ge 3 => 0

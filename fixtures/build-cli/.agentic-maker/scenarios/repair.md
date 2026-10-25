@@ -2,6 +2,7 @@
 name: repair
 kind: plugin
 target: ../..
+leave_out: ["fixtures", "evals", "docs"]
 runner: headless
 isolation: clean
 model: sonnet

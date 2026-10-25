@@ -2,13 +2,14 @@
 name: redesign
 kind: plugin
 target: ../..
+leave_out: ["fixtures", "evals", "docs"]
 runner: headless
 isolation: clean
 model: sonnet
 max_turns: 40
 timeout_s: 420
 budget_usd: 1.5
-allowed_tools: ["Read", "Glob", "Grep", "Write", "Edit", "Skill", "Bash(ls *)", "Bash(cat *)", "Bash(wc *)", "Bash(grep *)", "Bash(mkdir *)", "Bash(mv *)", "Bash(python3 *)", "Bash(claude plugin validate *)"]
+allowed_tools: ["Read", "Glob", "Grep", "Write", "Edit", "Skill", "Bash(ls *)", "Bash(cat *)", "Bash(wc *)", "Bash(grep *)", "Bash(mkdir *)", "Bash(mv *)", "Bash(python3 *)", "Bash(claude plugin validate *)", "Bash(agentic-maker *)"]
 ---
 
 ## Prompt
@@ -39,3 +40,4 @@ allowed_tools: ["Read", "Glob", "Grep", "Write", "Edit", "Skill", "Bash(ls *)", 
 - exists: skills/ship-notes/references/formats.md
 - exists: skills/ship-notes/scripts/group.py
 - cmd: test "$(grep -ciE '^[0-9]*\.? *never ' skills/ship-notes/SKILL.md)" -lt 3 => 0
+- cmd: test "$(ls .agentic-maker/scenarios/*.md 2>/dev/null | wc -l)" -ge 3 => 0
