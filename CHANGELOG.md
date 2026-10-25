@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0 - 2026-10-25
+
+- feat(codex): Codex plugin, global install that stays off, per-project switch (#8) (595fa9a)
+
 ## 0.4.0 - 2026-10-25
 
 - feat(skills): build-cli and build-mcp, build-skill fixed by derail, derail leave_out, shipped scenario packs (#7) (7c822b3)
