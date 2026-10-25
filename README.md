@@ -34,6 +34,7 @@ claude plugin disable agentic-maker@plugin-agentic-maker --scope project
 ### codex (0.163+)
 
 ```sh
+mkdir -p ~/.local/bin && for f in plugin-here codex-plugin-project.sh; do curl -fsSL https://raw.githubusercontent.com/yigitkonur/plugin-agentic-maker/main/scripts/$f -o ~/.local/bin/$f && chmod +x ~/.local/bin/$f; done   # helpers, ~/.local/bin must be on PATH
 codex plugin marketplace add yigitkonur/plugin-agentic-maker
 codex plugin add agentic-maker@plugin-agentic-maker
 codex-plugin-project.sh global-off agentic-maker@plugin-agentic-maker   # codex has no "disable" command, the script edits ~/.codex/config.toml
@@ -51,10 +52,9 @@ codex-plugin-project.sh off agentic-maker@plugin-agentic-maker .
 
 ### one command for both
 
-`plugin-here` does the claude and the codex half for the folder you are in (it skips a host that isn't installed or doesn't have the plugin):
+with the two helpers from the codex step on PATH, `plugin-here` does the claude and the codex half for the folder you are in (it skips a host that doesn't have the plugin installed):
 
 ```sh
-mkdir -p ~/.local/bin && for f in plugin-here codex-plugin-project.sh; do curl -fsSL https://raw.githubusercontent.com/yigitkonur/plugin-agentic-maker/main/scripts/$f -o ~/.local/bin/$f && chmod +x ~/.local/bin/$f; done
 cd your-project
 plugin-here on agentic-maker@plugin-agentic-maker
 plugin-here off agentic-maker@plugin-agentic-maker

@@ -18,7 +18,7 @@ if command -v claude >/dev/null 2>&1; then
   else echo "claude: $id is not installed (claude plugin install $id -s user)"; fi
 fi
 if command -v codex >/dev/null 2>&1; then
-  if codex plugin list 2>/dev/null | grep -qF "$id"; then
+  if codex plugin list 2>/dev/null | grep -Eq "^${id}[[:space:]]+installed"; then
     if [ "$mode" = on ]; then codex-plugin-project.sh on "$id" "$dir" --trust || rc=1
     else codex-plugin-project.sh off "$id" "$dir" || rc=1; fi
   else echo "codex: $id is not installed (codex plugin add $id)"; fi
