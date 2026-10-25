@@ -31,7 +31,11 @@ VERBS = set("""get list search find fetch read show describe query lookup check 
 update set edit modify change rename move patch put upload write save delete remove drop destroy purge cancel archive
 run execute start stop restart deploy build open close apply approve reject validate verify export import sync
 publish subscribe notify submit review merge tag assign generate summarize translate convert analyze download
-login logout connect disconnect enable disable invite grant revoke fork clone ping""".split())
+login logout connect disconnect enable disable invite grant revoke fork clone ping
+suspend resume unsuspend activate deactivate lock unlock block unblock ban unban mute unmute pause retry resend restore refresh
+schedule unschedule escalate resolve reopen follow unfollow untag label pin unpin flag share unshare attach detach link unlink
+mark copy duplicate rotate reissue render calculate compute parse extract compare diff estimate predict resolve reserve release
+claim acknowledge dismiss snooze transfer withdraw refund charge capture void reassign""".split())
 DEFAULTS = {"description_chars": 400, "schema_chars": 2000, "response_chars": 4000, "tool_threshold": 20}
 
 
