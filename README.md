@@ -34,6 +34,18 @@ claude plugin marketplace update plugin-agentic-maker && claude plugin update ag
 claude plugin uninstall agentic-maker@plugin-agentic-maker
 ```
 
+want it in one project only, installed but switched off until you need it? use project scope (this edits that project's `.claude/settings.json` and nothing global):
+
+```sh
+cd your-project
+claude plugin marketplace add yigitkonur/plugin-agentic-maker --scope project
+claude plugin install agentic-maker@plugin-agentic-maker --scope project
+claude plugin disable agentic-maker@plugin-agentic-maker --scope project   # installed, off
+claude plugin enable agentic-maker@plugin-agentic-maker --scope project    # on, whenever you want it
+```
+
+(`claude plugin list` shows it as `Scope: project` with `✘ disabled` or `✔ enabled`. commit `.claude/settings.json` if the team should get the same setup, or leave it out of git if it's just you.)
+
 what you need: `python3` 3.9+ (standard library only, zero deps to install) and, for fresh-agent runs, `claude` on PATH. built and tested on claude code 2.1.304; `claude plugin eval` (used by `eval-emit`) needs 2.1.269 or later. optional extras: `herdr` (live interactive rounds, and finding a pane's session), `git` (only for `check diff` without `--session`), `jq` (only if you want the recipes in `skills/derail/references/session-recipes.md`). that's the whole list.
 
 still running the three skills this replaces (`audit-agentic-cli`, `audit-agentic-mcp`, `audit-skill-by-derailment`)? read [docs/parity/REPORT.md](docs/parity/REPORT.md), then disable them. they fight over the same requests.
