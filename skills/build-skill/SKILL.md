@@ -1,6 +1,6 @@
 ---
 name: build-skill
-description: Create, redesign or merge an agent skill: ground it in verified facts, lay it out, write it, then test it with fresh agents. Started by you.
+description: Create, redesign or merge a skill, grounded in facts, then hand over the test. Started by you.
 disable-model-invocation: true
 argument-hint: "<what the skill should do | path of a skill to redesign>"
 allowed-tools: Bash(agentic-maker *) Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker *) Bash(claude plugin validate *) Read Grep Glob Write Edit

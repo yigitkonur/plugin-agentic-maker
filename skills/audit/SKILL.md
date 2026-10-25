@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Audit a CLI, script, MCP server or skill for agent use with read-only probes. Reports; changes nothing. Started by you.
+description: Audit a CLI, MCP server or skill with read-only probes; changes nothing. Started by you.
 disable-model-invocation: true
 argument-hint: "<CLI binary path | MCP command or config | skill directory>"
 context: fork
