@@ -3,14 +3,15 @@
 
 Usage: release.py [--root DIR] [--plugin NAME] [--level auto|patch|minor|major] [--apply] [--notes-out FILE] [--github-output]
 Dry run unless --apply. Python 3.9+, stdlib only; works on any plugin repo, so each repo vendors this one file
-(scripts/release.py). The canonical copy is yigitkonur/plugin-agentic-maker/scripts/release.py (this file).
+(scripts/kit/release.py). The canonical copy is yigitkonur/plugin-kit/release/release.py; change it there and run sync.sh.
 
 Why: Claude Code updates an installed plugin only when its computed version changes (the manifest `version` string
 first), so every shipped change must bump it, and the bump must reach every place the version is written.
 
 Level (auto): commits since the last release tag, merges and release commits left out. A commit counts only if it
 changed at least one SHIPPED file: in a repo whose marketplace points at subfolders (source "./plugins/<name>") that is anything
-under those folders; otherwise everything except docs, tests, evals, CI and root markdown/license files (see IGNORED_*).
+under those folders; otherwise everything except docs, tests, evals, CI and root markdown/license files (see IGNORED_*). A repo can
+state its own list in .github/release.json: {"shipped": ["skills/", "agents/", "hooks/", "bin/", "lib/"]} (plus .claude-plugin/ always).
   feat -> minor; fix, perf -> patch; `type!:` or "BREAKING CHANGE" -> major (minor while the major is 0).
   docs, ci, chore, test, style, build, refactor -> no release.
   A `Release-Level: minor|major` line in a commit body raises the level for that commit. A commit with no conventional prefix counts as a patch.
@@ -35,7 +36,7 @@ import re
 import subprocess
 
 # Not shipped to the people who install the plugin: a commit that touches only these never releases.
-IGNORED_DIRS = (".github/", "docs/", "doc/", "tests/", "test/", "evals/", "spikes/", "scripts/ci/", ".claude/")
+IGNORED_DIRS = (".github/", "docs/", "doc/", "tests/", "test/", "evals/", "spikes/", "scripts/ci/", "scripts/kit/", ".claude/")
 IGNORED_ROOT = re.compile(r"^(README|CHANGELOG|AGENTS|CLAUDE|CONTRIBUTING|LICENSE|NOTICE|CODEOWNERS)[^/]*$|^\.gitignore$|^\.gitattributes$")
 SKIP_WALK = {"node_modules", ".git", "tests", "test", "evals", "docs", "fixtures", ".claude"}
 CONV = re.compile(r"^(?P<type>[a-zA-Z]+)(\([^)]*\))?(?P<bang>!)?:\s*(?P<subject>.+)$")
@@ -135,15 +136,27 @@ def write_plugin_versions(root, name, old, new):
             done.append("%s (%d)" % (rel, n))
     path = os.path.join(root, market)
     text = open(path, encoding="utf-8").read()
-    at = text.find('"name": "%s"' % name)
-    if at < 0:
-        at = re.search(r'"name"\s*:\s*"%s"' % re.escape(name), text).start()
-    end = text.find('"source"', at)
+    at, end = entry_span(text, name)
     seg, n = re.subn(r'("version"\s*:\s*")%s(")' % re.escape(old), lambda m: m.group(1) + new + m.group(2), text[at:end])
     if n:
         open(path, "w", encoding="utf-8").write(text[:at] + seg + text[end:])
         done.append("%s (%d)" % (market, n))
     return done
+
+
+def entry_span(text, name):
+    """(start, end) of the marketplace entry called `name`, found structurally so the order of its keys does not matter."""
+    dec = json.JSONDecoder()
+    i = text.index("[", re.search(r'"plugins"\s*:', text).end()) + 1
+    while True:
+        while text[i] in " \t\r\n,":
+            i += 1
+        if text[i] == "]":
+            raise SystemExit("release.py: no marketplace entry called %s" % name)
+        obj, end = dec.raw_decode(text, i)
+        if obj.get("name") == name:
+            return i, end
+        i = end
 
 
 def last_release_tag(root, name=None):
@@ -173,6 +186,15 @@ def plugin_dirs(root):
     return tuple(dirs) or None
 
 
+def shipped_config(root):
+    """Optional .github/release.json {"shipped": ["skills/", "agents/", ...]}: the folders and files that reach installers, when the default guess is wrong."""
+    try:
+        v = json.load(open(os.path.join(root, ".github", "release.json"), encoding="utf-8")).get("shipped")
+        return tuple(v) if v else None
+    except (OSError, ValueError):
+        return None
+
+
 def shipped(path, dirs=None):
     if dirs:
         return path.startswith(dirs) or path.startswith(".claude-plugin/")
@@ -181,7 +203,7 @@ def shipped(path, dirs=None):
 
 def commits_since(root, name=None):
     base = last_release_tag(root, name)
-    dirs = (plugin_entry(root, name)[1],) if name else plugin_dirs(root)
+    dirs = shipped_config(root) or ((plugin_entry(root, name)[1],) if name else plugin_dirs(root))
     rng = "%s..HEAD" % base if base else "HEAD"
     raw = git(root, "log", "--no-merges", "--name-only", "--format=%x1e%H%x1f%s%x1f%b%x1f", rng)
     out = []
@@ -206,9 +228,7 @@ def decide(commits, major):
         m = CONV.match(c["subject"])
         lv = "none"
         trailer = re.search(r"^Release-Level:[ \t]*(minor|major)[ \t]*$", c["body"], re.I | re.M)
-        if trailer:                              # an explicit trailer raises the level (major stays minor while the major is 0)
-            lv = "minor" if (trailer.group(1).lower() == "minor" or major == 0) else "major"
-        elif m:
+        if m:
             t = m.group("type").lower()
             if m.group("bang") or "BREAKING CHANGE" in c["body"]:
                 lv = "minor" if major == 0 else "major"
@@ -218,6 +238,10 @@ def decide(commits, major):
                 lv = "patch"
         else:
             lv = "patch"
+        if trailer:                              # an explicit trailer only raises the level (major stays minor while the major is 0)
+            tl = "minor" if (trailer.group(1).lower() == "minor" or major == 0) else "major"
+            if RANK[tl] > RANK[lv]:
+                lv = tl
         if lv != "none":
             why.append("%s: %s" % (lv, c["subject"]))
         if RANK[lv] > RANK[level]:
