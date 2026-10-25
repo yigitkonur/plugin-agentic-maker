@@ -46,6 +46,30 @@ claude plugin enable agentic-maker@plugin-agentic-maker --scope project    # on,
 
 (`claude plugin list` shows it as `Scope: project` with `✘ disabled` or `✔ enabled`. commit `.claude/settings.json` if the team should get the same setup, or leave it out of git if it's just you.)
 
+## updates
+
+every merge to `main` that changes the plugin gets a new version, a git tag and a github release by itself (`.github/workflows/release.yml`; commit types decide patch, minor or major, docs-only changes don't release). claude code only updates a plugin when its version changes, which is why that's automatic.
+
+third-party marketplaces don't auto-update unless you switch it on. two ways:
+
+- in claude code: `/plugin` → Marketplaces → plugin-agentic-maker → Enable auto-update
+- in settings (user or project `settings.json`), as a key on the marketplace entry:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "plugin-agentic-maker": {
+      "source": { "source": "github", "repo": "yigitkonur/plugin-agentic-maker" },
+      "autoUpdate": true
+    }
+  }
+}
+```
+
+claude code checks after the first message of a session (random delay of up to ten minutes), updates the files on disk, and loads the new version next time you start it (or `/reload-plugins`). manual route any time: `claude plugin marketplace update plugin-agentic-maker && claude plugin update agentic-maker@plugin-agentic-maker`.
+
+## requirements
+
 what you need: `python3` 3.9+ (standard library only, zero deps to install) and, for fresh-agent runs, `claude` on PATH. built and tested on claude code 2.1.304; `claude plugin eval` (used by `eval-emit`) needs 2.1.269 or later. optional extras: `herdr` (live interactive rounds, and finding a pane's session), `git` (only for `check diff` without `--session`), `jq` (only if you want the recipes in `skills/derail/references/session-recipes.md`). that's the whole list.
 
 still running the three skills this replaces (`audit-agentic-cli`, `audit-agentic-mcp`, `audit-skill-by-derailment`)? read [docs/parity/REPORT.md](docs/parity/REPORT.md), then disable them. they fight over the same requests.
