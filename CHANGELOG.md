@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0 - 2026-10-25
+
+- feat(skills): build-cli and build-mcp, build-skill fixed by derail, derail leave_out, shipped scenario packs (#7) (7c822b3)
+- ci: release.py v2 (shipped-file filter, nested manifests, both tag forms, Release-Level trailer, --plugin for multi-plugin marketplaces) (11ae046)
+
 ## 0.3.0 - 2026-10-25
 
 - feat(skills): /agentic-maker:build-skill creates, redesigns or merges a skill: facts verified first, layout, frontmatter, body, ship checklist, then tested with fresh agents through derail; twelve reference pages re-cut from build-skill (frontmatter facts checked against Claude Code 2.1) (da21afa)
