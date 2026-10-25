@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 - 2026-10-25
+
+- feat(skills): /agentic-maker:build-skill creates, redesigns or merges a skill: facts verified first, layout, frontmatter, body, ship checklist, then tested with fresh agents through derail; twelve reference pages re-cut from build-skill (frontmatter facts checked against Claude Code 2.1) (da21afa)
+- ci(release): manual runs only on main, check out the newest main, no rebase after the gate (fail and let the queued run release), refuse a tag that exists, empty Unreleased section handled (Codex review) (607ab39)
+- ci(release): every shipped change on main gets a version, tag and release by itself (scripts/release.py decides the bump from commit types; the workflow commits, tags and publishes), README documents the auto-update setting, AGENTS.md says not to bump by hand (99ce525)
+- docs(readme): project-scope install that stays off until enabled (marketplace add, install, disable, enable with --scope project; tested in a fresh config) (04c8c3e)
+
 ## 0.2.1 - 2026-10-21
 
 - README rewritten in a plainer, lowercase voice. Install now leads with the one-line shell command, `claude plugin install agentic-maker --marketplace yigitkonur/plugin-agentic-maker`, run in an empty config with and without a GitHub ssh key (Claude Code retries over https). `/plugin marketplace add` and `/plugin install` were run in a real session too: the plugin is active at once, and `/agentic-maker:audit` worked in that session.
