@@ -9,82 +9,81 @@ tl;dr, it does two things:
 
 works on any project, any language. the probes hit the public interface (an executable, an mcp endpoint, a skill's text), and the language-specific stuff lives in reference files that only get read when they're needed.
 
+<!-- kit:install:start -->
 ## install
 
-this plugin is meant to be **installed once per machine and switched off**, then turned on only in the projects where you want it. that way it costs zero tokens in every other chat. same idea in claude code and in codex.
+Every plugin of ours is installed **once, globally, and off**, then **turned on per project**. Nothing runs and no tokens are spent in chats that don't switch it on. It works the same in Claude Code and Codex.
 
-### claude code
+### 1. install it globally
+
+**Claude Code**
 
 ```sh
 claude plugin marketplace add yigitkonur/plugin-agentic-maker
-claude plugin install agentic-maker@plugin-agentic-maker -s user   # lands disabled (defaultEnabled is false)
+claude plugin install agentic-maker@plugin-agentic-maker -s user          # stays off: defaultEnabled is false in the manifest
 ```
 
-no github ssh key on the machine? set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` in its environment, or background and in-session updates fail (the install itself falls back to https).
-
-turn it on for one project (run it in that folder, then restart claude there), and off again:
+**Codex** (0.163+)
 
 ```sh
-claude plugin enable agentic-maker@plugin-agentic-maker --scope project
-claude plugin disable agentic-maker@plugin-agentic-maker --scope project
-```
-
-(`claude plugin list` shows `Scope: user` with `✘ disabled` globally. the project switch edits that project's `.claude/settings.json`; commit it if the team should get it, leave it out if it's just you.) from inside claude code: `/plugin marketplace add yigitkonur/plugin-agentic-maker`, then `/plugin install agentic-maker@plugin-agentic-maker`.
-
-### codex (0.163+)
-
-```sh
-mkdir -p ~/.local/bin && for f in plugin-here codex-plugin-project.sh; do curl -fsSL https://raw.githubusercontent.com/yigitkonur/plugin-agentic-maker/main/scripts/$f -o ~/.local/bin/$f && chmod +x ~/.local/bin/$f; done   # helpers, ~/.local/bin must be on PATH
 codex plugin marketplace add yigitkonur/plugin-agentic-maker
 codex plugin add agentic-maker@plugin-agentic-maker
-codex-plugin-project.sh global-off agentic-maker@plugin-agentic-maker   # codex has no "disable" command, the script edits ~/.codex/config.toml
+codex-plugin-project.sh global-off agentic-maker@plugin-agentic-maker     # Codex has no enable/disable command; this keeps it off everywhere
 ```
 
-turn it on for one project, and off again:
+All our plugins, both hosts, plus the `plugin` command and the 6-hourly update job, in one line:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/yigitkonur/plugin-kit/main/install.sh | sh -s -- --all
+```
+
+### 2. turn it on in a project
 
 ```sh
 cd your-project
-codex-plugin-project.sh on agentic-maker@plugin-agentic-maker . --trust
-codex-plugin-project.sh off agentic-maker@plugin-agentic-maker .
+plugin on agentic-maker    # Claude Code and Codex, this folder only
+plugin off agentic-maker   # undo
+plugin                     # or pick from a list (TUI)
 ```
 
-`on` writes `[plugins."agentic-maker@plugin-agentic-maker"] enabled = true` into the project's `.codex/config.toml`. codex ignores that file unless the project is trusted, which is what `--trust` adds to `~/.codex/config.toml`. trusting a project also turns on its hooks and rules, so only do it for projects you own. check with `codex plugin list` (`installed, enabled` inside the project, `installed, disabled` elsewhere).
-
-### one command for both
-
-with the two helpers from the codex step on PATH, `plugin-here` does the claude and the codex half for the folder you are in (it skips a host that doesn't have the plugin installed):
+By hand, without the `plugin` command:
 
 ```sh
-cd your-project
-plugin-here on agentic-maker@plugin-agentic-maker
-plugin-here off agentic-maker@plugin-agentic-maker
+claude plugin enable agentic-maker@plugin-agentic-maker --scope project      # undo: claude plugin disable agentic-maker@plugin-agentic-maker --scope project
+codex-plugin-project.sh on agentic-maker@plugin-agentic-maker . --trust      # undo: codex-plugin-project.sh off agentic-maker@plugin-agentic-maker
 ```
 
-works for any plugin you installed this way, not just this one. the six commands you start yourself (`audit`, `design`, `build-cli`, `build-mcp`, `build-skill`, `derail`) are typed as `/agentic-maker:audit` in claude and `$audit` in codex. `derail` runs from claude code: its workers are claude sessions and its ledger, reader agent and stop hook only exist there. everything else works in both.
+Restart `claude` / `codex` in that folder afterwards.
+Codex reads a folder's `.codex/config.toml` only when the folder is trusted; `--trust` adds that, and it also enables the folder's hooks and rules, so use it for your own projects only. `plugin` and `codex-plugin-project.sh` come from [plugin-kit](https://github.com/yigitkonur/plugin-kit) (the one-line installer above).
 
-## updates
+### 3. updates
 
-every merge to `main` that changes the plugin gets a new version, a git tag and a github release by itself (`.github/workflows/release.yml`; commit types decide patch, minor or major, docs-only changes don't release). claude code only updates a plugin when its version changes, which is why that's automatic.
+A plugin updates only when its `version` changes, and this repo's `release` workflow bumps it on every shipped change. Machines pick it up with `plugin update`, or by themselves with the 6-hourly job (`plugin autoupdate install`). By hand:
 
-third-party marketplaces don't auto-update unless you switch it on. two ways:
-
-- in claude code: `/plugin` → Marketplaces → plugin-agentic-maker → Enable auto-update
-- in settings (user or project `settings.json`), as a key on the marketplace entry:
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "plugin-agentic-maker": {
-      "source": { "source": "github", "repo": "yigitkonur/plugin-agentic-maker" },
-      "autoUpdate": true
-    }
-  }
-}
+```sh
+claude plugin marketplace update plugin-agentic-maker && claude plugin update agentic-maker@plugin-agentic-maker
+codex plugin marketplace upgrade plugin-agentic-maker        # then start a new session
 ```
 
-claude code checks after the first message of a session (random delay of up to ten minutes), updates the files on disk, and loads the new version next time you start it (or `/reload-plugins`). manual route any time: `claude plugin marketplace update plugin-agentic-maker && claude plugin update agentic-maker@plugin-agentic-maker`.
+No GitHub SSH key on the machine? `export CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` (`plugin install` sets it in Claude's settings for you).
 
-codex has no background auto-update: `codex plugin marketplace upgrade plugin-agentic-maker` on its own moves the installed plugin to the newest version (start a new session to load it). both manifests (`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`) and the marketplace entry carry the same version; `scripts/release.py` writes all three and `scripts/check.sh` fails if they differ.
+### 4. uninstall
+
+```sh
+claude plugin uninstall agentic-maker@plugin-agentic-maker -s user
+claude plugin marketplace remove plugin-agentic-maker
+codex plugin remove agentic-maker@plugin-agentic-maker
+codex plugin marketplace remove plugin-agentic-maker
+```
+<!-- kit:install:end -->
+
+### the commands, in each host
+
+the six commands you start yourself (`audit`, `design`, `build-cli`, `build-mcp`, `build-skill`, `derail`) are typed as `/agentic-maker:audit` in claude and `$audit` in codex. `derail` runs from claude code: its workers are claude sessions and its ledger, reader agent and stop hook only exist there. everything else works in both.
+
+### versions
+
+both manifests (`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`) and the marketplace entry carry the same version, and `scripts/check.sh` fails if they differ. the release workflow writes them (and `lib/agentic_maker/__init__.py`); never edit one by hand.
 
 ## requirements
 
