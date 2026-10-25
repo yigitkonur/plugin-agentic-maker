@@ -38,7 +38,7 @@ Read what it did instead of guessing: `agentic-maker normalize session:<id>` (Cl
 
 | Situation | Read |
 |---|---|
-| Writing a skill or its description | [skill/descriptions-that-trigger.md](references/skill/descriptions-that-trigger.md), [skill/text-as-program.md](references/skill/text-as-program.md) |
+| Writing a skill or its description | [skill/descriptions-that-trigger.md](references/skill/descriptions-that-trigger.md), [skill/text-as-program.md](references/skill/text-as-program.md); a whole new skill: the user starts `/agentic-maker:build-skill` (frontmatter, layout, checklist, testing) |
 | Choosing CLI, MCP or a skill | [decisions/surface-choice.md](references/decisions/surface-choice.md) |
 | Designing or fixing a CLI | [cli/checks.md](references/cli/checks.md) (five checks, severity, finish criteria), [cli/repair-build-order.md](references/cli/repair-build-order.md), then [index-cli.md](references/index-cli.md) |
 | Output, errors, exit codes | [cli/envelope-and-errors.md](references/cli/envelope-and-errors.md), [cli/exit-codes.md](references/cli/exit-codes.md), [cli/streams-and-jsonl.md](references/cli/streams-and-jsonl.md) |
@@ -75,3 +75,4 @@ Not sure which file: the indexes list every page with a one-line "read when".
 - `/agentic-maker:audit <target>` probes a CLI, script, MCP server or skill and reports against the contract. It changes nothing.
 - `/agentic-maker:derail <target>` runs fresh agents on realistic tasks, reads what they did and rewrites the text that misled them.
 - `/agentic-maker:design <idea>` interviews you, then sketches the surface before any code.
+- `/agentic-maker:build-skill <idea or path>` creates or redesigns a skill: grounded in verified facts, laid out, written, then tested with fresh agents.
