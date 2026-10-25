@@ -1,6 +1,6 @@
 ---
 name: build-skill
-description: Create, redesign or merge an agent skill: ground it in verified facts, lay it out, write it, then test it with fresh agents. Started by you.
+description: Create, redesign or merge a skill, grounded in facts, then hand over the test. Started by you.
 disable-model-invocation: true
 argument-hint: "<what the skill should do | path of a skill to redesign>"
 allowed-tools: Bash(agentic-maker *) Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker *) Bash(claude plugin validate *) Read Grep Glob Write Edit
@@ -17,8 +17,8 @@ Pages are in `${CLAUDE_SKILL_DIR}/references/` (listed at the end); the two skil
 | The request is | Do |
 |---|---|
 | a new skill | steps 1-7 |
-| an existing skill to redesign (a path) | read it first, run `/agentic-maker:derail <path>` on a scratch copy to see how it fails today (that is the RED of step 6), then steps 3-7 |
-| several skills or sources to merge | step 2 builds a comparison table (what to inherit, what to drop, why) before any text is written |
+| an existing skill to redesign (a path, relative to the current working directory, not to the plugin) | `ls` that path in the current directory and read it first. If the user has derail findings for it, read them; they say how it fails today. Then steps 3-7 |
+| several skills or sources to merge | step 2 builds a comparison table (what to inherit, what to drop, why) before any text is written. Every command, flag and path comes verbatim from a source; one found in no source goes in the report as a suggested addition, not in the skill |
 | "turn this conversation into a skill" | list what was done as a nested outline, five levels at most: milestone, phase, step, error met and its correction, invariant learned. Corrections and invariants become the skill's rules; repeated commands become scripts. Then steps 2-7 |
 
 ## Steps
@@ -29,11 +29,11 @@ Pages are in `${CLAUDE_SKILL_DIR}/references/` (listed at the end); the two skil
 4. **Write it.**
    - Frontmatter: [frontmatter.md](references/frontmatter.md). Portable fields only if it must run outside Claude Code.
    - Description: it is the only thing the model sees when deciding to load the skill. [descriptions-that-trigger.md](../agent-interface-design/references/skill/descriptions-that-trigger.md).
-   - Body: exact paths and commands, numbers instead of adjectives, a check on every phase: [text-as-program.md](../agent-interface-design/references/skill/text-as-program.md). How strict each step should be: [instruction-strength.md](references/instruction-strength.md).
+   - Body: exact paths and commands, numbers instead of adjectives, a check on every phase, using only commands and flags that appear in the sources from step 2: [text-as-program.md](../agent-interface-design/references/skill/text-as-program.md). How strict each step should be: [instruction-strength.md](references/instruction-strength.md).
    - A skill that drives MCP tools: [wrapping-mcp-tools.md](references/wrapping-mcp-tools.md).
-5. **Check what a script can check.** `claude plugin validate <skill dir>` (frontmatter and structure); run every bundled script on real input; open each link and path. [checklist.md](references/checklist.md) lists the rest.
-6. **Test it with fresh agents.** `/agentic-maker:derail <skill dir>`: a clean-room agent gets a realistic request that never names the skill, a reader finds where it drifted, and the text that caused each drift is fixed and rerun. Do it on a scratch copy of a skill you do not own. Procedure and what a pass looks like: [test-with-fresh-agents.md](references/test-with-fresh-agents.md). A skill only the user can start is tested through a slash-command prompt; the derail dry-run says so.
-7. **Ship.** Go through [checklist.md](references/checklist.md) and say which lines you checked and how. Anything unchecked goes in the report as unchecked.
+5. **Check what a script can check.** Run each check as its own Bash call, with no `&&`, `;` or heredoc: `claude plugin validate <skill dir>` (frontmatter and structure), `wc -l <skill dir>/SKILL.md`, every bundled script on real input. A denied call skips only that check: redo it with Read, Grep or Glob (frontmatter fields, line count, each link and path) and name the denied command in the report. Then open [checklist.md](references/checklist.md) and build a table with one row per line, marked checked or unchecked.
+6. **Hand over the test.** Only the user can start `/agentic-maker:derail`; you cannot, so do not try. Write three scenarios into `.agentic-maker/scenarios/<name>.md` (format in `${CLAUDE_PLUGIN_ROOT}/skills/derail/references/scenarios.md`): a normal request in the user's words that never names the skill, an ambiguous one, and one with a missing input; each with receipts that check the disk, not the agent's words. Preview one with `agentic-maker run <name> --dry-run`. End by giving the user the exact command, `/agentic-maker:derail <skill dir>`. Until they run it the skill is untested, and your report says so. Procedure and what a pass looks like: [test-with-fresh-agents.md](references/test-with-fresh-agents.md). A skill only the user can start is tested through a slash-command prompt; the derail dry-run says so.
+7. **Ship.** The final message is the checklist table from step 5: one row per line of [checklist.md](references/checklist.md), marked checked (with the command and its output, or the file and line you read) or unchecked. A message without that table is not a ship.
 
 ## Do this, not that
 

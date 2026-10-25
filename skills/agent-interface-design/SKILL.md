@@ -75,4 +75,4 @@ Not sure which file: the indexes list every page with a one-line "read when".
 - `/agentic-maker:audit <target>` probes a CLI, script, MCP server or skill and reports against the contract. It changes nothing.
 - `/agentic-maker:derail <target>` runs fresh agents on realistic tasks, reads what they did and rewrites the text that misled them.
 - `/agentic-maker:design <idea>` interviews you, then sketches the surface before any code.
-- `/agentic-maker:build-skill <idea or path>` creates or redesigns a skill: grounded in verified facts, laid out, written, then tested with fresh agents.
+- `/agentic-maker:build-skill`, `:build-cli` and `:build-mcp` (`<idea or path>`) create or repair a skill, a CLI or an MCP server: grounded in verified facts, written in a fixed order, probed after each stage, then handed over for the fresh-agent test.

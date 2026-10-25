@@ -2,7 +2,7 @@
 
 > Read when: you finished a draft skill (or changed one) and need to know whether fresh agents choose it and follow it, before you ship it.
 
-Run the skill's text through agents that have never seen it. Two questions, in this order: does a fresh agent choose the skill (trigger), and once chosen, does it do what the text says (following). Write nothing until you have watched the failure it must fix.
+Run the skill's text through agents that have never seen it. Only the user can start `/agentic-maker:derail`; an agent that builds a skill writes the scenarios below and hands the user the command. Two questions, in this order: does a fresh agent choose the skill (trigger), and once chosen, does it do what the text says (following). Write nothing until you have watched the failure it must fix.
 
 ## Which skills need the full cycle
 
