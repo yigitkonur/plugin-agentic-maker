@@ -139,10 +139,16 @@ def changelog(root, new, commits):
     text = open(p, encoding="utf-8").read()
     today = datetime.date.today().isoformat()
     head = "## %s - %s" % (new, today)
-    m = re.search(r"^## Unreleased\s*$", text, re.M)
+    m = re.search(r"^## Unreleased[ \t]*$", text, re.M)
+    renamed = False
     if m:
-        text = text[:m.start()] + head + text[m.end():]
-    else:
+        end = text.find("\n## ", m.end())
+        if text[m.end():end if end >= 0 else len(text)].strip():
+            text = text[:m.start()] + head + text[m.end():]
+            renamed = True
+        else:                                    # an empty Unreleased heading: drop it and generate from the commits
+            text = text[:m.start()] + text[m.end():].lstrip("\n")
+    if not renamed:
         lines = ["- %s (%s)" % (c["subject"], c["sha"][:7]) for c in commits]
         section = head + "\n\n" + "\n".join(lines) + "\n\n"
         i = text.find("\n## ")
@@ -172,6 +178,8 @@ def main():
     result = {"current": old, "since": base, "commits": len(commits), "level": level, "reasons": why, "release": level != "none"}
     if level != "none":
         new = bump(old, level)
+        if git(root, "tag", "--list", "v" + new).strip():
+            raise SystemExit("release.py: tag v%s already exists but the files say %s; check out the newest main" % (new, old))
         result.update(version=new, tag="v" + new)
         if a.apply:
             result["written"] = write_versions(root, old, new)
