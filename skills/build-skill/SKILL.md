@@ -8,6 +8,8 @@ allowed-tools: Bash(agentic-maker *) Bash(${CLAUDE_PLUGIN_ROOT}/bin/agentic-make
 
 # Build a skill
 
+> In Codex: `$ARGUMENTS` is what the user wrote after the skill name. `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}` mean the plugin folder and this skill's folder (the plugin folder is two levels above this file); `agentic-maker` is on PATH or is `<plugin folder>/bin/agentic-maker`. A line that starts with an exclamation mark and a backtick is a command: run it yourself first.
+
 Request: `$ARGUMENTS`
 
 Pages are in `${CLAUDE_SKILL_DIR}/references/` (listed at the end); the two skill pages in the knowledge base are `${CLAUDE_PLUGIN_ROOT}/skills/agent-interface-design/references/skill/`. Open a page when the step names it, not before. This runs in the main conversation, so ask the user directly, and only what changes the result.

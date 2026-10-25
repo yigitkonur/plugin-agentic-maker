@@ -1,0 +1,20 @@
+{
+  "name": "plugin-agentic-maker",
+  "interface": {
+    "displayName": "agentic-maker"
+  },
+  "plugins": [
+    {
+      "name": "agentic-maker",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

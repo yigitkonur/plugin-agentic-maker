@@ -1,0 +1,6 @@
+interface:
+  display_name: "design"
+  short_description: "Design an agent-facing CLI, MCP server or skill: choose the surface, interview, sketch before code. "
+  default_prompt: "Use $design on this project."
+policy:
+  allow_implicit_invocation: false

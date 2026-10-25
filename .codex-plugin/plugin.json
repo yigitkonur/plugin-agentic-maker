@@ -1,0 +1,39 @@
+{
+  "name": "agentic-maker",
+  "version": "0.4.0",
+  "description": "Design agent-facing tools (CLIs, scripts, MCP servers, skills) and test them by derailment: run a fresh agent, read the whole execution, fix the text that caused each drift, rerun.",
+  "author": {
+    "name": "yigitkonur",
+    "url": "https://github.com/yigitkonur"
+  },
+  "homepage": "https://github.com/yigitkonur/plugin-agentic-maker",
+  "repository": "https://github.com/yigitkonur/plugin-agentic-maker",
+  "license": "MIT",
+  "keywords": [
+    "agent-tools",
+    "cli",
+    "mcp",
+    "skills",
+    "derailment",
+    "audit",
+    "testing"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "agentic-maker",
+    "shortDescription": "Design, build and audit CLIs, MCP servers and skills for agents",
+    "longDescription": "Design agent-facing tools (CLIs, MCP servers, skills), build or repair them in the order that matters, audit them with read-only probes, and hand over a derail test that runs fresh agents against them. Skills you start by name: audit, design, build-cli, build-mcp, build-skill; derail runs from Claude Code.",
+    "developerName": "yigitkonur",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/yigitkonur/plugin-agentic-maker",
+    "defaultPrompt": [
+      "Use $audit on ./my-cli",
+      "Use $build-mcp to add a tool to this server",
+      "Use $design to sketch a CLI for agents"
+    ]
+  }
+}

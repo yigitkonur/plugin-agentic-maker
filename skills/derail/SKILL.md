@@ -14,6 +14,9 @@ hooks:
 <!-- src: audit-skill-by-derailment/SKILL.md#When to Use -->
 # Derail
 
+> In Codex: `$ARGUMENTS` is what the user wrote after the skill name. `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}` mean the plugin folder and this skill's folder (the plugin folder is two levels above this file); `agentic-maker` is on PATH or is `<plugin folder>/bin/agentic-maker`. A line that starts with an exclamation mark and a backtick is a command: run it yourself first.
+> `derail` runs from Claude Code: its workers are `claude` sessions and its ledger, reader agent and Stop hook exist only there.
+
 Arguments: `$ARGUMENTS`
 
 Environment: !`${CLAUDE_PLUGIN_ROOT}/bin/agentic-maker doctor --human 2>&1 || true`

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# plugin-here on|off <plugin@marketplace> [dir]
+# Turn a globally installed (but disabled) plugin on or off for ONE project, in Claude Code and in Codex.
+#   claude: claude plugin enable|disable <id> --scope project   (writes <dir>/.claude/settings.json)
+#   codex : codex-plugin-project.sh on|off <id> <dir> --trust   (writes <dir>/.codex/config.toml, trusts the dir)
+# Example: plugin-here on agentic-maker@plugin-agentic-maker
+# Restart claude / codex in that folder afterwards. Only run "on" in projects you own: codex trust also enables the project's hooks and rules.
+set -u
+mode="${1:-}"; id="${2:-}"; dir="${3:-$PWD}"
+case "$mode" in on|off) ;; *) echo "usage: plugin-here on|off <plugin@marketplace> [dir]" >&2; exit 2 ;; esac
+[ -n "$id" ] || { echo "usage: plugin-here on|off <plugin@marketplace> [dir]" >&2; exit 2; }
+dir="$(cd "$dir" && pwd -P)" || exit 2
+cc=enable; [ "$mode" = off ] && cc=disable
+rc=0
+if command -v claude >/dev/null 2>&1; then
+  if claude plugin list 2>/dev/null | grep -qF "$id"; then
+    (cd "$dir" && claude plugin "$cc" "$id" --scope project) || rc=1
+  else echo "claude: $id is not installed (claude plugin install $id -s user)"; fi
+fi
+if command -v codex >/dev/null 2>&1; then
+  if codex plugin list 2>/dev/null | grep -Eq "^${id}[[:space:]]+installed"; then
+    if [ "$mode" = on ]; then codex-plugin-project.sh on "$id" "$dir" --trust || rc=1
+    else codex-plugin-project.sh off "$id" "$dir" || rc=1; fi
+  else echo "codex: $id is not installed (codex plugin add $id)"; fi
+fi
+exit $rc
